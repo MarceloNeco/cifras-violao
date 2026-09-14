@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="pt-BR" data-tema="claro">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Importar cifra</title>
+<meta name="theme-color" content="#a8501e">
+<link rel="stylesheet" href="estilo.css">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎸</text></svg>">
+</head>
+<body>
+
+<header class="topo">
+  <div class="topo-interno">
+    <a class="marca" href="index.html">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round">
+        <path d="M11.5 12.5 19 5M17 3l4 4M6.5 21a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7Z"/>
+      </svg>
+      <span>Cifras de Violão</span>
+    </a>
+    <div class="espaco"></div>
+    <a class="botao" href="acordes.html">Acordes</a>
+    <button class="botao icone" data-botao-tema title="Mudar o tema">☾</button>
+  </div>
+</header>
+
+<main class="conteudo">
+  <div class="chamada">
+    <h1>Importar cifra</h1>
+    <p>Cole a cifra copiada de qualquer site. Esta página arruma o texto e monta
+       o arquivo pronto para você subir no GitHub.</p>
+  </div>
+
+  <div class="passo">
+    <h2><span class="numero">1</span> Que música é?</h2>
+    <div class="campos">
+      <label class="campo largo">
+        <span>Escolha da sua lista</span>
+        <select id="escolher" class="selecao larga"></select>
+      </label>
+      <label class="campo"><span>Título</span><input id="titulo" type="text" placeholder="Evidências"></label>
+      <label class="campo"><span>Artista</span><input id="artista" type="text" placeholder="Chitãozinho &amp; Xororó"></label>
+      <label class="campo"><span>Categoria</span><input id="categoria" type="text" list="lista-categorias" placeholder="Sertanejo">
+        <datalist id="lista-categorias"></datalist></label>
+      <label class="campo curto"><span>Tom</span><input id="tom" type="text" placeholder="G"></label>
+      <label class="campo curto"><span>Capo</span><input id="capo" type="number" min="0" max="11" value="0"></label>
+      <label class="campo"><span>Ritmo (opcional)</span><input id="ritmo" type="text" placeholder="Balada"></label>
+      <label class="campo"><span>Nome do arquivo</span><input id="arquivo" type="text" placeholder="evidencias.txt"></label>
+    </div>
+  </div>
+
+  <div class="passo">
+    <h2><span class="numero">2</span> Cole a cifra aqui</h2>
+    <p class="dica">Copie a cifra inteira do site (letra com os acordes em cima) e cole no quadro.
+       Pode colar com a bagunça de espaços que vier — eu arrumo.</p>
+    <textarea id="entrada" class="area" spellcheck="false"
+      placeholder="[Intro] G  D  Em  C&#10;&#10; G              D&#10;Cole a cifra aqui…"></textarea>
+    <div class="linha-botoes">
+      <button class="botao forte" id="processar">Arrumar e conferir</button>
+      <button class="botao" id="limpar-tudo">Limpar</button>
+      <span class="relatorio" id="relatorio"></span>
+    </div>
+  </div>
+
+  <div class="passo" id="passo3" hidden>
+    <h2><span class="numero">3</span> Confira como ficou</h2>
+    <div class="diagramas" id="diagramas"></div>
+    <div class="cifra previa" id="previa"></div>
+  </div>
+
+  <div class="passo" id="passo4" hidden>
+    <h2><span class="numero">4</span> Leve para o GitHub</h2>
+
+    <h3>a) O arquivo da cifra</h3>
+    <p class="dica">Crie no repositório um arquivo chamado <b id="nome-arquivo">musica.txt</b>
+       (<b>Add file → Create new file</b>) e cole este conteúdo dentro:</p>
+    <textarea id="saida" class="area saida" readonly spellcheck="false"></textarea>
+    <div class="linha-botoes">
+      <button class="botao forte" id="copiar">Copiar o conteúdo</button>
+      <button class="botao" id="baixar">Baixar o arquivo .txt</button>
+    </div>
+
+    <h3>b) O índice</h3>
+    <div id="aviso-indice"></div>
+    <textarea id="saida-json" class="area saida baixa" readonly spellcheck="false"></textarea>
+    <div class="linha-botoes">
+      <button class="botao" id="copiar-json">Copiar</button>
+    </div>
+  </div>
+</main>
+
+<footer class="rodape">
+  O texto colado aqui não sai do seu navegador.
+</footer>
+
+<script src="acordes.js"></script>
+<script src="comum.js"></script>
+<script src="importador.js"></script>
+</body>
+</html>

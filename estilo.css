@@ -359,3 +359,46 @@ body.modo-palco .conteudo{ padding-top:48px; }
   .capa-texto p{ font-size:.9rem; }
   .capa::after{ background:linear-gradient(180deg, rgba(12,8,5,.35) 0%, rgba(12,8,5,.9) 70%); }
 }
+
+/* ---------- página de importar cifra ---------- */
+.passo{
+  background:var(--fundo-card); border:1px solid var(--borda);
+  border-radius:var(--raio); padding:18px; margin-bottom:16px;
+}
+.passo h2{ font-size:1.08rem; margin:0 0 12px; display:flex; align-items:center; gap:9px; }
+.passo h3{ font-size:.95rem; margin:20px 0 6px; }
+.passo h3:first-of-type{ margin-top:4px; }
+.numero{
+  flex:none; width:25px; height:25px; border-radius:50%;
+  background:var(--destaque); color:#fff; font-size:.85rem;
+  display:grid; place-items:center;
+}
+.campos{ display:grid; grid-template-columns:repeat(auto-fit, minmax(190px,1fr)); gap:11px; }
+.campo{ display:flex; flex-direction:column; gap:4px; min-width:0; }
+.campo.largo{ grid-column:1/-1; }
+.campo.curto{ max-width:110px; }
+.campo > span{ font-size:.76rem; color:var(--texto-fraco); text-transform:uppercase; letter-spacing:.04em; }
+.campo input, .selecao.larga{
+  font:inherit; min-height:40px; padding:0 10px; width:100%;
+  border:1px solid var(--borda); border-radius:9px;
+  background:var(--fundo); color:var(--texto);
+}
+.campo input:focus, .selecao.larga:focus, .area:focus{ outline:2px solid var(--destaque); outline-offset:1px; }
+.selecao.larga{ font-family:var(--fonte); font-weight:400; color:var(--texto); }
+
+.area{
+  width:100%; min-height:260px; padding:12px;
+  border:1px solid var(--borda); border-radius:10px;
+  background:var(--fundo); color:var(--texto);
+  font-family:var(--fonte-cifra); font-size:13px; line-height:1.5;
+  white-space:pre; overflow-wrap:normal; overflow-x:auto; resize:vertical;
+}
+.area.saida{ min-height:210px; background:var(--fundo-suave); }
+.area.baixa{ min-height:130px; }
+.linha-botoes{ display:flex; flex-wrap:wrap; align-items:center; gap:9px; margin-top:10px; }
+.relatorio{ color:var(--texto-fraco); font-size:.85rem; }
+.previa{
+  border:1px dashed var(--borda); border-radius:10px;
+  padding:12px; padding-bottom:12px; max-height:420px; overflow:auto;
+  font-size:13px;
+}

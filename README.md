@@ -28,7 +28,13 @@ Para tirar o selo, apague a linha `"pendente": true` daquela música no
 
 ## Como adicionar uma música nova
 
-São **dois passos**.
+O jeito rápido é a página **Importar** (botão no topo do site): você cola a cifra
+copiada de qualquer lugar, ela arruma o texto (tira tabulações, espaços
+estranhos e linhas em branco a mais, separa acordes que vieram no meio da letra),
+mostra uma prévia com os desenhos dos acordes e entrega o arquivo pronto para
+copiar ou baixar. Nada do que você cola sai do seu navegador.
+
+Se preferir montar na mão, são **dois passos**.
 
 ### Passo 1 — criar o arquivo da cifra
 
@@ -156,12 +162,14 @@ capa.jpg         a foto da faixa de cima da página inicial
 index.html       página inicial: busca, categorias e favoritos
 cifra.html       página que mostra uma cifra
 acordes.html     dicionário de acordes
+importar.html    cola uma cifra e gera o arquivo pronto
 estilo.css       as cores e o visual (as cores ficam no topo do arquivo)
 acordes.js       entende, transpõe e desenha os acordes
 comum.js         tema, favoritos e leitura dos arquivos de música
 biblioteca.js    a busca e a lista da página inicial
 leitor.js        rolagem, tom, capotraste, afinador, modo celular
 dicionario.js    a página do dicionário de acordes
+importador.js    a limpeza e a formatação da cifra colada
 indice.json      a lista de todas as músicas
 MODELO.txt       modelo para copiar quando for criar uma cifra nova
 *.txt            uma cifra por arquivo

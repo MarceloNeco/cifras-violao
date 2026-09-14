@@ -86,8 +86,8 @@ function semCifraAinda(){
     Ela já está na sua lista, mas falta criar o arquivo <b>${escapar(arquivo)}</b>.
     <ol>
       <li>Use o botão <b>Procurar a cifra</b> aqui em cima e copie a cifra de onde você preferir.</li>
-      <li>No GitHub: <b>Add file → Create new file</b>, nome do arquivo <b>${escapar(arquivo)}</b>.</li>
-      <li>Copie o cabeçalho do <b>MODELO.txt</b>, cole a cifra embaixo e salve.</li>
+      <li>Cole na página <a href="importar.html">Importar cifra</a> — ela arruma o texto e monta o arquivo pronto.</li>
+      <li>No GitHub: <b>Add file → Create new file</b>, nome do arquivo <b>${escapar(arquivo)}</b>, e cole o que a página gerou.</li>
     </ol>
     Assim que o arquivo existir, esta página passa a mostrar a cifra com rolagem, tom e desenhos.
   </div>`;
