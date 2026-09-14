@@ -111,11 +111,11 @@ a{ color:inherit; text-decoration:none; }
 
 .contagem{ color:var(--texto-fraco); font-size:.87rem; margin:0 0 10px; }
 
-.lista{ display:grid; gap:10px; grid-template-columns:repeat(auto-fill, minmax(270px,1fr)); }
+.lista{ display:grid; gap:10px; grid-template-columns:repeat(auto-fill, minmax(min(270px,100%), 1fr)); }
 .cartao{
   display:flex; align-items:center; gap:12px;
   background:var(--fundo-card); border:1px solid var(--borda);
-  border-radius:var(--raio); padding:13px 14px;
+  border-radius:var(--raio); padding:13px 14px; min-width:0;
   transition:border-color .15s, transform .08s, box-shadow .15s;
 }
 .cartao:hover{ border-color:var(--destaque); box-shadow:var(--sombra); transform:translateY(-1px); }
@@ -253,7 +253,7 @@ body.modo-palco .conteudo{ padding-top:48px; }
   .topo-interno{ padding:8px 12px; gap:8px; }
   .marca span{ font-size:.95rem; }
   .conteudo{ padding:16px 12px 90px; }
-  .lista{ grid-template-columns:1fr; }
+  .lista{ grid-template-columns:minmax(0,1fr); }
   .painel{ top:53px; gap:7px 10px; }
   .cabecalho-musica h1{ font-size:1.3rem; }
 }
@@ -325,9 +325,37 @@ body.modo-palco .conteudo{ padding-top:48px; }
 .selo{
   flex:none; font-size:.68rem; text-transform:uppercase; letter-spacing:.04em;
   color:var(--texto-fraco); background:var(--fundo-suave);
-  border-radius:7px; padding:4px 7px; white-space:nowrap;
+  border-radius:7px; padding:3px 6px; white-space:nowrap;
 }
 .aviso-cifra{ text-align:left; max-width:560px; white-space:normal; font-family:var(--fonte); }
 .aviso-cifra ol{ margin:14px 0; padding-left:20px; }
 .aviso-cifra li{ margin-bottom:7px; }
 .aviso-cifra b{ color:var(--texto); font-family:var(--fonte-cifra); font-size:.92em; }
+
+/* ---------- imagem de capa da página inicial ---------- */
+.capa{
+  position:relative; display:flex; align-items:flex-end;
+  min-height:180px; margin:0 0 20px;
+  border-radius:16px; overflow:hidden;
+  background:linear-gradient(135deg, #472c1a, #190f08);
+  box-shadow:var(--sombra);
+}
+.capa img{
+  position:absolute; inset:0; width:100%; height:100%;
+  object-fit:cover; object-position:center 42%;
+}
+.capa::after{
+  content:''; position:absolute; inset:0;
+  background:linear-gradient(90deg, rgba(12,8,5,.93) 0%, rgba(12,8,5,.72) 42%, rgba(12,8,5,.22) 100%);
+}
+.capa-texto{ position:relative; z-index:1; padding:24px; max-width:620px; }
+.capa-texto h1{ margin:0 0 4px; font-size:1.9rem; letter-spacing:-.02em; color:#fff; }
+.capa-texto p{ margin:0; color:rgba(255,255,255,.8); }
+
+@media (max-width:640px){
+  .capa{ min-height:148px; border-radius:14px; }
+  .capa-texto{ padding:18px; }
+  .capa-texto h1{ font-size:1.45rem; }
+  .capa-texto p{ font-size:.9rem; }
+  .capa::after{ background:linear-gradient(180deg, rgba(12,8,5,.35) 0%, rgba(12,8,5,.9) 70%); }
+}

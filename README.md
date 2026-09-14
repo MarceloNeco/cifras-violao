@@ -152,6 +152,7 @@ Todos os arquivos ficam soltos na raiz do repositório, sem pasta nenhuma —
 assim nada quebra na hora de subir os arquivos pelo site do GitHub.
 
 ```
+capa.jpg         a foto da faixa de cima da página inicial
 index.html       página inicial: busca, categorias e favoritos
 cifra.html       página que mostra uma cifra
 acordes.html     dicionário de acordes
@@ -165,6 +166,15 @@ indice.json      a lista de todas as músicas
 MODELO.txt       modelo para copiar quando for criar uma cifra nova
 *.txt            uma cifra por arquivo
 ```
+
+---
+
+## Trocar a foto da capa
+
+A faixa de cima da página inicial usa o arquivo **`capa.jpg`**. Para trocar:
+suba outra imagem com esse mesmo nome (`capa.jpg`) e ela substitui a atual.
+Funciona melhor com fotos largas e escuras, a partir de 1200 pixels de largura.
+Se o arquivo não existir, a faixa continua funcionando, só com um fundo marrom.
 
 ---
 
