@@ -135,18 +135,19 @@ const ACORDES_ABERTOS = {
   'B:7':[-1,2,1,2,0,2]
 };
 
-/* formas moveis: o numero 0 e onde fica a pestana (casa da tonica) */
+/* formas moveis.  O numero 0 e a casa da tonica (onde vai a pestana).
+   Os outros numeros sao casas contadas a partir dela; null = corda abafada. */
 const FORMA_MI = { /* tonica na 6a corda */
   'maj':[0,2,2,1,0,0], 'm':[0,2,2,0,0,0], '7':[0,2,0,1,0,0], 'm7':[0,2,0,0,0,0],
   'maj7':[0,2,1,1,0,0], 'sus4':[0,2,2,2,0,0],
-  '6':[0,2,2,1,2,0], 'm6':[0,2,2,0,2,0], '9':[0,2,0,1,0,2],
+  '6':[0,null,2,1,2,null], 'm6':[0,2,2,0,2,0], '9':[0,2,0,1,0,2],
   'aug':[0,3,2,1,1,0]
 };
 const FORMA_LA = { /* tonica na 5a corda */
-  'maj':[-1,0,2,2,2,0], 'm':[-1,0,2,2,1,0], '7':[-1,0,2,0,2,0], 'm7':[-1,0,2,0,1,0],
-  'maj7':[-1,0,2,1,2,0], 'sus4':[-1,0,2,2,3,0], 'sus2':[-1,0,2,2,0,0],
-  '6':[-1,0,2,2,2,2], 'm6':[-1,0,2,2,1,2], '9':[-1,0,2,4,2,3],
-  'dim7':[-1,0,1,2,1,-1], 'm7b5':[-1,0,1,0,1,-1], 'aug':[-1,0,3,2,2,-1]
+  'maj':[null,0,2,2,2,0], 'm':[null,0,2,2,1,0], '7':[null,0,2,0,2,0], 'm7':[null,0,2,0,1,0],
+  'maj7':[null,0,2,1,2,0], 'sus4':[null,0,2,2,3,0], 'sus2':[null,0,2,2,0,0],
+  'm6':[null,0,2,2,1,2], '9':[null,0,-1,0,0,null],
+  'dim7':[null,0,1,2,1,null], 'm7b5':[null,0,1,0,1,null], 'aug':[null,0,3,2,2,null]
 };
 
 function posicaoDoAcorde(texto){
@@ -158,25 +159,73 @@ function posicaoDoAcorde(texto){
 
   const nomeCanonico = SUSTENIDOS[valor] + ':' + tipo;
   const nomeBemol    = BEMOIS[valor] + ':' + tipo;
-  if (ACORDES_ABERTOS[nomeCanonico]) return {casas:ACORDES_ABERTOS[nomeCanonico], base:1, pestana:0};
-  if (ACORDES_ABERTOS[nomeBemol])    return {casas:ACORDES_ABERTOS[nomeBemol],    base:1, pestana:0};
+  const aberto = ACORDES_ABERTOS[nomeCanonico] || ACORDES_ABERTOS[nomeBemol];
+  if (aberto) return montar(aberto, 1, 0, a.baixo);
 
-  /* forma movel: escolhe a que cai na casa mais baixa */
-  const casaMi = ((valor - 4) % 12 + 12) % 12 || 12;  // Mi = 4
-  const casaLa = ((valor - 9) % 12 + 12) % 12 || 12;  // La = 9
-  const usaLa = FORMA_LA[tipo] && (casaLa <= casaMi || !FORMA_MI[tipo]);
-  const forma = usaLa ? FORMA_LA[tipo] : FORMA_MI[tipo];
-  if (!forma) return null;
-  let casa = usaLa ? casaLa : casaMi;
-  if (tipo === 'dim7') { while (casa > 3) casa -= 3; }      // o diminuto se repete a cada 3 casas
-  if (tipo === 'aug')  { while (casa > 4) casa -= 4; }      // o aumentado, a cada 4
+  /* formas moveis: monta as duas (pestana na 6ª e na 5ª corda) e escolhe a melhor */
+  const opcoes = [];
+  [[FORMA_MI[tipo], 4], [FORMA_LA[tipo], 9]].forEach(([forma, cordaSolta])=>{
+    if (!forma) return;
+    let casa = ((valor - cordaSolta) % 12 + 12) % 12 || 12;
+    if (tipo === 'dim7') { while (casa > 3) casa -= 3; }   // o diminuto se repete a cada 3 casas
+    if (tipo === 'aug')  { while (casa > 4) casa -= 4; }   // o aumentado, a cada 4
+    const casas = forma.map(f => f === null ? -1 : f + casa);
+    const pestana = forma.filter(f => f === 0).length >= 2 ? casa : 0;
+    const presas = casas.filter(c => c > 0);
+    const menor = Math.min(...presas), maior = Math.max(...presas);
+    /* só é pestana de verdade se nada estiver preso antes dela */
+    const vale = pestana && casas.every(c => c <= 0 || c >= pestana) ? pestana : 0;
+    opcoes.push(montar(casas, maior > 5 ? menor : 1, vale, a.baixo));
+  });
+  if (!opcoes.length) return null;
 
-  const casas = forma.map(f => f < 0 ? -1 : f + casa);
-  /* quantas cordas fazem pestana na casa da tonica */
-  const pestana = forma.filter(f => f === 0).length >= 2 ? casa : 0;
-  const menor = Math.min(...casas.filter(c => c > 0));
-  const base = menor > 4 ? menor : 1;
-  return {casas, base, pestana};
+  /* prefere a que a mão alcança; em seguida, a que fica mais perto do começo do braço */
+  opcoes.sort((x, y)=> (daPraFazer(y) - daPraFazer(x)) || (maiorCasa(x) - maiorCasa(y)));
+  return opcoes[0];
+}
+
+/* toda nota presa tem que ter um dedo sobrando para ela */
+function daPraFazer(pos){
+  return pos.casas.every((c,i)=> c <= 0 || pos.dedos[i] > 0) ? 1 : 0;
+}
+function maiorCasa(pos){ return Math.max(...pos.casas); }
+
+/* junta tudo: baixo invertido (acordes com barra), dedilhado e base do desenho */
+function montar(casas, base, pestana, baixo){
+  const pos = {casas: casas.slice(), base, pestana};
+  if (baixo) porBaixoNoAcorde(pos, baixo);
+  pos.dedos = escolherDedos(pos.casas, pos.pestana);
+  return pos;
+}
+
+/* acordes tipo G/B, Dm/C: põe a nota do baixo na corda grave certa */
+function porBaixoNoAcorde(pos, baixo){
+  const alvo = VALOR_NOTA[baixo];
+  if (alvo === undefined) return;
+  const soltas = [4, 9];                       // Mi da 6ª corda, Lá da 5ª
+  for (let corda = 0; corda < 2; corda++){
+    const casa = ((alvo - soltas[corda]) % 12 + 12) % 12;
+    const serve = casa === 0 || (casa >= pos.base && casa <= pos.base + 4);
+    if (!serve) continue;
+    pos.casas[corda] = casa;
+    for (let antes = 0; antes < corda; antes++) pos.casas[antes] = -1;  // abafa o que for mais grave
+    return;
+  }
+}
+
+/* qual dedo em cada nota: 1 na pestana, e os outros da casa mais baixa para a mais alta */
+function escolherDedos(casas, pestana){
+  const dedos = casas.map(()=> 0);
+  let proximo = 1;
+  if (pestana){
+    casas.forEach((c,i)=>{ if (c === pestana) dedos[i] = 1; });
+    proximo = 2;
+  }
+  const restantes = [];
+  casas.forEach((c,i)=>{ if (c > 0 && !dedos[i]) restantes.push({i, c}); });
+  restantes.sort((a,b)=> a.c - b.c || a.i - b.i);
+  restantes.forEach(r=>{ if (proximo <= 4) dedos[r.i] = proximo++; });
+  return dedos;
 }
 
 /* desenha o diagrama em SVG */
@@ -184,8 +233,8 @@ function diagramaSVG(texto, tamanho){
   const pos = posicaoDoAcorde(texto);
   const L = tamanho || 78;
   const larg = L, alt = L * 1.35;
-  const mX = L*0.14, mY = L*0.30;
-  const areaL = larg - mX*2, areaA = alt - mY - L*0.10;
+  const mX = L*0.20, mY = L*0.30;                 // espaço à esquerda p/ o número da casa
+  const areaL = larg - mX - L*0.09, areaA = alt - mY - L*0.10;
   const passoC = areaL / 5, passoF = areaA / 5;
 
   if (!pos){
@@ -197,10 +246,13 @@ function diagramaSVG(texto, tamanho){
   let s = `<svg viewBox="0 0 ${larg} ${alt}" class="diagrama" role="img" aria-label="Posição de ${texto}">`;
   s += `<text x="${larg/2}" y="${L*0.15}" text-anchor="middle" class="dg-nome">${texto}</text>`;
 
-  /* pestana */
+  /* pestana (a barra que o dedo indicador faz) */
+  let xPestana = null;
   if (pos.pestana){
     const y = mY + (pos.pestana - pos.base + 0.5) * passoF;
-    s += `<rect x="${mX-3}" y="${y-passoF*0.20}" width="${areaL+6}" height="${passoF*0.40}" rx="${passoF*0.2}" class="dg-pestana"/>`;
+    const primeira = pos.casas.findIndex(c => c === pos.pestana);
+    xPestana = {x: mX + primeira*passoC, y};
+    s += `<rect x="${mX-3.5}" y="${y-passoF*0.26}" width="${areaL+7}" height="${passoF*0.52}" rx="${passoF*0.26}" class="dg-pestana"/>`;
   }
   /* cordas */
   for (let c=0;c<6;c++){
@@ -215,7 +267,7 @@ function diagramaSVG(texto, tamanho){
   }
   /* numero da casa quando o desenho nao comeca no inicio do braco */
   if (pos.base > 1){
-    s += `<text x="${mX-5}" y="${mY+passoF*0.72}" text-anchor="end" class="dg-casa">${pos.base}</text>`;
+    s += `<text x="${mX-4}" y="${mY+passoF*0.74}" text-anchor="end" class="dg-casa">${pos.base}ª</text>`;
   }
   /* bolinhas, X e O */
   pos.casas.forEach((casa, i) => {
@@ -225,10 +277,16 @@ function diagramaSVG(texto, tamanho){
     } else if (casa === 0){
       s += `<circle cx="${x}" cy="${mY-7}" r="3.2" class="dg-solta"/>`;
     } else {
+      if (pos.pestana && casa === pos.pestana) return;   // essa nota já está dentro da barra
       const y = mY + (casa - pos.base + 0.5) * passoF;
-      s += `<circle cx="${x}" cy="${y}" r="${passoF*0.33}" class="dg-dedo"/>`;
+      s += `<circle cx="${x}" cy="${y}" r="${passoF*0.36}" class="dg-dedo"/>`;
+      const dedo = pos.dedos && pos.dedos[i];
+      if (dedo) s += `<text x="${x}" y="${y + passoF*0.21}" text-anchor="middle" class="dg-numero">${dedo}</text>`;
     }
   });
+  /* o 1 do indicador em cima da barra */
+  if (xPestana)
+    s += `<text x="${xPestana.x}" y="${xPestana.y + passoF*0.21}" text-anchor="middle" class="dg-numero">1</text>`;
   return s + '</svg>';
 }
 
