@@ -136,3 +136,17 @@ function acordesDaMusica(linhas, semitons, usarBemol){
   });
   return vistos;
 }
+
+/* ---------- links para ouvir / procurar a música ---------- */
+function buscaDaMusica(m){
+  const artista = /^dom[ií]nio p[uú]blico/i.test(m.artista || '') ? '' : (m.artista || '');
+  return (m.titulo + ' ' + artista).trim();
+}
+function linksDaMusica(m){
+  const q = encodeURIComponent(buscaDaMusica(m));
+  return {
+    spotify: 'https://open.spotify.com/search/' + q,
+    youtube: 'https://www.youtube.com/results?search_query=' + q,
+    cifra:   'https://www.google.com/search?q=' + encodeURIComponent('cifra ' + buscaDaMusica(m))
+  };
+}

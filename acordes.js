@@ -151,19 +151,25 @@ const FORMA_LA = { /* tonica na 5a corda */
 };
 
 function posicaoDoAcorde(texto){
+  const lista = opcoesDoAcorde(texto);
+  return lista.length ? lista[0] : null;
+}
+
+/* devolve as posições possíveis, da melhor para a pior */
+function opcoesDoAcorde(texto){
   const a = lerAcorde(texto);
-  if (!a) return null;
+  if (!a) return [];
   const tipo = normalizarSufixo(a.sufixo);
   const valor = VALOR_NOTA[a.nota];
-  if (valor === undefined) return null;
+  if (valor === undefined) return [];
 
   const nomeCanonico = SUSTENIDOS[valor] + ':' + tipo;
   const nomeBemol    = BEMOIS[valor] + ':' + tipo;
   const aberto = ACORDES_ABERTOS[nomeCanonico] || ACORDES_ABERTOS[nomeBemol];
-  if (aberto) return montar(aberto, 1, 0, a.baixo);
 
-  /* formas moveis: monta as duas (pestana na 6ª e na 5ª corda) e escolhe a melhor */
+  /* a posição aberta (quando existe) vem primeiro; depois as formas com pestana */
   const opcoes = [];
+  if (aberto) opcoes.push(montar(aberto, 1, 0, a.baixo));
   [[FORMA_MI[tipo], 4], [FORMA_LA[tipo], 9]].forEach(([forma, cordaSolta])=>{
     if (!forma) return;
     let casa = ((valor - cordaSolta) % 12 + 12) % 12 || 12;
@@ -177,11 +183,26 @@ function posicaoDoAcorde(texto){
     const vale = pestana && casas.every(c => c <= 0 || c >= pestana) ? pestana : 0;
     opcoes.push(montar(casas, maior > 5 ? menor : 1, vale, a.baixo));
   });
-  if (!opcoes.length) return null;
-
   /* prefere a que a mão alcança; em seguida, a que fica mais perto do começo do braço */
-  opcoes.sort((x, y)=> (daPraFazer(y) - daPraFazer(x)) || (maiorCasa(x) - maiorCasa(y)));
-  return opcoes[0];
+  const perto = opcoes.filter(p => maiorCasa(p) <= 12);
+  const boas = (perto.length ? perto : opcoes).filter(daPraFazer);
+  const usar = boas.length ? boas : (perto.length ? perto : opcoes);
+  usar.sort((x, y)=> maiorCasa(x) - maiorCasa(y));
+  if (aberto && usar.includes(opcoes[0])){        // a aberta sempre encabeça a lista
+    const i = usar.indexOf(opcoes[0]);
+    usar.splice(i, 1); usar.unshift(opcoes[0]);
+  }
+  return semRepetir(usar);
+}
+
+function semRepetir(lista){
+  const vistas = new Set(), saida = [];
+  lista.forEach(p=>{
+    const chave = p.casas.join(',');
+    if (vistas.has(chave)) return;
+    vistas.add(chave); saida.push(p);
+  });
+  return saida;
 }
 
 /* toda nota presa tem que ter um dedo sobrando para ela */
@@ -229,11 +250,12 @@ function escolherDedos(casas, pestana){
 }
 
 /* desenha o diagrama em SVG */
-function diagramaSVG(texto, tamanho){
-  const pos = posicaoDoAcorde(texto);
+function diagramaSVG(texto, tamanho, posicaoEscolhida){
+  const pos = posicaoEscolhida || posicaoDoAcorde(texto);
   const L = tamanho || 78;
-  const larg = L, alt = L * 1.35;
-  const mX = L*0.20, mY = L*0.30;                 // espaço à esquerda p/ o número da casa
+  const larg = L, alt = L * 1.46;
+  const temCasa = pos && pos.base > 1;
+  const mX = L * (temCasa ? 0.26 : 0.13), mY = L*0.40;   // esquerda: nº da casa / topo: nome e x-o
   const areaL = larg - mX - L*0.09, areaA = alt - mY - L*0.10;
   const passoC = areaL / 5, passoF = areaA / 5;
 
@@ -244,7 +266,7 @@ function diagramaSVG(texto, tamanho){
   }
 
   let s = `<svg viewBox="0 0 ${larg} ${alt}" class="diagrama" role="img" aria-label="Posição de ${texto}">`;
-  s += `<text x="${larg/2}" y="${L*0.15}" text-anchor="middle" class="dg-nome">${texto}</text>`;
+  s += `<text x="${larg/2}" y="${L*0.135}" text-anchor="middle" class="dg-nome">${texto}</text>`;
 
   /* pestana (a barra que o dedo indicador faz) */
   let xPestana = null;
@@ -267,15 +289,15 @@ function diagramaSVG(texto, tamanho){
   }
   /* numero da casa quando o desenho nao comeca no inicio do braco */
   if (pos.base > 1){
-    s += `<text x="${mX-4}" y="${mY+passoF*0.74}" text-anchor="end" class="dg-casa">${pos.base}ª</text>`;
+    s += `<text x="${mX-L*0.075}" y="${mY+passoF*0.72}" text-anchor="end" class="dg-casa">${pos.base}ª</text>`;
   }
   /* bolinhas, X e O */
   pos.casas.forEach((casa, i) => {
     const x = mX + i*passoC;
     if (casa < 0){
-      s += `<text x="${x}" y="${mY-4}" text-anchor="middle" class="dg-marca">✕</text>`;
+      s += `<text x="${x}" y="${mY-5}" text-anchor="middle" class="dg-marca">✕</text>`;
     } else if (casa === 0){
-      s += `<circle cx="${x}" cy="${mY-7}" r="3.2" class="dg-solta"/>`;
+      s += `<circle cx="${x}" cy="${mY-8}" r="3.2" class="dg-solta"/>`;
     } else {
       if (pos.pestana && casa === pos.pestana) return;   // essa nota já está dentro da barra
       const y = mY + (casa - pos.base + 0.5) * passoF;
@@ -294,7 +316,11 @@ function diagramaSVG(texto, tamanho){
 const CORDAS_MIDI = [40,45,50,55,59,64]; // Mi2 La2 Re3 Sol3 Si3 Mi4
 let _audio = null;
 function tocarAcorde(texto){
-  const pos = posicaoDoAcorde(texto);
+  tocarPosicao(posicaoDoAcorde(texto));
+}
+
+/* toca uma posição específica do braço */
+function tocarPosicao(pos){
   if (!pos) return;
   try{
     _audio = _audio || new (window.AudioContext || window.webkitAudioContext)();
@@ -334,4 +360,47 @@ function tocarNota(midi, segundos){
   vol.gain.exponentialRampToValueAtTime(0.0001, t + dur);
   osc.connect(vol).connect(_audio.destination);
   osc.start(t); osc.stop(t + dur);
+}
+
+/* ============================================================
+   Extras usados pelo dicionário de acordes
+   ============================================================ */
+
+/* de quais notas cada tipo de acorde é feito (em semitons a partir da tônica) */
+const INTERVALOS = {
+  'maj':[0,4,7], 'm':[0,3,7], '7':[0,4,7,10], 'm7':[0,3,7,10],
+  'maj7':[0,4,7,11], 'sus4':[0,5,7], 'sus2':[0,2,7], '6':[0,4,7,9],
+  'm6':[0,3,7,9], '9':[0,4,7,10,14], 'dim7':[0,3,6,9], 'm7b5':[0,3,6,10],
+  'aug':[0,4,8]
+};
+
+const NOME_NOTA_PT = {'C':'Dó','D':'Ré','E':'Mi','F':'Fá','G':'Sol','A':'Lá','B':'Si'};
+const NOME_TIPO_PT = {
+  'maj':'maior', 'm':'menor', '7':'com sétima', 'm7':'menor com sétima',
+  'maj7':'com sétima maior', 'sus4':'com quarta', 'sus2':'com segunda',
+  '6':'com sexta', 'm6':'menor com sexta', '9':'com nona',
+  'dim7':'diminuto', 'm7b5':'meio-diminuto', 'aug':'aumentado'
+};
+
+/* quais notas saem quando você toca o acorde */
+function notasDoAcorde(texto){
+  const a = lerAcorde(texto);
+  if (!a) return [];
+  const base = VALOR_NOTA[a.nota];
+  const passos = INTERVALOS[normalizarSufixo(a.sufixo)];
+  if (base === undefined || !passos) return [];
+  const bemol = a.nota.includes('b');
+  const notas = passos.map(p => (bemol ? BEMOIS : SUSTENIDOS)[(base + p) % 12]);
+  if (a.baixo && !notas.includes(a.baixo)) notas.unshift(a.baixo + ' (baixo)');
+  return notas;
+}
+
+/* "Am7" vira "Lá menor com sétima" */
+function nomePorExtenso(texto){
+  const a = lerAcorde(texto);
+  if (!a) return texto;
+  const acidente = a.nota[1] === '#' ? ' sustenido' : a.nota[1] === 'b' ? ' bemol' : '';
+  const tipo = NOME_TIPO_PT[normalizarSufixo(a.sufixo)] || '';
+  const baixo = a.baixo ? ' com baixo em ' + (NOME_NOTA_PT[a.baixo[0]] || a.baixo) : '';
+  return ((NOME_NOTA_PT[a.nota[0]] || a.nota) + acidente + ' ' + tipo + baixo).trim();
 }

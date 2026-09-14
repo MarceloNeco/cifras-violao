@@ -46,5 +46,432 @@
     "tom": "G",
     "categoria": "Seresta",
     "arquivo": "luar-do-sertao.txt"
+  },
+  {
+    "id": "pedra-flor-e-espinho",
+    "titulo": "Pedra, Flor e Espinho",
+    "artista": "Barão Vermelho",
+    "categoria": "Rock nacional",
+    "pendente": true
+  },
+  {
+    "id": "por-voce",
+    "titulo": "Por Você",
+    "artista": "Barão Vermelho",
+    "categoria": "Rock nacional",
+    "pendente": true
+  },
+  {
+    "id": "primeiros-erros-chove",
+    "titulo": "Primeiros Erros (Chove)",
+    "artista": "Capital Inicial",
+    "categoria": "Rock nacional",
+    "pendente": true
+  },
+  {
+    "id": "malandragem",
+    "titulo": "Malandragem",
+    "artista": "Cássia Eller",
+    "categoria": "Rock nacional",
+    "pendente": true
+  },
+  {
+    "id": "segredos",
+    "titulo": "Segredos",
+    "artista": "Frejat",
+    "categoria": "Rock nacional",
+    "pendente": true
+  },
+  {
+    "id": "teorema",
+    "titulo": "Teorema",
+    "artista": "Ira!",
+    "categoria": "Rock nacional",
+    "pendente": true
+  },
+  {
+    "id": "nucleo-base",
+    "titulo": "Núcleo Base",
+    "artista": "Ira!",
+    "categoria": "Rock nacional",
+    "pendente": true
+  },
+  {
+    "id": "eduardo-e-monica",
+    "titulo": "Eduardo e Mônica",
+    "artista": "Legião Urbana",
+    "categoria": "Rock nacional",
+    "pendente": true
+  },
+  {
+    "id": "faroeste-caboclo",
+    "titulo": "Faroeste Caboclo",
+    "artista": "Legião Urbana",
+    "categoria": "Rock nacional",
+    "pendente": true
+  },
+  {
+    "id": "quando-o-sol-bater-na-janela-do-teu-quarto",
+    "titulo": "Quando o Sol Bater na Janela do Teu Quarto",
+    "artista": "Legião Urbana",
+    "categoria": "Rock nacional",
+    "pendente": true
+  },
+  {
+    "id": "quase-sem-querer",
+    "titulo": "Quase Sem Querer",
+    "artista": "Legião Urbana",
+    "categoria": "Rock nacional",
+    "pendente": true
+  },
+  {
+    "id": "sera",
+    "titulo": "Será",
+    "artista": "Legião Urbana",
+    "categoria": "Rock nacional",
+    "pendente": true
+  },
+  {
+    "id": "serenissima",
+    "titulo": "Sereníssima",
+    "artista": "Legião Urbana",
+    "categoria": "Rock nacional",
+    "pendente": true
+  },
+  {
+    "id": "o-teatro-dos-vampiros",
+    "titulo": "O Teatro dos Vampiros",
+    "artista": "Legião Urbana",
+    "categoria": "Rock nacional",
+    "pendente": true
+  },
+  {
+    "id": "daniel-na-cova-dos-leoes",
+    "titulo": "Daniel na Cova dos Leões",
+    "artista": "Legião Urbana",
+    "categoria": "Rock nacional",
+    "pendente": true
+  },
+  {
+    "id": "me-chama",
+    "titulo": "Me Chama",
+    "artista": "Lobão",
+    "categoria": "Rock nacional",
+    "pendente": true
+  },
+  {
+    "id": "por-onde-andei",
+    "titulo": "Por Onde Andei",
+    "artista": "Nando Reis",
+    "categoria": "Rock nacional",
+    "pendente": true
+  },
+  {
+    "id": "me-diga",
+    "titulo": "Me Diga",
+    "artista": "Nando Reis",
+    "categoria": "Rock nacional",
+    "pendente": true
+  },
+  {
+    "id": "romance-ideal",
+    "titulo": "Romance Ideal",
+    "artista": "Os Paralamas do Sucesso",
+    "categoria": "Rock nacional",
+    "pendente": true
+  },
+  {
+    "id": "lanterna-dos-afogados",
+    "titulo": "Lanterna dos Afogados",
+    "artista": "Os Paralamas do Sucesso",
+    "categoria": "Rock nacional",
+    "pendente": true
+  },
+  {
+    "id": "meu-erro",
+    "titulo": "Meu Erro",
+    "artista": "Os Paralamas do Sucesso",
+    "categoria": "Rock nacional",
+    "pendente": true
+  },
+  {
+    "id": "ate-quando-esperar",
+    "titulo": "Até Quando Esperar",
+    "artista": "Plebe Rude",
+    "categoria": "Rock nacional",
+    "pendente": true
+  },
+  {
+    "id": "eu-tambem-vou-reclamar",
+    "titulo": "Eu Também Vou Reclamar",
+    "artista": "Raul Seixas",
+    "categoria": "Rock nacional",
+    "pendente": true
+  },
+  {
+    "id": "flores",
+    "titulo": "Flores",
+    "artista": "Titãs",
+    "categoria": "Rock nacional",
+    "pendente": true
+  },
+  {
+    "id": "pra-dizer-adeus",
+    "titulo": "Pra Dizer Adeus",
+    "artista": "Titãs",
+    "categoria": "Rock nacional",
+    "pendente": true
+  },
+  {
+    "id": "eu-tive-um-sonho",
+    "titulo": "Eu Tive um Sonho",
+    "artista": "Kid Abelha",
+    "categoria": "Pop rock nacional",
+    "pendente": true
+  },
+  {
+    "id": "nada-por-mim",
+    "titulo": "Nada por Mim",
+    "artista": "Kid Abelha",
+    "categoria": "Pop rock nacional",
+    "pendente": true
+  },
+  {
+    "id": "garotos-ii-o-outro-lado",
+    "titulo": "Garotos II (O Outro Lado)",
+    "artista": "Leoni",
+    "categoria": "Pop rock nacional",
+    "pendente": true
+  },
+  {
+    "id": "apenas-mais-uma-de-amor",
+    "titulo": "Apenas Mais uma de Amor",
+    "artista": "Lulu Santos",
+    "categoria": "Pop rock nacional",
+    "pendente": true
+  },
+  {
+    "id": "toda-forma-de-amor",
+    "titulo": "Toda Forma de Amor",
+    "artista": "Lulu Santos",
+    "categoria": "Pop rock nacional",
+    "pendente": true
+  },
+  {
+    "id": "tempos-modernos",
+    "titulo": "Tempos Modernos",
+    "artista": "Lulu Santos",
+    "categoria": "Pop rock nacional",
+    "pendente": true
+  },
+  {
+    "id": "se",
+    "titulo": "Se...",
+    "artista": "Djavan",
+    "categoria": "MPB",
+    "pendente": true
+  },
+  {
+    "id": "na-estrada",
+    "titulo": "Na Estrada",
+    "artista": "Marisa Monte",
+    "categoria": "MPB",
+    "pendente": true
+  },
+  {
+    "id": "jesus-numa-moto",
+    "titulo": "Jesus Numa Moto",
+    "artista": "Sá, Rodrix & Guarabyra",
+    "categoria": "MPB",
+    "pendente": true
+  },
+  {
+    "id": "chao-de-giz",
+    "titulo": "Chão de Giz",
+    "artista": "Zé Ramalho",
+    "categoria": "MPB",
+    "pendente": true
+  },
+  {
+    "id": "garoto-de-aluguel-taxi-boy",
+    "titulo": "Garoto de Aluguel (Taxi Boy)",
+    "artista": "Zé Ramalho",
+    "categoria": "MPB",
+    "pendente": true
+  },
+  {
+    "id": "vida-vazia",
+    "titulo": "Vida Vazia",
+    "artista": "Bruno & Marrone",
+    "categoria": "Sertanejo",
+    "pendente": true
+  },
+  {
+    "id": "por-um-minuto",
+    "titulo": "Por um Minuto",
+    "artista": "Bruno & Marrone",
+    "categoria": "Sertanejo",
+    "pendente": true
+  },
+  {
+    "id": "alo",
+    "titulo": "Alô",
+    "artista": "Chitãozinho & Xororó",
+    "categoria": "Sertanejo",
+    "pendente": true
+  },
+  {
+    "id": "evidencias",
+    "titulo": "Evidências",
+    "artista": "Chitãozinho & Xororó",
+    "categoria": "Sertanejo",
+    "pendente": true
+  },
+  {
+    "id": "quer-namorar-comigo",
+    "titulo": "Quer Namorar Comigo?",
+    "artista": "Edson & Hudson",
+    "categoria": "Sertanejo",
+    "pendente": true
+  },
+  {
+    "id": "deixa-eu-te-amar",
+    "titulo": "Deixa Eu Te Amar",
+    "artista": "Edson & Hudson",
+    "categoria": "Sertanejo",
+    "pendente": true
+  },
+  {
+    "id": "bom-rapaz",
+    "titulo": "Bom Rapaz",
+    "artista": "Fernando & Sorocaba",
+    "categoria": "Sertanejo",
+    "pendente": true
+  },
+  {
+    "id": "poeira-da-estrada",
+    "titulo": "Poeira da Estrada",
+    "artista": "João Paulo & Daniel",
+    "categoria": "Sertanejo",
+    "pendente": true
+  },
+  {
+    "id": "propaganda",
+    "titulo": "Propaganda",
+    "artista": "Jorge & Mateus",
+    "categoria": "Sertanejo",
+    "pendente": true
+  },
+  {
+    "id": "medida-certa",
+    "titulo": "Medida Certa",
+    "artista": "Jorge & Mateus",
+    "categoria": "Sertanejo",
+    "pendente": true
+  },
+  {
+    "id": "eu-ligo-pra-voce",
+    "titulo": "Eu Ligo pra Você",
+    "artista": "Zé Neto & Cristiano",
+    "categoria": "Sertanejo",
+    "pendente": true
+  },
+  {
+    "id": "fim-de-festa",
+    "titulo": "Fim de Festa",
+    "artista": "Zezé Di Camargo & Luciano",
+    "categoria": "Sertanejo",
+    "pendente": true
+  },
+  {
+    "id": "mmm-mmm-mmm-mmm",
+    "titulo": "Mmm Mmm Mmm Mmm",
+    "artista": "Crash Test Dummies",
+    "categoria": "Rock internacional",
+    "pendente": true
+  },
+  {
+    "id": "lonely-stranger",
+    "titulo": "Lonely Stranger",
+    "artista": "Eric Clapton",
+    "categoria": "Rock internacional",
+    "pendente": true
+  },
+  {
+    "id": "i-want-to-know-what-love-is",
+    "titulo": "I Want to Know What Love Is",
+    "artista": "Foreigner",
+    "categoria": "Rock internacional",
+    "pendente": true
+  },
+  {
+    "id": "used-to-love-her",
+    "titulo": "Used to Love Her",
+    "artista": "Guns N' Roses",
+    "categoria": "Rock internacional",
+    "pendente": true
+  },
+  {
+    "id": "silent-lucidity",
+    "titulo": "Silent Lucidity",
+    "artista": "Queensrÿche",
+    "categoria": "Rock internacional",
+    "pendente": true
+  },
+  {
+    "id": "angie",
+    "titulo": "Angie",
+    "artista": "The Rolling Stones",
+    "categoria": "Rock internacional",
+    "pendente": true
+  },
+  {
+    "id": "cats-in-the-cradle",
+    "titulo": "Cats in the Cradle",
+    "artista": "Ugly Kid Joe",
+    "categoria": "Rock internacional",
+    "pendente": true
+  },
+  {
+    "id": "seven-days-in-sunny-june",
+    "titulo": "Seven Days in Sunny June",
+    "artista": "Jamiroquai",
+    "categoria": "Pop internacional",
+    "pendente": true
+  },
+  {
+    "id": "human-nature",
+    "titulo": "Human Nature",
+    "artista": "Michael Jackson",
+    "categoria": "Pop internacional",
+    "pendente": true
+  },
+  {
+    "id": "man-in-the-mirror",
+    "titulo": "Man in the Mirror",
+    "artista": "Michael Jackson",
+    "categoria": "Pop internacional",
+    "pendente": true
+  },
+  {
+    "id": "i-just-can-t-stop-loving-you",
+    "titulo": "I Just Can't Stop Loving You",
+    "artista": "Michael Jackson",
+    "categoria": "Pop internacional",
+    "pendente": true
+  },
+  {
+    "id": "kids",
+    "titulo": "Kids",
+    "artista": "OneRepublic",
+    "categoria": "Pop internacional",
+    "pendente": true
+  },
+  {
+    "id": "stars",
+    "titulo": "Stars",
+    "artista": "Simply Red",
+    "categoria": "Pop internacional",
+    "pendente": true
   }
 ]

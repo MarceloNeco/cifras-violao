@@ -28,8 +28,14 @@ async function carregarTudo(){
     MUSICA = indice.find(m => m.id === ID);
     if (!MUSICA) throw new Error('Essa música não está no índice.');
 
-    const r = await fetch(MUSICA.arquivo || (MUSICA.id + '.txt'), {cache:'no-cache'});
-    if (!r.ok) throw new Error('Não achei o arquivo da cifra.');
+    document.title = MUSICA.titulo + ' — Cifras de Violão';
+    $('#titulo').textContent = MUSICA.titulo;
+    $('#nome-palco').textContent = MUSICA.titulo;
+    montarLinks();
+
+    const r = MUSICA.pendente ? null
+            : await fetch(MUSICA.arquivo || (MUSICA.id + '.txt'), {cache:'no-cache'});
+    if (!r || !r.ok){ semCifraAinda(); return; }
     const {dados, corpo} = lerArquivoDeMusica(await r.text());
 
     MUSICA = {...MUSICA, ...dados};
@@ -56,6 +62,35 @@ async function carregarTudo(){
 Se você abriu o arquivo com dois cliques no computador, o navegador bloqueia
 a leitura dos arquivos por segurança. Publicando no GitHub Pages funciona.</span>`;
   }
+}
+
+/* botões para ouvir a música e procurar a cifra */
+function montarLinks(){
+  const l = linksDaMusica(MUSICA);
+  $('#ouvir').innerHTML =
+    `<a class="botao" href="${l.spotify}" target="_blank" rel="noopener">
+       <span class="ponto verde"></span> Ouvir no Spotify</a>
+     <a class="botao" href="${l.youtube}" target="_blank" rel="noopener">
+       <span class="ponto vermelho"></span> Ver no YouTube</a>` +
+    (MUSICA.pendente ? `<a class="botao" href="${l.cifra}" target="_blank" rel="noopener">🔎 Procurar a cifra</a>` : '');
+}
+
+/* músicas que estão na lista mas ainda não têm o arquivo da cifra */
+function semCifraAinda(){
+  $('#meta').textContent = [MUSICA.artista, MUSICA.categoria].filter(Boolean).join(' · ');
+  $('#painel').hidden = true;
+  $('#diagramas').hidden = true;
+  const arquivo = (MUSICA.arquivo || MUSICA.id + '.txt');
+  $('#cifra').innerHTML = `<div class="vazio aviso-cifra">
+    <strong>Esta música ainda não tem cifra</strong>
+    Ela já está na sua lista, mas falta criar o arquivo <b>${escapar(arquivo)}</b>.
+    <ol>
+      <li>Use o botão <b>Procurar a cifra</b> aqui em cima e copie a cifra de onde você preferir.</li>
+      <li>No GitHub: <b>Add file → Create new file</b>, nome do arquivo <b>${escapar(arquivo)}</b>.</li>
+      <li>Copie o cabeçalho do <b>MODELO.txt</b>, cole a cifra embaixo e salve.</li>
+    </ol>
+    Assim que o arquivo existir, esta página passa a mostrar a cifra com rolagem, tom e desenhos.
+  </div>`;
 }
 
 /* ---------------- desenhar ---------------- */

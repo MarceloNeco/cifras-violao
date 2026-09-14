@@ -3,8 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Cifras de Violão</title>
-<meta name="description" content="Cifras de violão com rolagem automática, mudança de tom e posições dos acordes.">
+<title>Dicionário de acordes</title>
+<meta name="description" content="Consulte qualquer acorde de violão: posições no braço, dedos e som.">
 <meta name="theme-color" content="#a8501e">
 <link rel="stylesheet" href="estilo.css">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎸</text></svg>">
@@ -20,38 +20,52 @@
       <span>Cifras de Violão</span>
     </a>
     <div class="espaco"></div>
-    <a class="botao" href="acordes.html">Acordes</a>
+    <a class="botao ativo" href="acordes.html">Acordes</a>
     <button class="botao icone" data-botao-tema title="Mudar o tema">☾</button>
   </div>
 </header>
 
 <main class="conteudo">
   <div class="chamada">
-    <h1>Minhas cifras</h1>
-    <p>Busque pelo nome da música, pelo artista ou pelo trecho da letra.</p>
+    <h1>Dicionário de acordes</h1>
+    <p>Digite qualquer acorde para ver como se faz no braço do violão.</p>
   </div>
 
   <div class="caixa-busca">
     <svg class="lupa" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
       <circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/>
     </svg>
-    <input id="busca" type="search" placeholder="Buscar música, artista ou tom…"
-           autocomplete="off" aria-label="Buscar">
-    <button class="limpar" id="limpar" aria-label="Limpar busca">×</button>
+    <input id="entrada" type="search" placeholder="Am7, C7M, F#m, G/B, Eº…"
+           autocomplete="off" autocapitalize="off" spellcheck="false" aria-label="Acorde">
   </div>
 
-  <div class="filtros" id="filtros" role="group" aria-label="Filtrar por categoria"></div>
+  <div class="escolhas">
+    <div class="linha-escolha">
+      <span class="rotulo">Nota</span>
+      <div class="pilha" id="notas"></div>
+    </div>
+    <div class="linha-escolha">
+      <span class="rotulo">Tipo</span>
+      <div class="pilha" id="tipos"></div>
+    </div>
+  </div>
 
-  <p class="contagem" id="contagem"></p>
-  <div class="lista" id="lista"></div>
+  <section class="cartao-acorde" id="resultado" hidden></section>
+
+  <section class="campo">
+    <h2>Acordes do tom de <select id="tom-campo" class="selecao"></select></h2>
+    <p class="dica">São os acordes que costumam aparecer juntos numa música nesse tom.
+       Toque em qualquer um para ver as posições.</p>
+    <div class="diagramas" id="campo-harmonico"></div>
+  </section>
 </main>
 
 <footer class="rodape">
-  Feito para tocar violão. As cifras são de uso pessoal.
+  Toque em qualquer desenho para ouvir o acorde.
 </footer>
 
 <script src="acordes.js"></script>
 <script src="comum.js"></script>
-<script src="biblioteca.js"></script>
+<script src="dicionario.js"></script>
 </body>
 </html>

@@ -2,11 +2,27 @@
 
 Site de cifras com **rolagem automática**, **mudança de tom**, **capotraste**,
 **posições dos acordes no braço do violão**, **categorias**, **busca**,
-**favoritos**, **modo escuro**, **afinador** e **modo celular** para tocar
-com o aparelho apoiado na estante.
+**favoritos**, **modo escuro**, **afinador**, **dicionário de acordes** e
+**modo celular** para tocar com o aparelho apoiado na estante.
 
 É um site estático: não precisa de servidor, banco de dados nem programa
 nenhum instalado. Funciona no GitHub Pages de graça.
+
+---
+
+## As músicas que ainda não têm cifra
+
+O `indice.json` já vem com a lista de músicas que você quer tocar. As que ainda
+não têm o arquivo `.txt` aparecem com o selo **sem cifra** e ficam agrupadas no
+filtro **Sem cifra** da página inicial.
+
+Abrindo uma delas, a página mostra botões para ouvir no Spotify, ver no YouTube
+e procurar a cifra — e o passo a passo para criar o arquivo. Quando o `.txt`
+existir, a mesma página passa a mostrar a cifra normalmente. Não precisa mexer
+no `indice.json` de novo: a música já está lá.
+
+Para tirar o selo, apague a linha `"pendente": true` daquela música no
+`indice.json` (e a vírgula da linha de cima, se ela tiver virado a última).
 
 ---
 
@@ -92,6 +108,21 @@ Partes da música vão entre colchetes, sozinhas na linha ou antes dos acordes:
 
 ---
 
+## Dicionário de acordes
+
+A página `acordes.html` (botão **Acordes** no topo) mostra qualquer acorde sem
+precisar abrir música nenhuma:
+
+- digite `Am7`, `C7M`, `F#m`, `G/B`, `Eº`… ou escolha nota + tipo nos botões
+- aparecem até 3 posições no braço, com o número de cada dedo
+- o nome por extenso (*Lá menor com sétima*) e as notas que formam o acorde
+- **Acordes do tom de…** mostra os 7 acordes que costumam andar juntos em cada
+  tom — útil para saber o que esperar de uma música
+
+Tocar em qualquer desenho faz o acorde soar.
+
+---
+
 ## O que dá para fazer na página da cifra
 
 | Botão | O que faz |
@@ -105,6 +136,8 @@ Partes da música vão entre colchetes, sozinhas na linha ou antes dos acordes:
 | **🎵** | afinador: toca a nota de cada corda |
 | **☆** | guarda a música nos favoritos |
 | **☾** | modo escuro |
+| **Ouvir no Spotify** | abre a busca da música no Spotify |
+| **Ver no YouTube** | abre a busca da música no YouTube |
 
 Tocando em qualquer acorde (no texto ou no desenho) você **ouve** como ele soa.
 
@@ -121,11 +154,13 @@ assim nada quebra na hora de subir os arquivos pelo site do GitHub.
 ```
 index.html       página inicial: busca, categorias e favoritos
 cifra.html       página que mostra uma cifra
+acordes.html     dicionário de acordes
 estilo.css       as cores e o visual (as cores ficam no topo do arquivo)
 acordes.js       entende, transpõe e desenha os acordes
 comum.js         tema, favoritos e leitura dos arquivos de música
 biblioteca.js    a busca e a lista da página inicial
 leitor.js        rolagem, tom, capotraste, afinador, modo celular
+dicionario.js    a página do dicionário de acordes
 indice.json      a lista de todas as músicas
 MODELO.txt       modelo para copiar quando for criar uma cifra nova
 *.txt            uma cifra por arquivo

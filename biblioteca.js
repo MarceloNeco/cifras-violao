@@ -31,7 +31,7 @@ carregarIndice()
   });
 
 function montarFiltros(){
-  const categorias = ['Todas', 'Favoritas',
+  const categorias = ['Todas', 'Prontas', 'Sem cifra', 'Favoritas',
     ...[...new Set(TODAS.map(m => m.categoria).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'pt'))];
   elFiltros.innerHTML = categorias.map(c =>
     `<button class="etiqueta" data-cat="${escapar(c)}" aria-pressed="${c===categoriaAtual}">${escapar(c)}</button>`
@@ -51,7 +51,10 @@ function filtrar(){
   const alvo = semAcento(termo).trim();
   return TODAS.filter(m=>{
     if (categoriaAtual === 'Favoritas' && !favoritos.has(m.id)) return false;
-    if (categoriaAtual !== 'Todas' && categoriaAtual !== 'Favoritas' && m.categoria !== categoriaAtual) return false;
+    if (categoriaAtual === 'Prontas' && m.pendente) return false;
+    if (categoriaAtual === 'Sem cifra' && !m.pendente) return false;
+    const especiais = ['Todas','Prontas','Sem cifra','Favoritas'];
+    if (!especiais.includes(categoriaAtual) && m.categoria !== categoriaAtual) return false;
     if (!alvo) return true;
     return alvo.split(/\s+/).every(pedaco => m._busca.includes(pedaco));
   }).sort((a,b)=> (a.titulo||'').localeCompare(b.titulo||'', 'pt'));
@@ -74,7 +77,7 @@ function desenhar(){
   }
 
   elLista.innerHTML = achadas.map(m => `
-    <div class="cartao">
+    <div class="cartao${m.pendente ? ' pendente' : ''}">
       <button class="estrela" data-id="${escapar(m.id)}"
               aria-pressed="${favoritos.has(m.id)}"
               aria-label="Favoritar ${escapar(m.titulo)}">${favoritos.has(m.id) ? '★' : '☆'}</button>
@@ -82,7 +85,8 @@ function desenhar(){
         <div class="titulo">${escapar(m.titulo)}</div>
         <div class="artista">${escapar(m.artista || '')}${m.categoria ? ' · ' + escapar(m.categoria) : ''}</div>
       </a>
-      ${m.tom ? `<span class="tom">${escapar(m.tom)}</span>` : ''}
+      ${m.pendente ? '<span class="selo">sem cifra</span>'
+                   : (m.tom ? `<span class="tom">${escapar(m.tom)}</span>` : '')}
     </div>`).join('');
 
   elLista.querySelectorAll('.estrela').forEach(b=>{
