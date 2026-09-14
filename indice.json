@@ -318,7 +318,8 @@
     "titulo": "Alô",
     "artista": "Chitãozinho & Xororó",
     "categoria": "Sertanejo",
-    "pendente": true
+    "tom": "Bb",
+    "arquivo": "alo.txt"
   },
   {
     "id": "evidencias",
