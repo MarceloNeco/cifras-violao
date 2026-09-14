@@ -1,0 +1,38 @@
+titulo: Luar do Sertão
+artista: Catulo da Paixão Cearense e João Pernambuco (domínio público)
+tom: G
+capo: 2
+categoria: Seresta
+ritmo: Toada
+---
+[Intro] G  D7  G
+
+[Refrão]
+ G                        D7
+Ó, que saudade do luar da minha terra
+ D7                                   G
+Lá na serra branquejando folhas secas pelo chão
+ G7               C                 G
+Este luar cá da cidade tão escuro
+ G          D7                        G
+Não tem aquela saudade do luar lá do sertão
+
+ G                     D7
+Não há, ó gente, ó não
+ D7                    G
+Luar como este do sertão
+ G                     D7
+Não há, ó gente, ó não
+ D7                    G
+Luar como este do sertão
+
+ G                         D7
+Se a lua nasce por detrás da verde mata
+ D7                                  G
+Mais parece um sol de prata prateando a solidão
+ G7                C                G
+E a gente pega na viola que ponteia
+ G          D7                        G
+E a canção é a lua cheia a nos zombar coração
+
+[Final] G  C  G  D7  G

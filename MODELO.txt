@@ -1,0 +1,47 @@
+titulo: Nome da música aqui
+artista: Nome do artista
+tom: G
+capo: 0
+categoria: MPB
+ritmo: Balada
+---
+[Intro] G  D  Em  C
+
+ G                D
+Aqui vai a primeira linha da letra
+ Em               C
+E os acordes ficam sempre na linha de cima
+
+[Refrão]
+ G          D
+Escreva assim mesmo, com espaços
+ Em             C
+para o acorde cair em cima da sílaba certa
+
+[Final] G  C  G
+
+
+=====================================================================
+COMO USAR ESTE MODELO
+
+1. Copie este arquivo e dê a ele um nome curto, sem acento e sem
+   espaço, terminando em .txt  — por exemplo:  minha-musica.txt
+
+2. Preencha o cabeçalho (a parte antes da linha com três tracinhos):
+     titulo    - o nome que vai aparecer no site
+     artista   - quem canta
+     tom       - o tom original da música (G, C, Am, D...)
+     capo      - a casa do capotraste; deixe 0 se não usar
+     categoria - vira um filtro na página inicial (MPB, Sertanejo,
+                 Gospel, Rock, Forró, Infantil...)
+     ritmo     - opcional, só informativo
+
+3. Depois da linha com --- vem a cifra: uma linha de acordes,
+   embaixo a linha da letra, e assim por diante.
+
+4. Partes da música entram entre colchetes, sozinhas na linha ou
+   antes dos acordes:   [Intro]   [Refrão]   [Solo]   [Final]
+
+5. Por último, abra o arquivo indice.json e acrescente a
+   música lá, seguindo o mesmo formato das outras.
+=====================================================================

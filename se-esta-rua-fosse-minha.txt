@@ -1,0 +1,36 @@
+titulo: Se Esta Rua Fosse Minha
+artista: Domínio público (folclore brasileiro)
+tom: C
+categoria: Folclore
+ritmo: Valsa
+---
+[Intro] C  Am  Dm  G7  C
+
+ C                 G7
+Se esta rua, se esta rua fosse minha
+ G7                    C
+Eu mandava, eu mandava ladrilhar
+ C            C7         F
+Com pedrinhas, com pedrinhas de brilhante
+ C          G7          C
+Para o meu, para o meu amor passar
+
+ Am                 E7
+Nesta rua, nesta rua tem um bosque
+ E7                    Am
+Que se chama, que se chama solidão
+ Dm                     G7
+Dentro dele, dentro dele mora um anjo
+ C           G7          C
+Que roubou, que roubou meu coração
+
+ C                 G7
+Se eu roubei, se eu roubei teu coração
+ G7                      C
+É porque, é porque te quero bem
+ C            C7          F
+Se roubaste, se roubaste o meu também
+ C          G7          C
+É porque, é porque eu te amo bem
+
+[Final] C  Am  Dm  G7  C

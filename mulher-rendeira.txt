@@ -1,0 +1,37 @@
+titulo: Mulher Rendeira
+artista: Domínio público (folclore nordestino)
+tom: D
+categoria: Folclore
+ritmo: Xaxado
+---
+[Intro] D  A7  D
+
+[Refrão]
+ D                A7
+Olê, mulher rendeira
+                  D
+Olê, mulher rendá
+ D                    A7
+Tu me ensina a fazer renda
+                     D
+Que eu te ensino a namorar
+
+ D                 A7
+Olê, mulher rendeira
+                  D
+Olê, mulher rendá
+ D                   A7
+Tu me ensina a fazer renda
+                     D
+Que eu te ensino a namorar
+
+ D               A7
+Lampião desceu a serra
+                   D
+Deu um beijo na donzela
+ D                 A7
+Ela pediu pra ficar
+                    D
+E ele foi embora com ela
+
+[Final] D  G  D  A7  D

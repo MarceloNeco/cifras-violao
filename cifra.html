@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="pt-BR" data-tema="claro">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Cifra</title>
+<meta name="theme-color" content="#a8501e">
+<link rel="stylesheet" href="estilo.css">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎸</text></svg>">
+</head>
+<body>
+
+<header class="topo">
+  <div class="topo-interno">
+    <a class="marca" href="index.html">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round">
+        <path d="m14 6-8 8M9 3 6 6M4 9l3-3"/><path d="M11.5 12.5 19 5M17 3l4 4M6.5 21a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7Z"/>
+      </svg>
+      <span>Voltar</span>
+    </a>
+    <div class="espaco"></div>
+    <button class="botao icone" id="btn-favorito" aria-pressed="false" title="Favoritar">☆</button>
+    <button class="botao icone" id="btn-afinador" title="Afinador">🎵</button>
+    <button class="botao icone" data-botao-tema title="Mudar o tema">☾</button>
+  </div>
+</header>
+
+<!-- faixa fina que aparece só no modo celular -->
+<div class="faixa-palco" id="faixa-palco">
+  <span class="nome" id="nome-palco"></span>
+  <span class="espaco"></span>
+  <span class="valor" id="tom-palco"></span>
+  <button class="botao icone" id="sair-palco" title="Sair do modo celular">✕</button>
+</div>
+
+<main class="conteudo">
+  <div class="cabecalho-musica">
+    <h1 id="titulo">Carregando…</h1>
+    <div class="meta" id="meta"></div>
+  </div>
+
+  <div class="painel" id="painel">
+    <div class="grupo">
+      <span class="rotulo some-no-palco">Tom</span>
+      <button class="botao icone" id="tom-menos" title="Abaixar meio tom">−</button>
+      <span class="valor" id="tom-atual">C</span>
+      <button class="botao icone" id="tom-mais" title="Subir meio tom">+</button>
+      <button class="botao icone some-no-palco" id="tom-zero" title="Voltar ao tom original">↺</button>
+    </div>
+
+    <div class="grupo some-no-palco">
+      <span class="rotulo">Capo</span>
+      <button class="botao icone" id="capo-menos" title="Menos uma casa">−</button>
+      <span class="valor" id="capo-atual">0</span>
+      <button class="botao icone" id="capo-mais" title="Mais uma casa">+</button>
+    </div>
+
+    <div class="grupo">
+      <button class="botao" id="btn-rolar" title="Rolagem automática (barra de espaço)">▶ Rolar</button>
+      <input class="velocidade" id="velocidade" type="range" min="1" max="30" value="8"
+             aria-label="Velocidade da rolagem">
+      <span class="valor" id="velocidade-valor">8</span>
+    </div>
+
+    <div class="grupo">
+      <span class="rotulo some-no-palco">Letra</span>
+      <button class="botao icone" id="fonte-menos" title="Diminuir a letra">A−</button>
+      <button class="botao icone" id="fonte-mais" title="Aumentar a letra">A+</button>
+      <button class="botao icone" id="btn-caber" title="Ajustar para caber na tela">⤢</button>
+    </div>
+
+    <div class="grupo some-no-palco">
+      <button class="botao" id="btn-palco" title="Tela cheia para tocar">📱 Modo celular</button>
+    </div>
+  </div>
+
+  <div class="diagramas" id="diagramas"></div>
+
+  <div class="cifra" id="cifra"></div>
+</main>
+
+<!-- afinador -->
+<div class="gaveta" id="afinador" aria-hidden="true">
+  <div class="gaveta-interna">
+    <h2>Afinador</h2>
+    <p>Toque numa corda para ouvir a nota certa e afinar de ouvido.
+       Da mais grossa para a mais fina.</p>
+    <div class="cordas" id="cordas"></div>
+    <div style="text-align:center;margin-top:12px">
+      <button class="botao" id="fechar-afinador">Fechar</button>
+    </div>
+  </div>
+</div>
+
+<footer class="rodape">
+  Espaço = rolar · setas ↑ ↓ = velocidade · + e − = tom
+</footer>
+
+<script src="acordes.js"></script>
+<script src="comum.js"></script>
+<script src="leitor.js"></script>
+</body>
+</html>

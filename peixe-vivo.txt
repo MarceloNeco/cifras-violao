@@ -1,0 +1,41 @@
+titulo: Peixe Vivo
+artista: Domínio público (folclore brasileiro)
+tom: G
+categoria: Folclore
+ritmo: Valsa
+---
+[Intro] G  D7  G
+
+ G                 D7
+Como pode um peixe vivo
+      D7           G
+Viver fora da água fria
+ G                 D7
+Como pode um peixe vivo
+      D7           G
+Viver fora da água fria
+
+[Refrão]
+    G            D7
+Como poderei viver
+    D7           G
+Como poderei viver
+      G        C          G
+Sem a tua, sem a tua
+      D7                 G
+Sem a tua companhia
+      G        C          G
+Sem a tua, sem a tua
+      D7                 G
+Sem a tua companhia
+
+ G                D7
+Os pastores desta aldeia
+      D7           G
+Já me fazem afrontas
+ G                 D7
+Por ver-me cantar loas
+      D7          G
+Vide flor, minha alma
+
+[Final] G  C  G  D7  G

@@ -1,0 +1,27 @@
+titulo: O Cravo e a Rosa
+artista: Domínio público (folclore brasileiro)
+tom: C
+categoria: Infantil
+ritmo: Valsa
+---
+[Intro] C  G7  C
+
+ C                    G7
+O cravo brigou com a rosa
+                      C
+Debaixo de uma sacada
+ C                  G7
+O cravo saiu ferido
+                    C
+E a rosa despedaçada
+
+ C                   G7
+O cravo ficou doente
+                    C
+A rosa foi visitar
+ C                   G7
+O cravo teve um desmaio
+                   C
+A rosa pôs-se a chorar
+
+[Final] C  F  C  G7  C

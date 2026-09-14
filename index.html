@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="pt-BR" data-tema="claro">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Cifras de Violão</title>
+<meta name="description" content="Cifras de violão com rolagem automática, mudança de tom e posições dos acordes.">
+<meta name="theme-color" content="#a8501e">
+<link rel="stylesheet" href="estilo.css">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎸</text></svg>">
+</head>
+<body>
+
+<header class="topo">
+  <div class="topo-interno">
+    <a class="marca" href="index.html">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round">
+        <path d="M11.5 12.5 19 5M17 3l4 4M6.5 21a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7Z"/>
+      </svg>
+      <span>Cifras de Violão</span>
+    </a>
+    <div class="espaco"></div>
+    <button class="botao icone" data-botao-tema title="Mudar o tema">☾</button>
+  </div>
+</header>
+
+<main class="conteudo">
+  <div class="chamada">
+    <h1>Minhas cifras</h1>
+    <p>Busque pelo nome da música, pelo artista ou pelo trecho da letra.</p>
+  </div>
+
+  <div class="caixa-busca">
+    <svg class="lupa" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/>
+    </svg>
+    <input id="busca" type="search" placeholder="Buscar música, artista ou tom…"
+           autocomplete="off" aria-label="Buscar">
+    <button class="limpar" id="limpar" aria-label="Limpar busca">×</button>
+  </div>
+
+  <div class="filtros" id="filtros" role="group" aria-label="Filtrar por categoria"></div>
+
+  <p class="contagem" id="contagem"></p>
+  <div class="lista" id="lista"></div>
+</main>
+
+<footer class="rodape">
+  Feito para tocar violão. As cifras são de uso pessoal.
+</footer>
+
+<script src="acordes.js"></script>
+<script src="comum.js"></script>
+<script src="biblioteca.js"></script>
+</body>
+</html>

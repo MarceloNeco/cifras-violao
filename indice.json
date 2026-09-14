@@ -1,0 +1,50 @@
+[
+  {
+    "id": "peixe-vivo",
+    "titulo": "Peixe Vivo",
+    "artista": "Domínio público (folclore brasileiro)",
+    "tom": "G",
+    "categoria": "Folclore",
+    "arquivo": "peixe-vivo.txt"
+  },
+  {
+    "id": "ciranda-cirandinha",
+    "titulo": "Ciranda, Cirandinha",
+    "artista": "Domínio público (folclore brasileiro)",
+    "tom": "C",
+    "categoria": "Infantil",
+    "arquivo": "ciranda-cirandinha.txt"
+  },
+  {
+    "id": "o-cravo-e-a-rosa",
+    "titulo": "O Cravo e a Rosa",
+    "artista": "Domínio público (folclore brasileiro)",
+    "tom": "C",
+    "categoria": "Infantil",
+    "arquivo": "o-cravo-e-a-rosa.txt"
+  },
+  {
+    "id": "mulher-rendeira",
+    "titulo": "Mulher Rendeira",
+    "artista": "Domínio público (folclore nordestino)",
+    "tom": "D",
+    "categoria": "Folclore",
+    "arquivo": "mulher-rendeira.txt"
+  },
+  {
+    "id": "se-esta-rua-fosse-minha",
+    "titulo": "Se Esta Rua Fosse Minha",
+    "artista": "Domínio público (folclore brasileiro)",
+    "tom": "C",
+    "categoria": "Folclore",
+    "arquivo": "se-esta-rua-fosse-minha.txt"
+  },
+  {
+    "id": "luar-do-sertao",
+    "titulo": "Luar do Sertão",
+    "artista": "Catulo da Paixão Cearense e João Pernambuco",
+    "tom": "G",
+    "categoria": "Seresta",
+    "arquivo": "luar-do-sertao.txt"
+  }
+]
