@@ -184,34 +184,33 @@ function montarSaida(){
   $('#nome-arquivo').textContent = arquivo;
 
   const id = arquivo.replace(/\.txt$/i, '');
-  const jaExiste = INDICE.find(m => m.id === id);
+  const jaExiste = INDICE.some(m => m.id === id);
 
-  if (jaExiste && jaExiste.pendente){
-    $('#aviso-indice').innerHTML = `<p class="dica"><b>${escapar(d.titulo)}</b> já está no
-      <b>indice.json</b>. Só abra o arquivo e apague a linha
-      <b>"pendente": true,</b> do bloco dela — e o tom, se quiser deixar certinho:</p>`;
-    $('#saida-json').value = `    "tom": "${d.tom}",\n    (apague a linha  "pendente": true,  deste bloco)`;
-    mostrarBlocoJson(true);
-  } else if (jaExiste){
-    $('#aviso-indice').innerHTML = `<p class="dica">Essa música já está no <b>indice.json</b>
-      e não está marcada como pendente. Não precisa mexer em nada.</p>`;
-    $('#saida-json').value = '';
-    mostrarBlocoJson(false);
-  } else {
-    $('#aviso-indice').innerHTML = `<p class="dica">Essa música ainda não está no <b>indice.json</b>.
-      Abra o arquivo e cole este bloco antes do <b>]</b> do final,
-      lembrando da vírgula no fim do bloco anterior:</p>`;
-    $('#saida-json').value =
-`  {
-    "id": "${id}",
-    "titulo": "${d.titulo}",
-    "artista": "${d.artista}",
-    "tom": "${d.tom}",
-    "categoria": "${d.categoria}",
-    "arquivo": "${arquivo}"
-  }`;
-    mostrarBlocoJson(true);
+  /* monta o indice.json inteiro, já atualizado — é mais seguro trocar o
+     arquivo todo do que caçar uma linha no meio de centenas */
+  const atualizado = INDICE.map(m => {
+    if (m.id !== id) return m;
+    const copia = {...m, titulo: d.titulo, artista: d.artista, categoria: d.categoria,
+                   tom: d.tom, arquivo};
+    delete copia.pendente;
+    return copia;
+  });
+  if (!jaExiste){
+    atualizado.push({id, titulo: d.titulo, artista: d.artista, tom: d.tom,
+                     categoria: d.categoria, arquivo});
   }
+  $('#saida-json').value = JSON.stringify(atualizado, null, 2) + '\n';
+
+  $('#aviso-indice').innerHTML = `<p class="dica">
+    A cifra já funciona só com o arquivo do item <b>a</b> — esta parte é só para
+    ${jaExiste ? 'tirar o selo <b>sem cifra</b> da lista e gravar o tom' : 'a música aparecer na lista'}.
+    <br><br>
+    <b>Não edite o indice.json linha por linha</b> — ele tem centenas de linhas e é
+    fácil quebrar. Faça assim: baixe o arquivo pronto aqui embaixo e suba por
+    <b>Add file → Upload files</b>, que ele substitui o antigo.
+    Ou, se preferir colar: abra o <b>indice.json</b> no GitHub, clique no lápis,
+    aperte <b>Ctrl+A</b> para marcar tudo e cole por cima.</p>`;
+  mostrarBlocoJson(true);
 }
 
 function mostrarBlocoJson(mostrar){
@@ -237,6 +236,15 @@ $('#baixar').onclick = ()=>{
   const a = document.createElement('a');
   a.href = URL.createObjectURL(blob);
   a.download = nome;
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(()=> URL.revokeObjectURL(a.href), 2000);
+};
+
+$('#baixar-json').onclick = ()=>{
+  const blob = new Blob([$('#saida-json').value], {type:'application/json;charset=utf-8'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'indice.json';
   document.body.appendChild(a); a.click(); a.remove();
   setTimeout(()=> URL.revokeObjectURL(a.href), 2000);
 };

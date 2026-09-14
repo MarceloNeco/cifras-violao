@@ -318,6 +318,7 @@
     "titulo": "Alô",
     "artista": "Chitãozinho & Xororó",
     "categoria": "Sertanejo",
+    "pendente": true
   },
   {
     "id": "evidencias",

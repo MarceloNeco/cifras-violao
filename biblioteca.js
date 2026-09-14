@@ -22,6 +22,7 @@ carregarIndice()
     }));
     montarFiltros();
     desenhar();
+    conferirArquivos();
   })
   .catch(erro=>{
     elLista.innerHTML = `<div class="vazio"><strong>Não consegui carregar as músicas</strong>
@@ -111,3 +112,56 @@ elLimpar.addEventListener('click', ()=>{
 document.addEventListener('keydown', e=>{
   if (e.key === '/' && document.activeElement !== elBusca){ e.preventDefault(); elBusca.focus(); }
 });
+
+
+/* ------------------------------------------------------------
+   Confere, em segundo plano, quais das músicas marcadas como
+   pendentes já têm arquivo de cifra no repositório. Assim o selo
+   "sem cifra" some sozinho quando você sobe o .txt, sem precisar
+   editar o indice.json.
+   ------------------------------------------------------------ */
+const CACHE_CHAVE = 'cifras:existem';
+const CACHE_VALIDADE = 30 * 60 * 1000;   // meia hora
+
+function lerCache(){
+  try{
+    const g = JSON.parse(localStorage.getItem(CACHE_CHAVE) || '{}');
+    if (!g.quando || Date.now() - g.quando > CACHE_VALIDADE) return {};
+    return g.itens || {};
+  }catch(e){ return {}; }
+}
+function gravarCache(itens){
+  try{ localStorage.setItem(CACHE_CHAVE, JSON.stringify({quando: Date.now(), itens})); }catch(e){}
+}
+
+async function conferirArquivos(){
+  const cache = lerCache();
+  if (!TODAS.some(m => m.pendente)) return;
+  const faltando = TODAS.filter(m => m.pendente && cache[m.id] === undefined);
+
+  /* o que já está no cache vale na hora */
+  let mudou = false;
+  TODAS.forEach(m => { if (m.pendente && cache[m.id]) { m.pendente = false; mudou = true; } });
+  if (mudou){ montarFiltros(); desenhar(); }
+  if (!faltando.length) return;
+
+  /* de 6 em 6 para não abrir 60 pedidos de uma vez */
+  const fila = faltando.slice();
+  const trabalhar = async ()=>{
+    while (fila.length){
+      const m = fila.shift();
+      const nome = m.arquivo || (m.id + '.txt');
+      let existe = false;
+      try{
+        const r = await fetch(nome, {method:'HEAD'});
+        existe = r.ok;
+      }catch(e){}
+      cache[m.id] = existe;
+      if (existe) m.pendente = false;
+    }
+  };
+  await Promise.all(Array.from({length:6}, trabalhar));
+  gravarCache(cache);
+  montarFiltros();
+  desenhar();
+}

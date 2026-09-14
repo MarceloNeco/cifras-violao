@@ -33,8 +33,10 @@ async function carregarTudo(){
     $('#nome-palco').textContent = MUSICA.titulo;
     montarLinks();
 
-    const r = MUSICA.pendente ? null
-            : await fetch(MUSICA.arquivo || (MUSICA.id + '.txt'), {cache:'no-cache'});
+    /* tenta sempre abrir o arquivo: se ele existir, a cifra aparece,
+       mesmo que o indice.json ainda diga que está pendente */
+    let r = null;
+    try{ r = await fetch(MUSICA.arquivo || (MUSICA.id + '.txt'), {cache:'no-cache'}); }catch(e){}
     if (!r || !r.ok){ semCifraAinda(); return; }
     const {dados, corpo} = lerArquivoDeMusica(await r.text());
 

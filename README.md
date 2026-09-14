@@ -21,8 +21,16 @@ e procurar a cifra — e o passo a passo para criar o arquivo. Quando o `.txt`
 existir, a mesma página passa a mostrar a cifra normalmente. Não precisa mexer
 no `indice.json` de novo: a música já está lá.
 
-Para tirar o selo, apague a linha `"pendente": true` daquela música no
-`indice.json` (e a vírgula da linha de cima, se ela tiver virado a última).
+**Você não precisa editar o `indice.json` na mão.** Assim que o arquivo `.txt`
+existir no repositório, a música passa a abrir normalmente, e o selo some
+sozinho da lista em até meia hora (o site confere sozinho quais arquivos
+existem). Se quiser atualizar o índice mesmo assim — para gravar o tom, por
+exemplo — a página **Importar** monta o `indice.json` inteiro, já pronto:
+baixe e suba por **Add file → Upload files**, que ele substitui o antigo.
+
+> Editar o `indice.json` linha por linha é a receita para quebrar o site: são
+> centenas de linhas e uma vírgula fora do lugar derruba tudo. Troque o arquivo
+> inteiro em vez de caçar a linha.
 
 ---
 

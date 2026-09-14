@@ -402,3 +402,8 @@ body.modo-palco .conteudo{ padding-top:48px; }
   padding:12px; padding-bottom:12px; max-height:420px; overflow:auto;
   font-size:13px;
 }
+.opcional{
+  font-size:.68rem; text-transform:uppercase; letter-spacing:.04em; font-weight:600;
+  color:var(--texto-fraco); background:var(--fundo-suave);
+  border-radius:6px; padding:3px 6px; margin-left:6px; vertical-align:middle;
+}
