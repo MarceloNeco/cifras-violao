@@ -615,3 +615,34 @@ html[data-tema="escuro"] .recado.erro{ color:#f2837a; }
   .janela-texto{ max-height:calc(100vh - 70px); padding:22px 18px 10px; }
   .form-remocao .dupla{ grid-template-columns:1fr; }
 }
+
+/* ---------- bolinha guia ---------- */
+.cifra{ position:relative; }
+
+.bolinha{
+  position:absolute; left:0; top:0; width:10px; height:10px;
+  border-radius:50%; background:var(--destaque);
+  box-shadow:0 0 0 3px color-mix(in srgb, var(--destaque) 26%, transparent);
+  opacity:0; pointer-events:none; z-index:2;
+  transition:transform .16s cubic-bezier(.34,1.3,.64,1), opacity .2s;
+}
+.bolinha.pula{ animation:pulinho .34s ease-out; }
+@keyframes pulinho{
+  0%   { margin-top:0; }
+  45%  { margin-top:-9px; }
+  100% { margin-top:0; }
+}
+
+.cifra .l-ativa{
+  background:color-mix(in srgb, var(--destaque) 12%, transparent);
+  border-radius:5px;
+}
+.cifra .l-acorde b.acorde-agora{
+  background:var(--destaque); color:#fff;
+  border-radius:4px; box-shadow:0 0 12px -2px var(--destaque);
+}
+
+@media (prefers-reduced-motion: reduce){
+  .bolinha{ transition:opacity .2s; }
+  .bolinha.pula{ animation:none; }
+}

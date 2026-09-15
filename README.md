@@ -210,10 +210,18 @@ Tocar em qualquer desenho faz o acorde soar.
 | **☆** | guarda a música nos favoritos |
 | **☾** | modo escuro |
 | **▤ Só a cifra** | esconde o cabeçalho e os desenhos (só no computador) |
+| **◉ Guia** | bolinha que acompanha os acordes conforme a cifra rola |
+| **🔇 / 🔊** | liga o som da bolinha (aparece quando o Guia está ligado) |
 | **Ouvir no Spotify** | abre a busca da música no Spotify |
 | **Ver no YouTube** | abre a busca da música no YouTube |
 
 Tocando em qualquer acorde (no texto ou no desenho) você **ouve** como ele soa.
+
+O **Guia** acende a linha de acordes que está na altura de leitura e põe uma
+bolinha sobre o acorde do momento. Ele segue a **rolagem**, não a música: cifra
+não guarda ritmo, então a bolinha anda quando a página anda e para quando a
+rolagem para. Serve para não perder o lugar e para saber qual acorde vem a
+seguir — não para marcar o compasso.
 
 No computador, a barra de ferramentas e os desenhos dos acordes ficam **grudados
 no topo** enquanto você rola a cifra. No celular, a barra do topo some sozinha
@@ -292,9 +300,9 @@ const VERSAO = '1.0';
 const VERSAO_DATA = '15/09/2026';
 ```
 
-Sugestão de contagem: mudanças pequenas (ajuste visual, correção) sobem a
-segunda casa — 1.0, 1.1, 1.2. Recursos novos sobem a primeira — 2.0.
-Acrescentar cifras não precisa mudar a versão.
+Sugestão de contagem: ajustes e recursos novos sobem a segunda casa — 1.0, 1.1,
+1.2. Uma reformulação grande do site sobe a primeira — 2.0. Acrescentar cifras
+não precisa mudar a versão.
 
 ---
 

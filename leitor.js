@@ -130,6 +130,7 @@ function desenharCifra(){
 
   desenharDiagramas(total, bemol);
   guardarPreferencias();
+  if (typeof medirLinhas === 'function') setTimeout(()=>{ medirLinhas(); atualizarGuia(); }, 0);
 }
 
 function desenharDiagramas(total, bemol){
@@ -253,6 +254,7 @@ function ligarBotoes(){
   };
 
   esconderTopoAoRolar();
+  iniciarGuia();
   $('#btn-afinador').onclick = ()=> abrirAfinador(true);
   $('#fechar-afinador').onclick = ()=> abrirAfinador(false);
 
@@ -297,6 +299,7 @@ function mudarFonte(passo){
   tamanho = Math.max(11, Math.min(34, tamanho + passo));
   document.documentElement.style.setProperty('--tamanho-cifra', tamanho + 'px');
   guardarPreferencias();
+  if (typeof medirLinhas === 'function') setTimeout(()=>{ medirLinhas(); atualizarGuia(); }, 0);
 }
 function modoPalco(ligar){
   document.body.classList.toggle('modo-palco', ligar);
@@ -360,4 +363,139 @@ function recuperarPreferencias(){
   $('#velocidade').value = velocidade;
   $('#velocidade-valor').textContent = velocidade;
   return tinha;
+}
+
+/* ============================================================
+   A bolinha guia
+   Não há ritmo escrito numa cifra, então ela não segue a música:
+   segue a ROLAGEM. A linha que está na altura de leitura fica
+   destacada, e a bolinha caminha pelos acordes dessa linha
+   conforme ela sobe na tela. Pausou a rolagem, a bolinha para.
+   ============================================================ */
+
+let guiaLigado = false, guiaComSom = false;
+let linhasDeAcorde = [];      // posições das linhas, medidas uma vez
+let acordeAtual = null, ultimoSom = 0, bolinha = null;
+
+/* a "linha de leitura" fica logo abaixo da barra fixa, nunca escondida atrás dela */
+function alturaDeLeitura(){
+  const fixo = document.querySelector('.fixavel');
+  const abaixoDaBarra = (fixo && !document.body.classList.contains('modo-palco'))
+    ? fixo.getBoundingClientRect().bottom + 46 : 0;
+  const topoDaPagina = document.querySelector('.topo');
+  const abaixoDoTopo = (topoDaPagina ? topoDaPagina.getBoundingClientRect().bottom : 0) + 46;
+  return Math.min(window.innerHeight * 0.62,
+                  Math.max(window.innerHeight * 0.30, abaixoDaBarra, abaixoDoTopo));
+}
+
+function medirLinhas(){
+  const area = $('#cifra');
+  if (!area) return;
+  linhasDeAcorde = [...area.querySelectorAll('.l-acorde')].map(el => ({
+    el,
+    topo: el.offsetTop,
+    acordes: [...el.querySelectorAll('b')]
+  })).filter(l => l.acordes.length);
+}
+
+function criarBolinha(){
+  if (bolinha) return bolinha;
+  bolinha = document.createElement('span');
+  bolinha.className = 'bolinha';
+  bolinha.setAttribute('aria-hidden', 'true');
+  $('#cifra').appendChild(bolinha);
+  return bolinha;
+}
+
+function limparGuia(){
+  document.querySelectorAll('.l-ativa').forEach(e => e.classList.remove('l-ativa'));
+  document.querySelectorAll('.acorde-agora').forEach(e => e.classList.remove('acorde-agora'));
+  if (bolinha) bolinha.style.opacity = '0';
+  acordeAtual = null;
+}
+
+function atualizarGuia(){
+  if (!guiaLigado || !linhasDeAcorde.length) return;
+  const area = $('#cifra');
+  const alvoNaPagina = window.scrollY + alturaDeLeitura() - area.offsetTop;
+
+  /* qual linha de acordes está na altura de leitura */
+  let i = -1;
+  for (let k = 0; k < linhasDeAcorde.length; k++){
+    if (linhasDeAcorde[k].topo <= alvoNaPagina) i = k; else break;
+  }
+  if (i < 0){ limparGuia(); return; }
+
+  const linha = linhasDeAcorde[i];
+  const proxima = linhasDeAcorde[i+1];
+  const fim = proxima ? proxima.topo : linha.topo + 60;
+  const andado = (alvoNaPagina - linha.topo) / Math.max(1, fim - linha.topo);
+
+  const quantos = linha.acordes.length;
+  const qual = Math.min(quantos - 1, Math.max(0, Math.floor(andado * quantos)));
+  const alvo = linha.acordes[qual];
+  if (!alvo || alvo === acordeAtual) return;
+
+  document.querySelectorAll('.l-ativa').forEach(e => e.classList.remove('l-ativa'));
+  document.querySelectorAll('.acorde-agora').forEach(e => e.classList.remove('acorde-agora'));
+  linha.el.classList.add('l-ativa');
+  alvo.classList.add('acorde-agora');
+
+  const b = criarBolinha();
+  b.style.opacity = '1';
+  b.style.transform = `translate(${alvo.offsetLeft + alvo.offsetWidth/2 - 5}px, ${alvo.offsetTop - 13}px)`;
+  b.classList.remove('pula'); void b.offsetWidth; b.classList.add('pula');
+
+  acordeAtual = alvo;
+
+  if (guiaComSom && Date.now() - ultimoSom > 220){
+    ultimoSom = Date.now();
+    tocarAcorde(alvo.dataset.acorde);
+  }
+}
+
+function ligarGuia(ligado){
+  guiaLigado = ligado;
+  document.body.classList.toggle('com-guia', ligado);
+  const b = $('#btn-guia');
+  b.classList.toggle('ativo', ligado);
+  b.setAttribute('aria-pressed', ligado);
+  $('#btn-guia-som').hidden = !ligado;
+  try{ localStorage.setItem('cifras:guia', ligado ? 'sim' : 'nao'); }catch(e){}
+  if (ligado){ medirLinhas(); atualizarGuia(); } else limparGuia();
+}
+
+function ligarSomDoGuia(ligado){
+  guiaComSom = ligado;
+  const b = $('#btn-guia-som');
+  b.classList.toggle('ativo', ligado);
+  b.setAttribute('aria-pressed', ligado);
+  b.textContent = ligado ? '🔊' : '🔇';
+  b.title = ligado ? 'Desligar o som da bolinha' : 'Ligar o som da bolinha';
+  try{ localStorage.setItem('cifras:guia-som', ligado ? 'sim' : 'nao'); }catch(e){}
+}
+
+function iniciarGuia(){
+  let salvo = null, salvoSom = null;
+  try{
+    salvo = localStorage.getItem('cifras:guia');
+    salvoSom = localStorage.getItem('cifras:guia-som');
+  }catch(e){}
+
+  $('#btn-guia').onclick = ()=> ligarGuia(!guiaLigado);
+  $('#btn-guia-som').onclick = ()=> ligarSomDoGuia(!guiaComSom);
+  ligarSomDoGuia(salvoSom === 'sim');
+  ligarGuia(salvo === 'sim');
+
+  let pedido = null;
+  window.addEventListener('scroll', ()=>{
+    if (pedido) return;
+    pedido = requestAnimationFrame(()=>{ pedido = null; atualizarGuia(); });
+  }, {passive:true});
+
+  let espera = null;
+  window.addEventListener('resize', ()=>{
+    clearTimeout(espera);
+    espera = setTimeout(()=>{ medirLinhas(); atualizarGuia(); }, 200);
+  });
 }
