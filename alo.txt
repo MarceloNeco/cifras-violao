@@ -3,103 +3,54 @@ artista: Chitãozinho & Xororó
 tom: Bb
 categoria: Sertanejo
 ---
-Alô
-Chitãozinho & Xororó
-
-Tom: Bb
-
 [Intro] Bb  Eb  F  Eb
 
-Eb Bb
+Eb        Bb
 Alô!
-        Eb                      F
+
+Eb                     F
 Tô ligando pra saber como você está
-           Gm       F           Eb
+
+Gm              F   Eb
 Eu tava à toa e por isso resolvi ligar
-        Bb                  F  Eb
+
+Bb             F      Eb
 Pra contar que sonhei com você
 
-  Bb
+Bb
 Alô!
-        Eb                   F
+
+Eb        F
 É tão bom ouvir de novo a sua voz
-  Gm         F                  Eb
+
+Gm         F                 Eb
 Apesar da distância que há entre nós
-         Bb                    F
+
+Bb                  F
 Tem uma coisa que eu preciso dizer
 
-       Cm
+Cm
 Na verdade, eu liguei
-      Gm                      F Bb F
+
+Gm                    F  Bb  F
 Esse sonho inventei pra te ouvir
-          Cm
+Cm
 E pra contar que chorei
-           Gm                 F Bb Eb
+
+Gm               F  Bb  Eb
 Que a solidão tava doendo em mim
 
-  Bb Eb
-Oh,ah!
-        F
+Bb  Eb
+Oh, ah!
+
+F
 Eu só menti pra não sofrer
-Eb  Bb Eb
-Oh,ah!
-               F
+
+Eb  Bb  Eb
+Oh, ah!
+
+F
 Eu só queria te dizer
-       Cm        Eb         Bb
-Tô morrendo de saudade de você
 
-( Bb  Eb  F  Eb )
-
- Eb Bb
-Alô!
-        Eb                      F
-Tô ligando pra saber como você está
-           Gm       F           Eb
-Eu tava à toa e por isso resolvi ligar
-        Bb                  F Eb
-Pra contar que sonhei com você
-
-  Bb
-Alô!
-        Eb                   F
-É tão bom ouvir de novo a sua voz
-  Gm         F                  Eb
-Apesar da distância que há entre nós
-         Bb                    F
-Tem uma coisa que eu preciso dizer
-
-       Cm
-Na verdade, eu liguei
-      Gm                      F Bb F
-Esse sonho inventei pra te ouvir
-          Cm
-E pra contar que chorei
-           Gm                 F Bb Eb
-Que a solidão tava doendo em mim
-
-  Bb Eb
-Oh,ah!
-        F
-Eu só menti pra não sofrer
-Eb  Bb Eb
-Oh,ah!
-               F
-Eu só queria te dizer
-       Cm        Eb         Bb
-Tô morrendo de saudade de você
-
-( Bb  Gm  F  Cm  Gm )
-( F  Bb  Gm  F  G )
-
-    C
-Oh,ah!
-F        G
-Eu só menti pra não sofrer
-G   C
-Oh,ah!
-F         G
-  Eu só queria te dizer
-       Dm          F        C
-Tô morrendo de saudade de você
-       Dm          F        C
+Cm       Eb        Bb
 Tô morrendo de saudade de você

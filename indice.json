@@ -3,15 +3,15 @@
     "id": "peixe-vivo",
     "titulo": "Peixe Vivo",
     "artista": "Domínio público (folclore brasileiro)",
-    "tom": "G",
+    "tom": "E",
     "categoria": "Folclore",
     "arquivo": "peixe-vivo.txt"
   },
   {
     "id": "ciranda-cirandinha",
     "titulo": "Ciranda, Cirandinha",
-    "artista": "Domínio público (folclore brasileiro)",
-    "tom": "C",
+    "artista": "Cantiga Popular (folclore brasileiro)",
+    "tom": "D",
     "categoria": "Infantil",
     "arquivo": "ciranda-cirandinha.txt"
   },
@@ -42,8 +42,8 @@
   {
     "id": "luar-do-sertao",
     "titulo": "Luar do Sertão",
-    "artista": "Catulo da Paixão Cearense e João Pernambuco",
-    "tom": "G",
+    "artista": "Chitãozinho & Xororó (Catulo da Paixão Cearense e João Pernambuco)",
+    "tom": "Bb",
     "categoria": "Seresta",
     "arquivo": "luar-do-sertao.txt"
   },
@@ -52,42 +52,48 @@
     "titulo": "Pedra, Flor e Espinho",
     "artista": "Barão Vermelho",
     "categoria": "Rock nacional",
-    "pendente": true
+    "tom": "D",
+    "arquivo": "pedra-flor-e-espinho.txt"
   },
   {
     "id": "por-voce",
     "titulo": "Por Você",
     "artista": "Barão Vermelho",
     "categoria": "Rock nacional",
-    "pendente": true
+    "tom": "E",
+    "arquivo": "por-voce.txt"
   },
   {
     "id": "primeiros-erros-chove",
     "titulo": "Primeiros Erros (Chove)",
     "artista": "Capital Inicial",
     "categoria": "Rock nacional",
-    "pendente": true
+    "tom": "D",
+    "arquivo": "primeiros-erros-chove.txt"
   },
   {
     "id": "malandragem",
     "titulo": "Malandragem",
     "artista": "Cássia Eller",
     "categoria": "Rock nacional",
-    "pendente": true
+    "tom": "Dm",
+    "arquivo": "malandragem.txt"
   },
   {
     "id": "segredos",
     "titulo": "Segredos",
     "artista": "Frejat",
     "categoria": "Rock nacional",
-    "pendente": true
+    "tom": "G",
+    "arquivo": "segredos.txt"
   },
   {
     "id": "teorema",
     "titulo": "Teorema",
     "artista": "Ira!",
     "categoria": "Rock nacional",
-    "pendente": true
+    "tom": "D",
+    "arquivo": "teorema.txt"
   },
   {
     "id": "nucleo-base",
@@ -101,56 +107,64 @@
     "titulo": "Eduardo e Mônica",
     "artista": "Legião Urbana",
     "categoria": "Rock nacional",
-    "pendente": true
+    "tom": "E",
+    "arquivo": "eduardo-e-monica.txt"
   },
   {
     "id": "faroeste-caboclo",
     "titulo": "Faroeste Caboclo",
     "artista": "Legião Urbana",
     "categoria": "Rock nacional",
-    "pendente": true
+    "tom": "G",
+    "arquivo": "faroeste-caboclo.txt"
   },
   {
     "id": "quando-o-sol-bater-na-janela-do-teu-quarto",
     "titulo": "Quando o Sol Bater na Janela do Teu Quarto",
     "artista": "Legião Urbana",
     "categoria": "Rock nacional",
-    "pendente": true
+    "tom": "D",
+    "arquivo": "quando-o-sol-bater-na-janela-do-teu-quarto.txt"
   },
   {
     "id": "quase-sem-querer",
     "titulo": "Quase Sem Querer",
     "artista": "Legião Urbana",
     "categoria": "Rock nacional",
-    "pendente": true
+    "tom": "G",
+    "arquivo": "quase-sem-querer.txt"
   },
   {
     "id": "sera",
     "titulo": "Será",
     "artista": "Legião Urbana",
     "categoria": "Rock nacional",
-    "pendente": true
+    "tom": "C",
+    "arquivo": "sera.txt"
   },
   {
     "id": "serenissima",
     "titulo": "Sereníssima",
     "artista": "Legião Urbana",
     "categoria": "Rock nacional",
-    "pendente": true
+    "tom": "G",
+    "arquivo": "serenissima.txt"
   },
   {
     "id": "o-teatro-dos-vampiros",
     "titulo": "O Teatro dos Vampiros",
     "artista": "Legião Urbana",
     "categoria": "Rock nacional",
-    "pendente": true
+    "tom": "G",
+    "arquivo": "o-teatro-dos-vampiros.txt"
   },
   {
     "id": "daniel-na-cova-dos-leoes",
     "titulo": "Daniel na Cova dos Leões",
     "artista": "Legião Urbana",
     "categoria": "Rock nacional",
-    "pendente": true
+    "tom": "Am",
+    "arquivo": "daniel-na-cova-dos-leoes.txt"
   },
   {
     "id": "me-chama",
@@ -164,7 +178,8 @@
     "titulo": "Por Onde Andei",
     "artista": "Nando Reis",
     "categoria": "Rock nacional",
-    "pendente": true
+    "tom": "C",
+    "arquivo": "por-onde-andei.txt"
   },
   {
     "id": "me-diga",
@@ -178,14 +193,16 @@
     "titulo": "Romance Ideal",
     "artista": "Os Paralamas do Sucesso",
     "categoria": "Rock nacional",
-    "pendente": true
+    "tom": "A",
+    "arquivo": "romance-ideal.txt"
   },
   {
     "id": "lanterna-dos-afogados",
     "titulo": "Lanterna dos Afogados",
     "artista": "Os Paralamas do Sucesso",
     "categoria": "Rock nacional",
-    "pendente": true
+    "tom": "Ebm",
+    "arquivo": "lanterna-dos-afogados.txt"
   },
   {
     "id": "meu-erro",
@@ -199,35 +216,40 @@
     "titulo": "Até Quando Esperar",
     "artista": "Plebe Rude",
     "categoria": "Rock nacional",
-    "pendente": true
+    "tom": "C",
+    "arquivo": "ate-quando-esperar.txt"
   },
   {
     "id": "eu-tambem-vou-reclamar",
     "titulo": "Eu Também Vou Reclamar",
     "artista": "Raul Seixas",
     "categoria": "Rock nacional",
-    "pendente": true
+    "tom": "E",
+    "arquivo": "eu-tambem-vou-reclamar.txt"
   },
   {
     "id": "flores",
     "titulo": "Flores",
     "artista": "Titãs",
     "categoria": "Rock nacional",
-    "pendente": true
+    "tom": "D",
+    "arquivo": "flores.txt"
   },
   {
     "id": "pra-dizer-adeus",
     "titulo": "Pra Dizer Adeus",
     "artista": "Titãs",
     "categoria": "Rock nacional",
-    "pendente": true
+    "tom": "G",
+    "arquivo": "pra-dizer-adeus.txt"
   },
   {
     "id": "eu-tive-um-sonho",
     "titulo": "Eu Tive um Sonho",
     "artista": "Kid Abelha",
     "categoria": "Pop rock nacional",
-    "pendente": true
+    "tom": "G",
+    "arquivo": "eu-tive-um-sonho.txt"
   },
   {
     "id": "nada-por-mim",
@@ -241,35 +263,40 @@
     "titulo": "Garotos II (O Outro Lado)",
     "artista": "Leoni",
     "categoria": "Pop rock nacional",
-    "pendente": true
+    "tom": "Bm",
+    "arquivo": "garotos-ii-o-outro-lado.txt"
   },
   {
     "id": "apenas-mais-uma-de-amor",
     "titulo": "Apenas Mais uma de Amor",
     "artista": "Lulu Santos",
     "categoria": "Pop rock nacional",
-    "pendente": true
+    "tom": "Em",
+    "arquivo": "apenas-mais-uma-de-amor.txt"
   },
   {
     "id": "toda-forma-de-amor",
     "titulo": "Toda Forma de Amor",
     "artista": "Lulu Santos",
     "categoria": "Pop rock nacional",
-    "pendente": true
+    "tom": "A",
+    "arquivo": "toda-forma-de-amor.txt"
   },
   {
     "id": "tempos-modernos",
     "titulo": "Tempos Modernos",
     "artista": "Lulu Santos",
     "categoria": "Pop rock nacional",
-    "pendente": true
+    "tom": "Dm",
+    "arquivo": "tempos-modernos.txt"
   },
   {
     "id": "se",
     "titulo": "Se...",
     "artista": "Djavan",
     "categoria": "MPB",
-    "pendente": true
+    "tom": "A",
+    "arquivo": "se.txt"
   },
   {
     "id": "na-estrada",
@@ -283,14 +310,16 @@
     "titulo": "Jesus Numa Moto",
     "artista": "Sá, Rodrix & Guarabyra",
     "categoria": "MPB",
-    "pendente": true
+    "tom": "Am",
+    "arquivo": "jesus-numa-moto.txt"
   },
   {
     "id": "chao-de-giz",
     "titulo": "Chão de Giz",
     "artista": "Zé Ramalho",
     "categoria": "MPB",
-    "pendente": true
+    "tom": "G",
+    "arquivo": "chao-de-giz.txt"
   },
   {
     "id": "garoto-de-aluguel-taxi-boy",
@@ -304,63 +333,72 @@
     "titulo": "Vida Vazia",
     "artista": "Bruno & Marrone",
     "categoria": "Sertanejo",
-    "pendente": true
+    "tom": "G",
+    "arquivo": "vida-vazia.txt"
   },
   {
     "id": "por-um-minuto",
     "titulo": "Por um Minuto",
     "artista": "Bruno & Marrone",
     "categoria": "Sertanejo",
-    "pendente": true
+    "tom": "G",
+    "arquivo": "por-um-minuto.txt"
   },
   {
     "id": "alo",
     "titulo": "Alô",
     "artista": "Chitãozinho & Xororó",
     "categoria": "Sertanejo",
-    "pendente": true
+    "tom": "Bb",
+    "arquivo": "alo.txt"
   },
   {
     "id": "evidencias",
     "titulo": "Evidências",
     "artista": "Chitãozinho & Xororó",
     "categoria": "Sertanejo",
-    "pendente": true
+    "tom": "E",
+    "arquivo": "evidencias.txt"
   },
   {
     "id": "quer-namorar-comigo",
     "titulo": "Quer Namorar Comigo?",
     "artista": "Edson & Hudson",
     "categoria": "Sertanejo",
-    "pendente": true
+    "tom": "F",
+    "arquivo": "quer-namorar-comigo.txt"
   },
   {
     "id": "deixa-eu-te-amar",
     "titulo": "Deixa Eu Te Amar",
     "artista": "Edson & Hudson",
     "categoria": "Sertanejo",
-    "pendente": true
+    "tom": "A",
+    "arquivo": "deixa-eu-te-amar.txt"
   },
   {
     "id": "bom-rapaz",
     "titulo": "Bom Rapaz",
     "artista": "Fernando & Sorocaba",
     "categoria": "Sertanejo",
-    "pendente": true
+    "tom": "Eb",
+    "arquivo": "bom-rapaz.txt"
   },
   {
     "id": "poeira-da-estrada",
     "titulo": "Poeira da Estrada",
     "artista": "João Paulo & Daniel",
     "categoria": "Sertanejo",
-    "pendente": true
+    "tom": "B",
+    "arquivo": "poeira-da-estrada.txt"
   },
   {
     "id": "propaganda",
     "titulo": "Propaganda",
     "artista": "Jorge & Mateus",
     "categoria": "Sertanejo",
-    "pendente": true
+    "tom": "D",
+    "arquivo": "propaganda.txt"
   },
   {
     "id": "medida-certa",
@@ -374,14 +412,16 @@
     "titulo": "Eu Ligo pra Você",
     "artista": "Zé Neto & Cristiano",
     "categoria": "Sertanejo",
-    "pendente": true
+    "tom": "E",
+    "arquivo": "eu-ligo-pra-voce.txt"
   },
   {
     "id": "fim-de-festa",
     "titulo": "Fim de Festa",
     "artista": "Zezé Di Camargo & Luciano",
     "categoria": "Sertanejo",
-    "pendente": true
+    "tom": "G",
+    "arquivo": "fim-de-festa.txt"
   },
   {
     "id": "mmm-mmm-mmm-mmm",
@@ -395,83 +435,119 @@
     "titulo": "Lonely Stranger",
     "artista": "Eric Clapton",
     "categoria": "Rock internacional",
-    "pendente": true
+    "tom": "E",
+    "arquivo": "lonely-stranger.txt"
   },
   {
     "id": "i-want-to-know-what-love-is",
     "titulo": "I Want to Know What Love Is",
     "artista": "Foreigner",
     "categoria": "Rock internacional",
-    "pendente": true
+    "tom": "F#",
+    "arquivo": "i-want-to-know-what-love-is.txt"
   },
   {
     "id": "used-to-love-her",
     "titulo": "Used to Love Her",
     "artista": "Guns N' Roses",
     "categoria": "Rock internacional",
-    "pendente": true
+    "tom": "Db",
+    "arquivo": "used-to-love-her.txt"
   },
   {
     "id": "silent-lucidity",
     "titulo": "Silent Lucidity",
     "artista": "Queensrÿche",
     "categoria": "Rock internacional",
-    "pendente": true
+    "tom": "G",
+    "arquivo": "silent-lucidity.txt"
   },
   {
     "id": "angie",
     "titulo": "Angie",
     "artista": "The Rolling Stones",
     "categoria": "Rock internacional",
-    "pendente": true
+    "tom": "C",
+    "arquivo": "angie.txt"
   },
   {
     "id": "cats-in-the-cradle",
     "titulo": "Cats in the Cradle",
     "artista": "Ugly Kid Joe",
     "categoria": "Rock internacional",
-    "pendente": true
+    "tom": "D",
+    "arquivo": "cats-in-the-cradle.txt"
   },
   {
     "id": "seven-days-in-sunny-june",
     "titulo": "Seven Days in Sunny June",
     "artista": "Jamiroquai",
     "categoria": "Pop internacional",
-    "pendente": true
+    "tom": "C",
+    "arquivo": "seven-days-in-sunny-june.txt"
   },
   {
     "id": "human-nature",
     "titulo": "Human Nature",
     "artista": "Michael Jackson",
     "categoria": "Pop internacional",
-    "pendente": true
+    "tom": "D",
+    "arquivo": "human-nature.txt"
   },
   {
     "id": "man-in-the-mirror",
     "titulo": "Man in the Mirror",
     "artista": "Michael Jackson",
     "categoria": "Pop internacional",
-    "pendente": true
+    "tom": "G",
+    "arquivo": "man-in-the-mirror.txt"
   },
   {
     "id": "i-just-can-t-stop-loving-you",
     "titulo": "I Just Can't Stop Loving You",
     "artista": "Michael Jackson",
     "categoria": "Pop internacional",
-    "pendente": true
+    "tom": "F#",
+    "arquivo": "i-just-can-t-stop-loving-you.txt"
   },
   {
     "id": "kids",
     "titulo": "Kids",
     "artista": "OneRepublic",
     "categoria": "Pop internacional",
-    "pendente": true
+    "tom": "D",
+    "arquivo": "kids.txt"
   },
   {
     "id": "stars",
     "titulo": "Stars",
     "artista": "Simply Red",
     "categoria": "Pop internacional",
-    "pendente": true
+    "tom": "G",
+    "arquivo": "stars.txt"
+  },
+  {
+    "id": "garoto-de-aluguel",
+    "titulo": "Garoto de Aluguel",
+    "artista": "Zé Ramalho",
+    "tom": "F",
+    "categoria": "",
+    "arquivo": "garoto-de-aluguel.txt"
+  },
+  {
+    "id": "a-little-respect",
+    "titulo": "A Little Respect",
+    "artista": "Erasure",
+    "tom": "C",
+    "categoria": "",
+    "arquivo": "a-little-respect.txt"
+  },
+  {
+    "id": "se-essa-rua-fosse-minha",
+    "titulo": "Se Essa Rua Fosse Minha",
+    "artista": "Domínio público (folclore brasileiro)",
+    "tom": "Am",
+    "categoria": "",
+    "arquivo": "se-essa-rua-fosse-minha.txt"
   }
 ]

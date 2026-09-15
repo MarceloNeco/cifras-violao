@@ -1,0 +1,55 @@
+titulo: Flores
+artista: Titãs
+tom: D
+categoria: Rock nacional
+---
+[Intro] D5  B  E5
+D5  B  E5
+B5  A5  B5  A5
+
+D5  B  E5 (2x)
+Olhei até ficar cansado
+
+B5  A5 (2x)
+De ver os meus olhos no espelho
+
+D5  B  E5 (2x)
+Chorei por ter despedaçado
+
+B5  A5 (2x)
+As flores que estão no canteiro
+
+D5  B  E5 (2x)
+Os punhos e os pulsos cortados
+
+B5  A5 (2x)
+E o resto do meu corpo inteiro
+
+D5  B  E5 (2x)
+Há flores cobrindo o telhado
+
+B5  A5 (2x)
+E embaixo do meu travesseiro
+
+D5  B  E5 (2x)
+Há flores por todos os lados
+
+B5  A5 (2x)
+Há flores em tudo que eu vejo
+
+E             A
+A dor vai curar essas lástimas
+
+E             A
+O soro tem gosto de lágrimas
+
+E             A
+As flores têm cheiro de morte
+
+E             A
+A dor vai fechar esses cortes
+B      B
+Flores, flores
+
+E            A             E
+As flores de plástico não morrem
