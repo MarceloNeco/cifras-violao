@@ -549,3 +549,111 @@ $('#arquivo-varias').onchange = async e=>{
   $('#entrada-varias').value = texto;
   aviso.textContent = f.name + ' — ' + Math.round(f.size/1024) + ' KB';
 };
+
+/* ============================================================
+   Conferir a lista
+   Compara os arquivos .txt que estão no repositório com o que o
+   indice.json conhece, e monta o índice corrigido. Serve para
+   recuperar músicas que sumiram da página inicial porque a linha
+   delas no índice se perdeu.
+   ============================================================ */
+
+function ondeEstaORepositorio(){
+  const dono = location.hostname.split('.')[0];
+  const repo = location.pathname.split('/').filter(Boolean)[0];
+  if (!dono || !repo || !location.hostname.endsWith('github.io')) return null;
+  return {dono, repo};
+}
+
+async function lerFichaDoArquivo(nome){
+  try{
+    const r = await fetch(nome, {cache:'no-cache'});
+    if (!r.ok) return null;
+    const {dados} = lerArquivoDeMusica(await r.text());
+    return dados;
+  }catch(e){ return null; }
+}
+
+$('#conferir').onclick = async ()=>{
+  const recado = $('#recado-conferir');
+  const caixa = $('#resultado-conferir');
+  const onde = ondeEstaORepositorio();
+  caixa.innerHTML = '';
+
+  if (!onde){
+    recado.textContent = 'Isto só funciona com o site publicado no GitHub Pages.';
+    return;
+  }
+
+  recado.textContent = 'Lendo a lista de arquivos do repositório…';
+  let arquivos;
+  try{
+    const r = await fetch(`https://api.github.com/repos/${onde.dono}/${onde.repo}/contents/`,
+                          {headers:{'Accept':'application/vnd.github+json'}});
+    if (!r.ok) throw new Error('status ' + r.status);
+    arquivos = (await r.json())
+      .filter(f => f.type === 'file' && /\.txt$/i.test(f.name) && !/^MODELO/i.test(f.name))
+      .map(f => f.name);
+  }catch(e){
+    recado.textContent = 'Não consegui ler a lista de arquivos do GitHub agora. Tente de novo em alguns minutos.';
+    return;
+  }
+
+  const conhecidos = new Set(INDICE.map(m => m.arquivo || (m.id + '.txt')));
+  const faltando = arquivos.filter(a => !conhecidos.has(a));
+  const semArquivo = INDICE.filter(m => m.pendente && arquivos.includes(m.arquivo || (m.id + '.txt')));
+
+  recado.textContent = `${arquivos.length} cifras no repositório · ${faltando.length} fora do índice`;
+
+  if (!faltando.length && !semArquivo.length){
+    caixa.innerHTML = `<p class="dica">Está tudo certo: todas as cifras do repositório
+      estão no índice, e nenhuma delas está marcada como "sem cifra" à toa.</p>`;
+    return;
+  }
+
+  recado.textContent += ' · lendo as fichas…';
+  const novas = [];
+  for (const nome of faltando){
+    const ficha = await lerFichaDoArquivo(nome);
+    const id = nome.replace(/\.txt$/i, '');
+    novas.push({
+      id,
+      titulo: (ficha && ficha.titulo) || id.replace(/-/g,' '),
+      artista: (ficha && ficha.artista) || '',
+      tom: (ficha && ficha.tom) || '',
+      categoria: (ficha && ficha.categoria) || '',
+      arquivo: nome
+    });
+  }
+
+  /* índice corrigido: tira o "pendente" de quem já tem arquivo e acrescenta as que faltavam */
+  const corrigido = INDICE.map(m=>{
+    const copia = {...m};
+    if (arquivos.includes(m.arquivo || (m.id + '.txt'))) delete copia.pendente;
+    return copia;
+  }).concat(novas);
+
+  caixa.innerHTML = `
+    ${novas.length ? `<p class="dica"><b>${novas.length}</b> ${novas.length===1?'cifra estava':'cifras estavam'} no repositório
+      mas fora do índice:</p>
+      <ul class="fila">${novas.map(n=>`<li>
+        <span class="nome">${escapar(n.titulo)} <small>${escapar(n.artista||'')}</small></span>
+        <span class="arquivo">${escapar(n.arquivo)}</span></li>`).join('')}</ul>` : ''}
+    ${semArquivo.length ? `<p class="dica">${semArquivo.length} ${semArquivo.length===1?'música estava marcada':'músicas estavam marcadas'}
+      como "sem cifra" mesmo já tendo arquivo. O selo também foi corrigido.</p>` : ''}
+    <p class="dica">Baixe o índice corrigido e suba por <b>Add file → Upload files</b>,
+       que ele substitui o antigo.</p>
+    <div class="linha-botoes">
+      <button class="botao forte" id="baixar-corrigido">⬇ Baixar o indice.json corrigido</button>
+    </div>`;
+
+  $('#baixar-corrigido').onclick = ()=>{
+    const blob = new Blob([JSON.stringify(corrigido, null, 2) + '\n'],
+                          {type:'application/json;charset=utf-8'});
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'indice.json';
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(()=> URL.revokeObjectURL(a.href), 2000);
+  };
+};
