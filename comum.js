@@ -11,11 +11,9 @@ const VERSAO_DATA = '15/09/2026';
 function montarRodape(){
   document.querySelectorAll('.rodape').forEach(r=>{
     if (r.querySelector('.assinatura')) return;
-    const naPaginaDoAviso = /aviso\.html$/.test(location.pathname);
     r.insertAdjacentHTML('beforeend',
       `<div class="assinatura">versão ${VERSAO} · ${VERSAO_DATA}` +
-      (naPaginaDoAviso ? '' : ' · <a href="aviso.html">Aviso</a>') +
-      `</div>`);
+      ` · <a href="#aviso" data-abre-aviso>Aviso</a></div>`);
   });
 }
 

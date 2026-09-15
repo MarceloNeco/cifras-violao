@@ -237,7 +237,6 @@ fundo-celular.jpg  imagem de fundo do site (celular)
 index.html       página inicial: busca, categorias e favoritos
 cifra.html       página que mostra uma cifra
 acordes.html     dicionário de acordes
-aviso.html       aviso de uso pessoal, direitos autorais e dados
 importar.html    cola uma cifra e gera o arquivo pronto
 estilo.css       as cores e o visual (as cores ficam no topo do arquivo)
 acordes.js       entende, transpõe e desenha os acordes
@@ -247,6 +246,7 @@ leitor.js        rolagem, tom, capotraste, afinador, modo celular
 dicionario.js    a página do dicionário de acordes
 importador.js    a limpeza e a formatação da cifra colada
 zip.js           monta o .zip da fila dentro do próprio navegador
+aviso.js         o texto do aviso e a janela que o mostra
 leitor-pdf.js    lê coletâneas de cifras em PDF
 pdf-lib.mjs      biblioteca pdf.js (não mexa)
 pdf-worker.mjs   biblioteca pdf.js (não mexa)
@@ -300,11 +300,39 @@ Acrescentar cifras não precisa mudar a versão.
 
 ## Aviso de uso
 
-A página `aviso.html`, linkada no rodapé, registra que este é um acervo
-pessoal de estudo, sem finalidade comercial; que os direitos das obras são de
-seus titulares; que pedidos de remoção são atendidos de imediato; e que o site
-não coleta dado pessoal algum. O canal de remoção aponta para os *issues* do
-repositório — para trocar por um e-mail, edite a seção 3 do arquivo.
+O link **Aviso**, no rodapé de todas as páginas, abre uma janela por cima da
+página (não sai de onde se está; fecha no ✕, no botão, na tecla Esc ou clicando
+fora). O endereço `index.html#aviso` também abre direto, se for preciso mandar
+o link para alguém.
+
+O texto fica em `aviso.js` e registra: acervo pessoal de estudo, sem finalidade
+comercial; direitos das obras pertencem aos titulares; pedidos de remoção
+atendidos de imediato; e o que o site faz — e não faz — com dados.
+
+### Ligar o formulário de remoção
+
+O aviso traz um formulário para pedidos de retirada. Enquanto não for
+configurado, ele mostra um recado dizendo que o canal não está no ar. Para
+ligar, são cinco minutos:
+
+1. Entre em **formspree.io** e crie uma conta gratuita.
+2. Crie um formulário novo (**+ New form**) e informe o e-mail que deve receber
+   as mensagens.
+3. O serviço devolve um endereço parecido com
+   `https://formspree.io/f/abcdwxyz`. Copie.
+4. Abra o `aviso.js` no GitHub, clique no lápis, e cole esse endereço entre as
+   aspas da linha:
+
+```js
+const FORMULARIO_REMOCAO = '';
+```
+
+5. **Commit changes.** O formulário passa a funcionar, e o e-mail nunca aparece
+   na página.
+
+O plano gratuito aceita 50 mensagens por mês, de sobra para o que esse canal
+existe. Na primeira mensagem recebida, o Formspree pede uma confirmação por
+e-mail — vale fazer um envio de teste logo depois de configurar.
 
 ---
 
