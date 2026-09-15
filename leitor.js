@@ -183,6 +183,22 @@ document.addEventListener('visibilitychange', ()=>{
   if (document.visibilityState === 'visible' && rolando) manterTelaAcesa();
 });
 
+/* no celular, some com a barra do topo quando você rola para baixo:
+   são 53 pixels de tela que voltam para a cifra */
+function esconderTopoAoRolar(){
+  if (!window.matchMedia('(max-width:640px)').matches) return;
+  let ultimo = window.scrollY, parado = null;
+  window.addEventListener('scroll', ()=>{
+    const agora = window.scrollY;
+    if (Math.abs(agora - ultimo) > 6){
+      document.body.classList.toggle('topo-oculto', agora > ultimo && agora > 120);
+      ultimo = agora;
+    }
+    clearTimeout(parado);
+    parado = setTimeout(()=>{ if (window.scrollY < 120) document.body.classList.remove('topo-oculto'); }, 250);
+  }, {passive:true});
+}
+
 /* ---------------- botões e teclado ---------------- */
 function ligarBotoes(){
   $('#tom-mais').onclick  = ()=>{ deslocamento = Math.min(11, deslocamento + 1); desenharCifra(); };
@@ -201,6 +217,21 @@ function ligarBotoes(){
 
   $('#fonte-mais').onclick  = ()=> mudarFonte(+1);
   $('#fonte-menos').onclick = ()=> mudarFonte(-1);
+
+  /* só a cifra: esconde cabeçalho, links e desenhos */
+  const chaveSoCifra = 'cifras:so-cifra';
+  function aplicarSoCifra(ligado){
+    document.body.classList.toggle('so-cifra', ligado);
+    const b = $('#btn-so-cifra');
+    b.classList.toggle('ativo', ligado);
+    b.setAttribute('aria-pressed', ligado);
+    b.innerHTML = ligado ? '▥ Mostrar tudo' : '▤ Só a cifra';
+    try{ localStorage.setItem(chaveSoCifra, ligado ? 'sim' : 'nao'); }catch(e){}
+  }
+  let guardadoSoCifra = null;
+  try{ guardadoSoCifra = localStorage.getItem(chaveSoCifra); }catch(e){}
+  aplicarSoCifra(guardadoSoCifra === 'sim');
+  $('#btn-so-cifra').onclick = ()=> aplicarSoCifra(!document.body.classList.contains('so-cifra'));
 
   $('#btn-palco').onclick  = ()=> modoPalco(true);
   $('#btn-caber').onclick  = ajustarAoEcra;
@@ -221,6 +252,7 @@ function ligarBotoes(){
     fav.textContent = agora ? '★' : '☆';
   };
 
+  esconderTopoAoRolar();
   $('#btn-afinador').onclick = ()=> abrirAfinador(true);
   $('#fechar-afinador').onclick = ()=> abrirAfinador(false);
 

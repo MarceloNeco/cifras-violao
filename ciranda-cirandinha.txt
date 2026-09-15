@@ -1,39 +1,36 @@
 titulo: Ciranda, Cirandinha
-artista: Cantiga Popular (folclore brasileiro)
-tom: D
+artista: Domínio público (folclore brasileiro)
+tom: C
 categoria: Infantil
+ritmo: Ciranda
 ---
-D           A
+[Intro] C  G7  C
+
+ C                G7
 Ciranda, cirandinha
-
-D
-Vamos todos cirandar!
-
-G          A
+                 C
+Vamos todos cirandar
+ C                  G7
 Vamos dar a meia volta
-
-D
+                  C
 Volta e meia vamos dar
 
-A
-O anel que tu me destes
-
-D
+ C              G7
+O anel que tu me deste
+                  C
 Era vidro e se quebrou
-
-G             A
+ C                 G7
 O amor que tu me tinhas
-
-D
+                   C
 Era pouco e se acabou
 
-A
+ C                G7
 Por isso, dona Rosa
-D
+                   C
 Entre dentro desta roda
-
-G           A
+ C                 G7
 Diga um verso bem bonito
+                  C
+Diga adeus e vá-se embora
 
-D
-Diga adeus e vá se embora
+[Final] C  G7  C

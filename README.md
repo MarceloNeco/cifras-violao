@@ -209,10 +209,16 @@ Tocar em qualquer desenho faz o acorde soar.
 | **🎵** | afinador: toca a nota de cada corda |
 | **☆** | guarda a música nos favoritos |
 | **☾** | modo escuro |
+| **▤ Só a cifra** | esconde o cabeçalho e os desenhos (só no computador) |
 | **Ouvir no Spotify** | abre a busca da música no Spotify |
 | **Ver no YouTube** | abre a busca da música no YouTube |
 
 Tocando em qualquer acorde (no texto ou no desenho) você **ouve** como ele soa.
+
+No computador, a barra de ferramentas e os desenhos dos acordes ficam **grudados
+no topo** enquanto você rola a cifra. No celular, a barra do topo some sozinha
+quando você rola para baixo, para devolver espaço à cifra, e os desenhos viram
+uma faixa que corre para o lado.
 
 **Pelo teclado:** barra de espaço liga e desliga a rolagem, setas ↑ ↓ mudam a
 velocidade, `+` e `−` mudam o tom, `Esc` sai do modo celular.

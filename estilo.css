@@ -53,8 +53,8 @@ a{ color:inherit; text-decoration:none; }
 /* ---------- barra do topo ---------- */
 .topo{
   position:sticky; top:0; z-index:50;
-  background:color-mix(in srgb, var(--fundo) 88%, transparent);
-  backdrop-filter:saturate(180%) blur(12px);
+  background:color-mix(in srgb, var(--fundo) 94%, transparent);
+  backdrop-filter:saturate(180%) blur(14px);
   border-bottom:1px solid var(--borda);
 }
 .topo-interno{
@@ -473,7 +473,73 @@ body.modo-palco.com-fundo::before,
 body.modo-palco.com-fundo::after{ display:none; }
 
 /* com a foto atrás, a barra do topo e a cifra ficam um pouco translúcidas */
-body.com-fundo .topo{ background:color-mix(in srgb, var(--fundo) 78%, transparent); }
+body.com-fundo .topo{ background:color-mix(in srgb, var(--fundo) 88%, transparent); }
 body.com-fundo .capa{ box-shadow:0 10px 40px -18px rgba(0,0,0,.55); }
 
 @media print{ body.com-fundo::before, body.com-fundo::after{ display:none; } }
+
+/* ============================================================
+   Bloco que gruda no topo (barra de ferramentas + desenhos)
+   Só no computador: no celular a tela é curta demais para isso.
+   ============================================================ */
+.so-no-computador{ display:none; }
+
+@media (min-width:761px){
+  .so-no-computador{ display:inline-flex; }
+
+  .fixavel{
+    position:sticky; top:53px; z-index:40;
+    padding-top:10px; margin-top:-10px;
+    background:color-mix(in srgb, var(--fundo) 95%, transparent);
+    backdrop-filter:saturate(180%) blur(14px);
+  }
+  body.com-fundo .fixavel{ background:color-mix(in srgb, var(--fundo) 90%, transparent); }
+  .fixavel .painel{ position:static; top:auto; backdrop-filter:none; }
+  /* barra mais enxuta, para caber numa fileira só */
+  .fixavel .painel{ gap:7px 11px; padding:9px; }
+  .fixavel .painel .botao{ min-height:36px; padding:0 10px; font-size:.86rem; }
+  .fixavel .painel .botao.icone{ width:36px; padding:0; }
+  .fixavel .painel .velocidade{ width:92px; }
+  /* se a música tiver muitos acordes, a faixa de desenhos rola por dentro */
+  .fixavel .diagramas{ max-height:154px; overflow-y:auto; padding:10px; }
+  .fixavel .diagramas .diagrama{ width:80px; }
+}
+
+/* botão "Só a cifra": esconde o que não é a música */
+body.so-cifra .cabecalho-musica,
+body.so-cifra .ouvir,
+body.so-cifra .diagramas{ display:none; }
+
+/* no modo celular o bloco solta, porque a barra vai para o rodapé */
+body.modo-palco .fixavel{
+  position:static; padding:0; margin:0; background:none; backdrop-filter:none;
+}
+
+/* ---------- desenhos dos acordes no celular ----------
+   uma faixa só, que corre para o lado, em vez de várias fileiras
+   empurrando a cifra para baixo. */
+@media (max-width:760px){
+  .diagramas{
+    flex-wrap:nowrap; overflow-x:auto; overflow-y:hidden;
+    scroll-snap-type:x proximate; padding:10px;
+    -webkit-overflow-scrolling:touch;
+  }
+  .diagramas .aviso{ display:none; }
+  .diagramas > *{ flex:none; scroll-snap-align:start; }
+  .diagramas .diagrama{ width:74px; }
+}
+
+/* ---------- barra de ferramentas mais enxuta no celular ---------- */
+@media (max-width:640px){
+  .painel{ gap:6px 8px; padding:8px; }
+  .painel .rotulo{ font-size:.68rem; letter-spacing:.03em; }
+  .painel .botao{ min-height:36px; padding:0 9px; font-size:.86rem; }
+  .painel .botao.icone{ width:33px; padding:0; }
+  .painel .valor{ min-width:30px; font-size:.9rem; }
+  .painel .velocidade{ width:84px; }
+
+  /* ao rolar para baixo, a barra do topo sai da frente e devolve a altura dela */
+  .topo{ transition:transform .2s ease; }
+  body.topo-oculto .topo{ transform:translateY(-100%); }
+  body.topo-oculto .painel{ top:4px; }
+}
