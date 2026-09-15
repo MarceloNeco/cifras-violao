@@ -86,6 +86,29 @@ function separarAcordesDeDentro(linha){
   return acordes.trim() ? acordes + '\n' + letra : null;
 }
 
+/* algumas cifras vêm com um cabeçalho de 2 ou 3 linhas antes da música:
+   TÍTULO / Artista / Tom: X. Isso vira ficha, não faz parte da cifra. */
+function separarCabecalhoSolto(texto){
+  const linhas = texto.split('\n');
+  const ficha = {};
+  let corte = 0;
+  for (let i = 0; i < Math.min(6, linhas.length); i++){
+    const t = (linhas[i]||'').trim();
+    if (!t) continue;
+    const mTom = /^Tom:\s*(\S+)/i.exec(t);
+    if (mTom){
+      ficha.tom = mTom[1];
+      const anteriores = linhas.slice(0, i).map(l=>l.trim()).filter(Boolean);
+      if (anteriores.length >= 2){ ficha.titulo = anteriores[anteriores.length-2]; ficha.artista = anteriores[anteriores.length-1]; }
+      else if (anteriores.length === 1){ ficha.titulo = anteriores[0]; }
+      corte = i + 1;
+      break;
+    }
+    if (/^\[/.test(t) || ehAcorde(t.split(/\s+/)[0])) break;   // já começou a cifra
+  }
+  return {ficha, corpo: linhas.slice(corte).join('\n')};
+}
+
 function arrumar(texto){
   const linhas = normalizar(texto).split('\n');
   const saida = [];
@@ -135,7 +158,12 @@ $('#processar').onclick = ()=>{
   const bruto = $('#entrada').value;
   if (!bruto.trim()){ $('#relatorio').textContent = 'Cole a cifra no quadro primeiro.'; return; }
 
-  RESULTADO = arrumar(bruto);
+  const separado = separarCabecalhoSolto(bruto);
+  if (separado.ficha.titulo && !$('#titulo').value.trim()) $('#titulo').value = separado.ficha.titulo;
+  if (separado.ficha.artista && !$('#artista').value.trim()) $('#artista').value = separado.ficha.artista;
+  if (separado.ficha.tom && !$('#tom').value.trim()) $('#tom').value = separado.ficha.tom;
+
+  RESULTADO = arrumar(separado.corpo);
   if (!$('#tom').value.trim()) $('#tom').value = adivinharTom(RESULTADO.linhas);
   if (!$('#arquivo').value.trim()) $('#arquivo').value = apelido($('#titulo').value || 'musica') + '.txt';
 
@@ -441,6 +469,7 @@ $('#processar-varias').onclick = ()=>{
     /* casa com a lista do site pelo título */
     const conhecida = INDICE.find(m => chaveTitulo(m.titulo) === chaveTitulo(d.titulo));
     if (conhecida){
+      d.titulo    = conhecida.titulo;                       // grafia certa, da sua lista
       d.artista   = d.artista   || conhecida.artista  || '';
       d.categoria = d.categoria || conhecida.categoria || '';
     }
@@ -491,14 +520,32 @@ Debaixo de uma sacada
 `;
 };
 
-/* abrir um arquivo do computador (aceita texto salvo em UTF-8 ou no padrão do Windows) */
+/* abrir um arquivo do computador: .txt (UTF-8 ou padrão do Windows) ou .pdf */
 $('#arquivo-varias').onchange = async e=>{
   const f = e.target.files[0];
   if (!f) return;
+  const aviso = $('#nome-lote');
+
+  if (/\.pdf$/i.test(f.name) || f.type === 'application/pdf'){
+    aviso.textContent = 'Abrindo o PDF…';
+    try{
+      const r = await pdfParaFormatoLote(f, (feita, total)=>{
+        aviso.textContent = `Lendo o PDF… página ${feita} de ${total}`;
+      });
+      $('#entrada-varias').value = r.texto;
+      aviso.textContent = r.quantas
+        ? `${f.name} — ${r.paginas} páginas, ${r.quantas} músicas encontradas. Confira e mande para a fila.`
+        : `${f.name} — li o PDF, mas não reconheci nenhuma música. Ele precisa ter o título, o artista e uma linha "Tom:" antes de cada cifra.`;
+    }catch(erro){
+      aviso.textContent = erro.message;
+    }
+    return;
+  }
+
   const dados = new Uint8Array(await f.arrayBuffer());
   let texto;
   try{ texto = new TextDecoder('utf-8', {fatal:true}).decode(dados); }
   catch(erro){ texto = new TextDecoder('windows-1252').decode(dados); }
   $('#entrada-varias').value = texto;
-  $('#nome-lote').textContent = f.name + ' — ' + Math.round(f.size/1024) + ' KB';
+  aviso.textContent = f.name + ' — ' + Math.round(f.size/1024) + ' KB';
 };

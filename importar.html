@@ -50,14 +50,16 @@ aqui vai a cifra inteira
 [Intro] Am  E7
  Am              E7
 aqui vai a outra cifra</pre>
+    <p class="dica"><b>Tem uma coletânea de cifras em PDF?</b> Abra o PDF pelo botão acima:
+       a página separa as músicas sozinha, uma por uma, e já monta este formato.</p>
     <p class="dica">Só o título é obrigatório — se ele bater com uma música da sua lista,
        o artista, a categoria e o nome do arquivo vêm sozinhos. Se quiser mandar tudo
        na mão, use barras:
        <b>=== Título | Artista | Categoria | tom: G | capo: 2</b></p>
 
     <div class="linha-botoes">
-      <label class="botao" for="arquivo-varias">📂 Abrir um arquivo .txt</label>
-      <input id="arquivo-varias" type="file" accept=".txt,text/plain" hidden>
+      <label class="botao forte" for="arquivo-varias">📂 Abrir um arquivo .txt ou .pdf</label>
+      <input id="arquivo-varias" type="file" accept=".txt,.pdf,text/plain,application/pdf" hidden>
       <span class="relatorio" id="nome-lote"></span>
     </div>
     <textarea id="entrada-varias" class="area" spellcheck="false"
@@ -156,6 +158,7 @@ aqui vai a outra cifra</pre>
 </footer>
 
 <script src="zip.js"></script>
+<script src="leitor-pdf.js"></script>
 <script src="acordes.js"></script>
 <script src="comum.js"></script>
 <script src="importador.js"></script>

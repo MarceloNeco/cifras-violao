@@ -42,7 +42,23 @@ estranhos e linhas em branco a mais, separa acordes que vieram no meio da letra)
 mostra uma prévia com os desenhos dos acordes e entrega o arquivo pronto.
 Nada do que você cola sai do seu navegador.
 
-### Um arquivo com várias cifras (o mais rápido)
+### Uma coletânea em PDF (o mais rápido de todos)
+
+Na página **Importar**, em **Um arquivo com várias**, clique em
+**📂 Abrir um arquivo .txt ou .pdf** e escolha o PDF. A página lê o arquivo
+inteiro dentro do navegador, separa cada música e já preenche título, artista
+e tom.
+
+Para o site reconhecer as músicas, o PDF precisa trazer, antes de cada cifra:
+o título numa linha (em MAIÚSCULAS ou numerado, tipo `12. TÍTULO`), o artista
+na linha seguinte e uma linha `Tom: X`. Depois é só conferir o texto que
+apareceu no quadro e clicar em **Separar e mandar tudo para a fila**.
+
+A leitura do PDF usa a biblioteca pdf.js, que está no próprio repositório
+(`pdf-lib.mjs` e `pdf-worker.mjs`) — não depende de internet nem manda o
+arquivo para lugar nenhum.
+
+### Um arquivo com várias cifras
 
 Na página **Importar**, escolha **Um arquivo com várias**. Monte um arquivo de
 texto com todas as cifras, separando cada música por uma linha que comece com
@@ -224,6 +240,9 @@ leitor.js        rolagem, tom, capotraste, afinador, modo celular
 dicionario.js    a página do dicionário de acordes
 importador.js    a limpeza e a formatação da cifra colada
 zip.js           monta o .zip da fila dentro do próprio navegador
+leitor-pdf.js    lê coletâneas de cifras em PDF
+pdf-lib.mjs      biblioteca pdf.js (não mexa)
+pdf-worker.mjs   biblioteca pdf.js (não mexa)
 indice.json      a lista de todas as músicas
 MODELO.txt       modelo de uma cifra
 MODELO-VARIAS.txt  modelo do arquivo com várias cifras de uma vez
