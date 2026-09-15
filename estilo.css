@@ -18,6 +18,7 @@
   --raio:         12px;
   --fonte: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
   --fonte-cifra: ui-monospace, "SF Mono", "Cascadia Mono", Menlo, Consolas, "Liberation Mono", monospace;
+  --veu: linear-gradient(180deg, rgba(247,245,241,.90) 0%, rgba(247,245,241,.955) 55%, rgba(247,245,241,.975) 100%);
 }
 
 html[data-tema="escuro"]{
@@ -30,18 +31,19 @@ html[data-tema="escuro"]{
   --destaque:     #f0a26a;
   --destaque-claro:#2a2119;
   --acorde:       #f0a26a;
+  --veu: linear-gradient(180deg, rgba(17,19,24,.66) 0%, rgba(17,19,24,.88) 55%, rgba(17,19,24,.94) 100%);
   --sombra:       0 1px 2px rgba(0,0,0,.4), 0 8px 24px -12px rgba(0,0,0,.6);
 }
 
 *{ box-sizing:border-box; }
 [hidden]{ display:none !important; }
-html{ color-scheme: light dark; }
+html{ color-scheme: light dark; background:var(--fundo); }
 html[data-tema="claro"]{ color-scheme: light; }
 html[data-tema="escuro"]{ color-scheme: dark; }
 
 body{
   margin:0; padding:0;
-  background:var(--fundo); color:var(--texto);
+  background:transparent; color:var(--texto);
   font-family:var(--fonte);
   font-size:16px; line-height:1.55;
   -webkit-text-size-adjust:100%;
@@ -438,3 +440,40 @@ body.modo-palco .conteudo{ padding-top:48px; }
   font-family:var(--fonte-cifra); font-size:12.5px; line-height:1.5; white-space:pre;
 }
 label.botao{ cursor:pointer; }
+
+
+/* ============================================================
+   Imagem de fundo do site
+   Duas camadas fixas atrás de tudo: a foto e um véu que garante
+   que o texto continue legível por cima dela.
+   ============================================================ */
+body.com-fundo::before,
+body.com-fundo::after{
+  content:''; position:fixed; inset:0; z-index:-1; pointer-events:none;
+}
+body.com-fundo::before{
+  background-image:url('fundo.jpg');
+  background-size:cover;
+  background-position:center 55%;
+}
+body.com-fundo::after{ background:var(--veu); }
+
+/* no celular entra o recorte em pé, que não fica esticado.
+   Nada de background-attachment:fixed aqui — trava a rolagem no iPhone;
+   a camada fixa acima resolve o mesmo sem travar. */
+@media (max-width:760px){
+  body.com-fundo::before{
+    background-image:url('fundo-celular.jpg');
+    background-position:center top;
+  }
+}
+
+/* enquanto você toca, o fundo sai da frente */
+body.modo-palco.com-fundo::before,
+body.modo-palco.com-fundo::after{ display:none; }
+
+/* com a foto atrás, a barra do topo e a cifra ficam um pouco translúcidas */
+body.com-fundo .topo{ background:color-mix(in srgb, var(--fundo) 78%, transparent); }
+body.com-fundo .capa{ box-shadow:0 10px 40px -18px rgba(0,0,0,.55); }
+
+@media print{ body.com-fundo::before, body.com-fundo::after{ display:none; } }

@@ -210,6 +210,8 @@ assim nada quebra na hora de subir os arquivos pelo site do GitHub.
 
 ```
 capa.jpg         a foto da faixa de cima da página inicial
+fundo.jpg        imagem de fundo do site (telas grandes)
+fundo-celular.jpg  imagem de fundo do site (celular)
 index.html       página inicial: busca, categorias e favoritos
 cifra.html       página que mostra uma cifra
 acordes.html     dicionário de acordes
@@ -227,6 +229,21 @@ MODELO.txt       modelo de uma cifra
 MODELO-VARIAS.txt  modelo do arquivo com várias cifras de uma vez
 *.txt            uma cifra por arquivo
 ```
+
+---
+
+## A imagem de fundo
+
+O botão **▨** no topo liga e desliga a foto de fundo, e a sua escolha fica
+guardada no navegador. São dois arquivos:
+
+- `fundo.jpg` — telas grandes (deitada)
+- `fundo-celular.jpg` — telas de celular (em pé, para a foto não ficar esticada)
+
+Para trocar, suba outras imagens com esses mesmos nomes. Por cima da foto o
+site aplica um véu claro ou escuro conforme o tema, para o texto continuar
+legível — por isso a foto aparece bem mais forte no modo escuro. No **modo
+celular** (o de tocar), o fundo some sozinho: ali o que importa é enxergar a cifra.
 
 ---
 

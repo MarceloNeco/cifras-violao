@@ -21,10 +21,32 @@ function iniciarTema(){
   const escuroNoSistema = window.matchMedia &&
         window.matchMedia('(prefers-color-scheme: dark)').matches;
   aplicarTema(temaSalvo() || (escuroNoSistema ? 'escuro' : 'claro'));
+  iniciarFundo();
   document.querySelectorAll('[data-botao-tema]').forEach(b=>{
     b.addEventListener('click', ()=>{
       aplicarTema(document.documentElement.dataset.tema === 'escuro' ? 'claro' : 'escuro');
     });
+  });
+}
+
+/* ---------- imagem de fundo ---------- */
+const FUNDO_CHAVE = 'cifras:fundo';
+
+function aplicarFundo(ligado){
+  document.body.classList.toggle('com-fundo', ligado);
+  try{ localStorage.setItem(FUNDO_CHAVE, ligado ? 'sim' : 'nao'); }catch(e){}
+  document.querySelectorAll('[data-botao-fundo]').forEach(b=>{
+    b.classList.toggle('ativo', ligado);
+    b.title = ligado ? 'Tirar a imagem de fundo' : 'Colocar a imagem de fundo';
+    b.setAttribute('aria-pressed', ligado);
+  });
+}
+function iniciarFundo(){
+  let guardado = null;
+  try{ guardado = localStorage.getItem(FUNDO_CHAVE); }catch(e){}
+  aplicarFundo(guardado !== 'nao');          // vem ligado, a não ser que você desligue
+  document.querySelectorAll('[data-botao-fundo]').forEach(b=>{
+    b.addEventListener('click', ()=> aplicarFundo(!document.body.classList.contains('com-fundo')));
   });
 }
 
