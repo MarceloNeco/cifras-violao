@@ -217,9 +217,19 @@ Tocar em qualquer desenho faz o acorde soar.
 
 Tocando em qualquer acorde (no texto ou no desenho) você **ouve** como ele soa.
 
-O **Guia** acende a linha de acordes que está na altura de leitura, põe uma
-bolinha sobre o acorde do momento e pinta o trecho da letra que fica embaixo
-dele — o trecho é encaixado no começo das palavras, não cortado no meio. Ele segue a **rolagem**, não a música: cifra
+O **Guia** mostra uma **régua** — dois traços nas laterais da tela, sem cruzar a
+letra — que marca a altura em que os acordes entram. Arraste pela bolinha ↕ da
+direita (ou use as setas ↑ ↓ com ela em foco) para escolher essa altura; a
+posição fica guardada.
+
+Conforme a cifra rola, a letra da linha na régua vai sendo **pintada da esquerda
+para a direita**. Quando a tinta chega embaixo de um acorde, ele acende — e soa,
+se o som estiver ligado. A bolinha viaja na frente da tinta.
+
+A posição horizontal do acorde sobre a letra é o que define quando ele entra.
+É a única pista de tempo que uma cifra tem: um acorde escrito sobre a última
+palavra do verso entra no fim do verso. Continua não sendo compasso, mas é bem
+mais fiel do que dividir a linha em partes iguais. Ele segue a **rolagem**, não a música: cifra
 não guarda ritmo, então a bolinha anda quando a página anda e para quando a
 rolagem para. Serve para não perder o lugar e para saber qual acorde vem a
 seguir — não para marcar o compasso.
@@ -288,6 +298,21 @@ A faixa de cima da página inicial usa o arquivo **`capa.jpg`**. Para trocar:
 suba outra imagem com esse mesmo nome (`capa.jpg`) e ela substitui a atual.
 Funciona melhor com fotos largas e escuras, a partir de 1200 pixels de largura.
 Se o arquivo não existir, a faixa continua funcionando, só com um fundo marrom.
+
+---
+
+## Conferir a lista
+
+Se uma música sumir da página inicial, quase sempre é a linha dela no
+`indice.json` que se perdeu — o arquivo `.txt` continua no repositório.
+
+Na página **Importar** há o passo **Conferir a lista**: ele compara os arquivos
+que estão no repositório com o que o índice conhece, lê a ficha de cada cifra
+órfã e entrega o `indice.json` corrigido para baixar e subir.
+
+> **Nunca substitua o `indice.json` por uma cópia antiga.** Ele é a sua lista de
+> músicas, não faz parte do código do site. Os pacotes de atualização do site
+> não devem trazer esse arquivo nem os `.txt` das cifras.
 
 ---
 
