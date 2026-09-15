@@ -1,7 +1,23 @@
 /* ============================================================
-   comum.js — coisas usadas nas duas páginas
-   (tema claro/escuro, favoritos, leitura dos arquivos de música)
+   comum.js — coisas usadas em todas as páginas
    ============================================================ */
+
+/* Versão do site. Ao publicar uma mudança, altere estas duas linhas:
+   o número aparece no rodapé de todas as páginas. */
+const VERSAO = '1.0';
+const VERSAO_DATA = '15/09/2026';
+
+/* assinatura com a versão e o link do aviso, no rodapé de cada página */
+function montarRodape(){
+  document.querySelectorAll('.rodape').forEach(r=>{
+    if (r.querySelector('.assinatura')) return;
+    const naPaginaDoAviso = /aviso\.html$/.test(location.pathname);
+    r.insertAdjacentHTML('beforeend',
+      `<div class="assinatura">versão ${VERSAO} · ${VERSAO_DATA}` +
+      (naPaginaDoAviso ? '' : ' · <a href="aviso.html">Aviso</a>') +
+      `</div>`);
+  });
+}
 
 /* ---------- tema claro / escuro ---------- */
 const TEMA_CHAVE = 'cifras:tema';
@@ -22,6 +38,7 @@ function iniciarTema(){
         window.matchMedia('(prefers-color-scheme: dark)').matches;
   aplicarTema(temaSalvo() || (escuroNoSistema ? 'escuro' : 'claro'));
   iniciarFundo();
+  montarRodape();
   document.querySelectorAll('[data-botao-tema]').forEach(b=>{
     b.addEventListener('click', ()=>{
       aplicarTema(document.documentElement.dataset.tema === 'escuro' ? 'claro' : 'escuro');

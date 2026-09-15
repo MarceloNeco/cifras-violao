@@ -543,3 +543,18 @@ body.modo-palco .fixavel{
   body.topo-oculto .topo{ transform:translateY(-100%); }
   body.topo-oculto .painel{ top:4px; }
 }
+
+/* ---------- assinatura de versão no rodapé ---------- */
+.assinatura{ margin-top:6px; font-size:.78rem; opacity:.75; }
+.assinatura a{ text-decoration:underline; text-underline-offset:2px; }
+.assinatura a:hover{ color:var(--destaque); }
+
+/* ---------- página de aviso ---------- */
+.texto-legal{ max-width:720px; }
+.texto-legal h1{ font-size:1.6rem; margin:.2em 0 .1em; letter-spacing:-.02em; }
+.texto-legal h2{ font-size:1.02rem; margin:1.9em 0 .5em; letter-spacing:-.01em; }
+.texto-legal p{ margin:0 0 .9em; line-height:1.68; }
+.texto-legal a{ color:var(--destaque); text-decoration:underline; text-underline-offset:2px; }
+.texto-legal .atualizado{ color:var(--texto-fraco); font-size:.88rem; margin-bottom:1.6em; }
+.texto-legal .volta{ margin-top:2.4em; }
+.texto-legal .volta a{ text-decoration:none; }

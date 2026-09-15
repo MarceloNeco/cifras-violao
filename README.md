@@ -237,6 +237,7 @@ fundo-celular.jpg  imagem de fundo do site (celular)
 index.html       página inicial: busca, categorias e favoritos
 cifra.html       página que mostra uma cifra
 acordes.html     dicionário de acordes
+aviso.html       aviso de uso pessoal, direitos autorais e dados
 importar.html    cola uma cifra e gera o arquivo pronto
 estilo.css       as cores e o visual (as cores ficam no topo do arquivo)
 acordes.js       entende, transpõe e desenha os acordes
@@ -278,6 +279,32 @@ A faixa de cima da página inicial usa o arquivo **`capa.jpg`**. Para trocar:
 suba outra imagem com esse mesmo nome (`capa.jpg`) e ela substitui a atual.
 Funciona melhor com fotos largas e escuras, a partir de 1200 pixels de largura.
 Se o arquivo não existir, a faixa continua funcionando, só com um fundo marrom.
+
+---
+
+## Versão do site
+
+O rodapé de todas as páginas mostra a versão e a data. Para mudar, edite as
+duas primeiras linhas do arquivo `comum.js`:
+
+```js
+const VERSAO = '1.0';
+const VERSAO_DATA = '15/09/2026';
+```
+
+Sugestão de contagem: mudanças pequenas (ajuste visual, correção) sobem a
+segunda casa — 1.0, 1.1, 1.2. Recursos novos sobem a primeira — 2.0.
+Acrescentar cifras não precisa mudar a versão.
+
+---
+
+## Aviso de uso
+
+A página `aviso.html`, linkada no rodapé, registra que este é um acervo
+pessoal de estudo, sem finalidade comercial; que os direitos das obras são de
+seus titulares; que pedidos de remoção são atendidos de imediato; e que o site
+não coleta dado pessoal algum. O canal de remoção aponta para os *issues* do
+repositório — para trocar por um e-mail, edite a seção 3 do arquivo.
 
 ---
 
