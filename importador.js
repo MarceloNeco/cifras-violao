@@ -112,12 +112,18 @@ function arrumar(texto){
   };
 }
 
-/* o primeiro acorde costuma ser o tom da música */
+/* o primeiro acorde costuma indicar o tom — mas o tom é só a nota
+   (maior ou menor), sem as sétimas e nonas do acorde */
 function adivinharTom(linhas){
   for (const l of linhas){
     if (l.tipo !== 'acordes') continue;
     const p = l.texto.trim().split(/\s+/).find(ehAcorde);
-    if (p) return p;
+    if (!p) continue;
+    const a = lerAcorde(p);
+    if (!a) continue;
+    const tipo = normalizarSufixo(a.sufixo);
+    const menor = ['m','m7','m6','dim7','m7b5'].includes(tipo);
+    return a.nota + (menor ? 'm' : '');
   }
   return '';
 }
@@ -188,18 +194,7 @@ function montarSaida(){
 
   /* monta o indice.json inteiro, já atualizado — é mais seguro trocar o
      arquivo todo do que caçar uma linha no meio de centenas */
-  const atualizado = INDICE.map(m => {
-    if (m.id !== id) return m;
-    const copia = {...m, titulo: d.titulo, artista: d.artista, categoria: d.categoria,
-                   tom: d.tom, arquivo};
-    delete copia.pendente;
-    return copia;
-  });
-  if (!jaExiste){
-    atualizado.push({id, titulo: d.titulo, artista: d.artista, tom: d.tom,
-                     categoria: d.categoria, arquivo});
-  }
-  $('#saida-json').value = JSON.stringify(atualizado, null, 2) + '\n';
+  $('#saida-json').value = indiceAtualizado([{...d, id, arquivo}]);
 
   $('#aviso-indice').innerHTML = `<p class="dica">
     A cifra já funciona só com o arquivo do item <b>a</b> — esta parte é só para
@@ -217,6 +212,114 @@ function mostrarBlocoJson(mostrar){
   $('#saida-json').hidden = !mostrar;
   $('#copiar-json').parentElement.hidden = !mostrar;
 }
+
+/* devolve o indice.json inteiro com as músicas da lista já em dia */
+function indiceAtualizado(musicas){
+  const porId = new Map(musicas.map(m => [m.id, m]));
+  const saida = INDICE.map(m => {
+    const nova = porId.get(m.id);
+    if (!nova) return m;
+    porId.delete(m.id);
+    const copia = {...m, titulo: nova.titulo, artista: nova.artista,
+                   categoria: nova.categoria, tom: nova.tom, arquivo: nova.arquivo};
+    if (nova.capo) copia.capo = nova.capo; else delete copia.capo;
+    delete copia.pendente;
+    return copia;
+  });
+  porId.forEach(n => saida.push({id:n.id, titulo:n.titulo, artista:n.artista,
+                                 tom:n.tom, categoria:n.categoria, arquivo:n.arquivo}));
+  return JSON.stringify(saida, null, 2) + '\n';
+}
+
+/* ---------- a fila (fica guardada no navegador) ---------- */
+const FILA_CHAVE = 'cifras:fila';
+let FILA = [];
+try{ FILA = JSON.parse(localStorage.getItem(FILA_CHAVE) || '[]'); }catch(e){ FILA = []; }
+
+function gravarFila(){
+  try{ localStorage.setItem(FILA_CHAVE, JSON.stringify(FILA)); }catch(e){
+    alert('A fila ficou grande demais para o navegador guardar. Baixe o zip do que já tem e recomece a fila.');
+  }
+  desenharFila();
+}
+
+function desenharFila(){
+  $('#passo5').hidden = FILA.length === 0;
+  $('#contador-fila').textContent = FILA.length === 1 ? '1 música' : FILA.length + ' músicas';
+  $('#fila').innerHTML = FILA.length === 0
+    ? '<li class="fila-vazia">A fila está vazia.</li>'
+    : FILA.map((f,i)=>`
+      <li>
+        <span class="nome">${escapar(f.titulo)} <small>${escapar(f.artista||'')}</small></span>
+        <span class="arquivo">${escapar(f.arquivo)}</span>
+        <button class="tirar" data-i="${i}" title="Tirar da fila" aria-label="Tirar ${escapar(f.titulo)} da fila">✕</button>
+      </li>`).join('');
+  $('#fila').querySelectorAll('.tirar').forEach(b=>{
+    b.onclick = ()=>{ FILA.splice(+b.dataset.i, 1); gravarFila(); };
+  });
+}
+desenharFila();
+
+/* monta o texto do arquivo .txt a partir da ficha + corpo já arrumado */
+function textoDoArquivo(d, corpo){
+  return `titulo: ${d.titulo}\n` +
+         `artista: ${d.artista || ''}\n` +
+         `tom: ${d.tom || ''}\n` +
+         (d.capo ? `capo: ${d.capo}\n` : '') +
+         `categoria: ${d.categoria || ''}\n` +
+         (d.ritmo ? `ritmo: ${d.ritmo}\n` : '') +
+         '---\n' + corpo + '\n';
+}
+
+function porNaFila(item){
+  const igual = FILA.findIndex(f => f.id === item.id);
+  if (igual >= 0) FILA[igual] = item; else FILA.push(item);
+}
+
+$('#add-fila').onclick = ()=>{
+  if (!RESULTADO) return;
+  const arquivo = $('#arquivo').value.trim() || 'musica.txt';
+  const item = {
+    id: arquivo.replace(/\.txt$/i, ''),
+    arquivo,
+    titulo: $('#titulo').value.trim() || 'Sem título',
+    artista: $('#artista').value.trim(),
+    categoria: $('#categoria').value.trim(),
+    tom: $('#tom').value.trim(),
+    capo: parseInt($('#capo').value,10) || 0,
+    conteudo: $('#saida').value
+  };
+  porNaFila(item);
+  gravarFila();
+
+  /* limpa para a próxima música */
+  $('#entrada').value = '';
+  $('#relatorio').textContent = `“${item.titulo}” entrou na fila. Pode colar a próxima.`;
+  $('#titulo').value = ''; $('#artista').value = ''; $('#tom').value = '';
+  $('#capo').value = 0; $('#ritmo').value = ''; $('#arquivo').value = '';
+  $('#escolher').value = '';
+  $('#passo3').hidden = true; $('#passo4').hidden = true; $('#um-so').hidden = true;
+  RESULTADO = null;
+  $('#entrada').scrollIntoView({behavior:'smooth', block:'center'});
+};
+
+$('#ver-um').onclick = ()=>{ $('#um-so').hidden = !$('#um-so').hidden; };
+
+$('#baixar-zip').onclick = ()=>{
+  if (!FILA.length) return;
+  const arquivos = FILA.map(f => ({nome: f.arquivo, texto: f.conteudo}));
+  arquivos.push({nome:'indice.json', texto: indiceAtualizado(FILA)});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(montarZip(arquivos));
+  a.download = 'cifras-para-subir.zip';
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(()=> URL.revokeObjectURL(a.href), 3000);
+};
+
+$('#esvaziar').onclick = ()=>{
+  if (!confirm('Tirar todas as ' + FILA.length + ' músicas da fila? Isso não dá para desfazer.')) return;
+  FILA = []; gravarFila();
+};
 
 /* ---------- botões ---------- */
 function copiarDe(area, botao){
@@ -254,4 +357,148 @@ $('#limpar-tudo').onclick = ()=>{
   $('#relatorio').textContent = '';
   $('#passo3').hidden = true;
   $('#passo4').hidden = true;
+};
+
+
+/* ============================================================
+   Modo "um arquivo com várias cifras"
+   ============================================================ */
+
+function trocarModo(varias){
+  $('#bloco-varias').hidden = !varias;
+  document.querySelectorAll('.bloco-uma').forEach(e=>{
+    if (varias) e.hidden = true;
+    else if (e.id === 'passo3' || e.id === 'passo4') e.hidden = !RESULTADO;
+    else e.hidden = false;
+  });
+  $('#modo-uma').setAttribute('aria-pressed', !varias);
+  $('#modo-varias').setAttribute('aria-pressed', varias);
+}
+$('#modo-uma').onclick = ()=> trocarModo(false);
+$('#modo-varias').onclick = ()=> trocarModo(true);
+
+/* compara títulos ignorando acento, pontuação e maiúscula */
+function chaveTitulo(t){
+  return semAcento(t||'').replace(/[^a-z0-9]+/g, '');
+}
+
+/* lê o cabeçalho "=== Título | Artista | Categoria | tom: G | capo: 2" */
+function lerCabecalhoLote(linha){
+  const partes = linha.split('|').map(p => p.trim());
+  const d = {titulo: partes.shift() || '', artista:'', categoria:'', tom:'', capo:0, ritmo:''};
+  const soltas = [];
+  partes.forEach(p=>{
+    const m = /^([a-zA-ZçÇ]+)\s*:\s*(.*)$/.exec(p);
+    if (!m){ soltas.push(p); return; }
+    const campo = semAcento(m[1]), valor = m[2].trim();
+    if (campo === 'tom') d.tom = valor;
+    else if (campo === 'capo') d.capo = parseInt(valor,10) || 0;
+    else if (campo === 'ritmo') d.ritmo = valor;
+    else if (campo.startsWith('cat')) d.categoria = valor;
+    else if (campo.startsWith('art')) d.artista = valor;
+    else soltas.push(p);
+  });
+  if (soltas[0] && !d.artista) d.artista = soltas[0];
+  if (soltas[1] && !d.categoria) d.categoria = soltas[1];
+  return d;
+}
+
+/* separa o arquivo grande em músicas */
+function separarLote(texto){
+  const linhas = texto.replace(/\r\n?/g,'\n').split('\n');
+  const blocos = [];
+  let atual = null;
+  linhas.forEach(linha=>{
+    const m = /^\s*={3,}\s*(.+?)\s*$/.exec(linha);
+    if (m){
+      atual = {cabecalho: m[1], corpo: []};
+      blocos.push(atual);
+      return;
+    }
+    if (atual) atual.corpo.push(linha);
+  });
+  return blocos;
+}
+
+$('#processar-varias').onclick = ()=>{
+  const bruto = $('#entrada-varias').value;
+  const blocos = separarLote(bruto);
+  const relato = $('#relatorio-varias');
+
+  if (!blocos.length){
+    relato.innerHTML = `<p class="vazio aviso-cifra"><strong>Não achei nenhuma marca de separação</strong>
+      Cada música precisa começar numa linha com <b>===</b> seguida do título.
+      Clique em <b>Ver o modelo</b> para ver um exemplo.</p>`;
+    return;
+  }
+
+  const entraram = [], vazias = [];
+  blocos.forEach(b=>{
+    const d = lerCabecalhoLote(b.cabecalho);
+    const arrumado = arrumar(b.corpo.join('\n'));
+    if (!arrumado.corpo.trim() || !arrumado.acordes){ vazias.push(d.titulo || '(sem título)'); return; }
+
+    /* casa com a lista do site pelo título */
+    const conhecida = INDICE.find(m => chaveTitulo(m.titulo) === chaveTitulo(d.titulo));
+    if (conhecida){
+      d.artista   = d.artista   || conhecida.artista  || '';
+      d.categoria = d.categoria || conhecida.categoria || '';
+    }
+    if (!d.tom) d.tom = adivinharTom(arrumado.linhas);
+
+    const id = conhecida ? conhecida.id : apelido(d.titulo);
+    const arquivo = (conhecida && conhecida.arquivo) ? conhecida.arquivo : id + '.txt';
+
+    porNaFila({id, arquivo, titulo: d.titulo, artista: d.artista, categoria: d.categoria,
+               tom: d.tom, capo: d.capo, conteudo: textoDoArquivo(d, arrumado.corpo)});
+    entraram.push({titulo: d.titulo, tom: d.tom, acordes: arrumado.acordes,
+                   conhecida: !!conhecida, arquivo});
+  });
+
+  gravarFila();
+
+  relato.innerHTML = `
+    <p class="dica"><b>${entraram.length}</b> ${entraram.length === 1 ? 'música entrou' : 'músicas entraram'} na fila.</p>
+    <ul class="fila">
+      ${entraram.map(e=>`<li>
+        <span class="nome">${escapar(e.titulo)}
+          <small>tom ${escapar(e.tom || '?')} · ${e.acordes} linhas de acorde
+          ${e.conhecida ? '' : ' · <b>não estava na sua lista, entrou como música nova</b>'}</small></span>
+        <span class="arquivo">${escapar(e.arquivo)}</span></li>`).join('')}
+    </ul>
+    ${vazias.length ? `<p class="dica"><b>Fora:</b> ${vazias.map(escapar).join(', ')} —
+       não encontrei linhas de acorde nesses blocos.</p>` : ''}`;
+
+  $('#passo5').scrollIntoView({behavior:'smooth', block:'start'});
+};
+
+$('#modelo-varias').onclick = ()=>{
+  $('#entrada-varias').value =
+`=== Peixe Vivo
+[Intro] G  D7  G
+
+ G                 D7
+Como pode um peixe vivo
+      D7           G
+Viver fora da água fria
+
+=== O Cravo e a Rosa | Domínio público | Infantil | tom: C
+
+ C                    G7
+O cravo brigou com a rosa
+                      C
+Debaixo de uma sacada
+`;
+};
+
+/* abrir um arquivo do computador (aceita texto salvo em UTF-8 ou no padrão do Windows) */
+$('#arquivo-varias').onchange = async e=>{
+  const f = e.target.files[0];
+  if (!f) return;
+  const dados = new Uint8Array(await f.arrayBuffer());
+  let texto;
+  try{ texto = new TextDecoder('utf-8', {fatal:true}).decode(dados); }
+  catch(erro){ texto = new TextDecoder('windows-1252').decode(dados); }
+  $('#entrada-varias').value = texto;
+  $('#nome-lote').textContent = f.name + ' — ' + Math.round(f.size/1024) + ' KB';
 };

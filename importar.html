@@ -31,7 +31,44 @@
        o arquivo pronto para você subir no GitHub.</p>
   </div>
 
-  <div class="passo">
+  <div class="modos">
+    <button class="etiqueta" id="modo-uma" aria-pressed="true">Uma música por vez</button>
+    <button class="etiqueta" id="modo-varias" aria-pressed="false">Um arquivo com várias</button>
+  </div>
+
+  <div class="passo" id="bloco-varias" hidden>
+    <h2><span class="numero">A</span> Arquivo com várias cifras</h2>
+    <p class="dica">Monte um arquivo de texto com todas as cifras, separando cada música
+       por uma linha que comece com <b>===</b> seguida do título:</p>
+    <pre class="exemplo">=== Evidências
+[Intro] Gm7  C7  F
+ F                Dm
+aqui vai a cifra inteira
+
+=== Angie
+[Intro] Am  E7
+ Am              E7
+aqui vai a outra cifra</pre>
+    <p class="dica">Só o título é obrigatório — se ele bater com uma música da sua lista,
+       o artista, a categoria e o nome do arquivo vêm sozinhos. Se quiser mandar tudo
+       na mão, use barras:
+       <b>=== Título | Artista | Categoria | tom: G | capo: 2</b></p>
+
+    <div class="linha-botoes">
+      <label class="botao" for="arquivo-varias">📂 Abrir um arquivo .txt</label>
+      <input id="arquivo-varias" type="file" accept=".txt,text/plain" hidden>
+      <span class="relatorio" id="nome-lote"></span>
+    </div>
+    <textarea id="entrada-varias" class="area" spellcheck="false"
+      placeholder="Cole aqui o arquivo inteiro, ou use o botão acima para abrir um .txt"></textarea>
+    <div class="linha-botoes">
+      <button class="botao forte" id="processar-varias">Separar e mandar tudo para a fila</button>
+      <button class="botao" id="modelo-varias">Ver o modelo</button>
+    </div>
+    <div id="relatorio-varias"></div>
+  </div>
+
+  <div class="passo bloco-uma">
     <h2><span class="numero">1</span> Que música é?</h2>
     <div class="campos">
       <label class="campo largo">
@@ -49,7 +86,7 @@
     </div>
   </div>
 
-  <div class="passo">
+  <div class="passo bloco-uma">
     <h2><span class="numero">2</span> Cole a cifra aqui</h2>
     <p class="dica">Copie a cifra inteira do site (letra com os acordes em cima) e cole no quadro.
        Pode colar com a bagunça de espaços que vier — eu arrumo.</p>
@@ -62,38 +99,62 @@
     </div>
   </div>
 
-  <div class="passo" id="passo3" hidden>
+  <div class="passo bloco-uma" id="passo3" hidden>
     <h2><span class="numero">3</span> Confira como ficou</h2>
     <div class="diagramas" id="diagramas"></div>
     <div class="cifra previa" id="previa"></div>
   </div>
 
-  <div class="passo" id="passo4" hidden>
-    <h2><span class="numero">4</span> Leve para o GitHub</h2>
-
-    <h3>a) O arquivo da cifra</h3>
-    <p class="dica">Crie no repositório um arquivo chamado <b id="nome-arquivo">musica.txt</b>
-       (<b>Add file → Create new file</b>) e cole este conteúdo dentro:</p>
-    <textarea id="saida" class="area saida" readonly spellcheck="false"></textarea>
+  <div class="passo bloco-uma" id="passo4" hidden>
+    <h2><span class="numero">4</span> Guardar esta música</h2>
     <div class="linha-botoes">
-      <button class="botao forte" id="copiar">Copiar o conteúdo</button>
-      <button class="botao" id="baixar">Baixar o arquivo .txt</button>
+      <button class="botao forte" id="add-fila">+ Adicionar à fila</button>
+      <button class="botao" id="ver-um">Ver o arquivo desta música</button>
     </div>
+    <p class="dica">O jeito rápido é ir empilhando as músicas na fila e baixar tudo
+       de uma vez no fim — assim você faz um upload só no GitHub.</p>
 
-    <h3>b) O índice <span class="opcional">opcional</span></h3>
-    <div id="aviso-indice"></div>
-    <textarea id="saida-json" class="area saida" readonly spellcheck="false"></textarea>
-    <div class="linha-botoes">
-      <button class="botao forte" id="baixar-json">Baixar o indice.json</button>
-      <button class="botao" id="copiar-json">Copiar o índice inteiro</button>
+    <div id="um-so" hidden>
+      <h3>a) O arquivo da cifra</h3>
+      <p class="dica">Crie no repositório um arquivo chamado <b id="nome-arquivo">musica.txt</b>
+         (<b>Add file → Create new file</b>) e cole este conteúdo dentro:</p>
+      <textarea id="saida" class="area saida" readonly spellcheck="false"></textarea>
+      <div class="linha-botoes">
+        <button class="botao forte" id="copiar">Copiar o conteúdo</button>
+        <button class="botao" id="baixar">Baixar o arquivo .txt</button>
+      </div>
+
+      <h3>b) O índice <span class="opcional">opcional</span></h3>
+      <div id="aviso-indice"></div>
+      <textarea id="saida-json" class="area saida" readonly spellcheck="false"></textarea>
+      <div class="linha-botoes">
+        <button class="botao forte" id="baixar-json">Baixar o indice.json</button>
+        <button class="botao" id="copiar-json">Copiar o índice inteiro</button>
+      </div>
     </div>
   </div>
+
+  <div class="passo" id="passo5" hidden>
+    <h2><span class="numero">5</span> Fila <span class="opcional" id="contador-fila"></span></h2>
+    <p class="dica">As cifras ficam guardadas aqui no seu navegador — pode fechar a página
+       e voltar depois que elas continuam aqui.</p>
+    <ul class="fila" id="fila"></ul>
+    <div class="linha-botoes">
+      <button class="botao forte" id="baixar-zip">⬇ Baixar tudo num .zip</button>
+      <button class="botao" id="esvaziar">Esvaziar a fila</button>
+    </div>
+    <p class="dica"><b>Como subir:</b> abra o .zip, selecione tudo (<b>Ctrl+A</b>),
+       e arraste para <b>Add file → Upload files</b> no GitHub. O
+       <b>indice.json</b> vem junto, já atualizado, e substitui o antigo.</p>
+  </div>
+
 </main>
 
 <footer class="rodape">
   O texto colado aqui não sai do seu navegador.
 </footer>
 
+<script src="zip.js"></script>
 <script src="acordes.js"></script>
 <script src="comum.js"></script>
 <script src="importador.js"></script>

@@ -39,8 +39,51 @@ baixe e suba por **Add file → Upload files**, que ele substitui o antigo.
 O jeito rápido é a página **Importar** (botão no topo do site): você cola a cifra
 copiada de qualquer lugar, ela arruma o texto (tira tabulações, espaços
 estranhos e linhas em branco a mais, separa acordes que vieram no meio da letra),
-mostra uma prévia com os desenhos dos acordes e entrega o arquivo pronto para
-copiar ou baixar. Nada do que você cola sai do seu navegador.
+mostra uma prévia com os desenhos dos acordes e entrega o arquivo pronto.
+Nada do que você cola sai do seu navegador.
+
+### Um arquivo com várias cifras (o mais rápido)
+
+Na página **Importar**, escolha **Um arquivo com várias**. Monte um arquivo de
+texto com todas as cifras, separando cada música por uma linha que comece com
+`===` seguida do título:
+
+```
+=== Evidências
+[Intro] Gm7  C7  F
+ F                Dm
+aqui vai a cifra inteira
+
+=== Angie
+[Intro] Am  E7
+ Am              E7
+aqui vai a outra cifra
+```
+
+Só o título é obrigatório: se ele bater com uma música da sua lista, o artista,
+a categoria e o nome do arquivo vêm sozinhos. Para informar o resto na mão,
+separe por barras, em qualquer ordem:
+
+```
+=== Título | Artista | Categoria | tom: G | capo: 2 | ritmo: Balada
+```
+
+Cole o arquivo (ou abra um `.txt` do computador com o botão) e clique em
+**Separar e mandar tudo para a fila**. Ele avisa quantas entraram, qual tom
+achou em cada uma e quais blocos ficaram de fora por não ter acordes.
+O arquivo `MODELO-VARIAS.txt` no repositório é um exemplo pronto.
+
+### Uma de cada vez
+
+1. Cole a cifra, clique em **Arrumar e conferir** e depois em **+ Adicionar à fila**.
+2. Os campos se limpam sozinhos — cole a próxima e repita quantas quiser.
+   A fila fica guardada no navegador, então dá para parar e continuar outro dia.
+3. Quando cansar, clique em **⬇ Baixar tudo num .zip**.
+4. Abra o zip, selecione tudo (**Ctrl+A**) e arraste para
+   **Add file → Upload files** no GitHub.
+
+O zip já vem com todos os `.txt` **e** com o `indice.json` atualizado, então é um
+upload só para quantas músicas você tiver feito.
 
 Se preferir montar na mão, são **dois passos**.
 
@@ -178,8 +221,10 @@ biblioteca.js    a busca e a lista da página inicial
 leitor.js        rolagem, tom, capotraste, afinador, modo celular
 dicionario.js    a página do dicionário de acordes
 importador.js    a limpeza e a formatação da cifra colada
+zip.js           monta o .zip da fila dentro do próprio navegador
 indice.json      a lista de todas as músicas
-MODELO.txt       modelo para copiar quando for criar uma cifra nova
+MODELO.txt       modelo de uma cifra
+MODELO-VARIAS.txt  modelo do arquivo com várias cifras de uma vez
 *.txt            uma cifra por arquivo
 ```
 

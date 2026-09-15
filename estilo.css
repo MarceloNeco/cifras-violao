@@ -407,3 +407,34 @@ body.modo-palco .conteudo{ padding-top:48px; }
   color:var(--texto-fraco); background:var(--fundo-suave);
   border-radius:6px; padding:3px 6px; margin-left:6px; vertical-align:middle;
 }
+
+/* ---------- fila de cifras a subir ---------- */
+.fila{ list-style:none; margin:0 0 4px; padding:0; display:grid; gap:6px; }
+.fila li{
+  display:flex; align-items:center; gap:10px; min-width:0;
+  border:1px solid var(--borda); border-radius:10px;
+  padding:9px 11px; background:var(--fundo);
+}
+.fila .nome{ flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.fila .nome small{ color:var(--texto-fraco); }
+.fila .arquivo{
+  flex:none; font-family:var(--fonte-cifra); font-size:.75rem; color:var(--texto-fraco);
+  overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:180px;
+}
+.fila .tirar{
+  flex:none; border:0; background:none; cursor:pointer; color:var(--texto-fraco);
+  width:30px; height:30px; border-radius:8px; font-size:1.05rem; line-height:1;
+}
+.fila .tirar:hover{ background:var(--fundo-suave); color:var(--destaque); }
+.fila-vazia{ color:var(--texto-fraco); font-size:.9rem; padding:6px 0; }
+@media (max-width:640px){ .fila .arquivo{ display:none; } }
+
+/* ---------- escolha do modo de importação ---------- */
+.modos{ display:flex; gap:7px; margin:0 0 16px; flex-wrap:wrap; }
+.modos .etiqueta{ padding:9px 15px; font-size:.9rem; }
+.exemplo{
+  background:var(--fundo-suave); border:1px solid var(--borda); border-radius:10px;
+  padding:12px; margin:10px 0; overflow-x:auto;
+  font-family:var(--fonte-cifra); font-size:12.5px; line-height:1.5; white-space:pre;
+}
+label.botao{ cursor:pointer; }

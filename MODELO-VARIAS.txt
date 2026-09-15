@@ -1,0 +1,56 @@
+=== Peixe Vivo
+[Intro] G  D7  G
+
+ G                 D7
+Como pode um peixe vivo
+      D7           G
+Viver fora da água fria
+
+[Refrão]
+    G            D7
+Como poderei viver
+      G        C          G
+Sem a tua, sem a tua
+      D7                 G
+Sem a tua companhia
+
+=== O Cravo e a Rosa | Domínio público | Infantil | tom: C
+
+ C                    G7
+O cravo brigou com a rosa
+                      C
+Debaixo de uma sacada
+ C                  G7
+O cravo saiu ferido
+                    C
+E a rosa despedaçada
+
+=== Mulher Rendeira | Domínio público | Folclore | tom: D | capo: 2
+
+ D                A7
+Olê, mulher rendeira
+                  D
+Olê, mulher rendá
+ D                    A7
+Tu me ensina a fazer renda
+                     D
+Que eu te ensino a namorar
+
+
+=====================================================================
+COMO USAR ESTE MODELO
+
+Cada música começa numa linha que comece com ===  seguida do título.
+Tudo que vem depois, até o próximo ===, é a cifra daquela música.
+
+Só o título é obrigatório. Se ele bater com uma música que já está na
+sua lista do site, o artista, a categoria e o nome do arquivo são
+preenchidos sozinhos.
+
+Se quiser informar o resto na mão, separe por barras, em qualquer ordem:
+
+  === Título | Artista | Categoria | tom: G | capo: 2 | ritmo: Balada
+
+Depois é só abrir a página Importar, escolher "Um arquivo com várias",
+colar (ou abrir o arquivo) e clicar em "Separar e mandar tudo para a fila".
+=====================================================================
