@@ -647,9 +647,67 @@ html[data-tema="escuro"] .recado.erro{ color:#f2837a; }
   .bolinha.pula{ animation:none; }
 }
 
-/* a sílaba que está embaixo do acorde do momento */
-.cifra mark.letra-agora{
-  background:color-mix(in srgb, var(--destaque) 30%, transparent);
-  color:var(--texto); border-radius:4px;
-  box-shadow:0 0 0 1px color-mix(in srgb, var(--destaque) 40%, transparent);
+/* ============================================================
+   Guia de leitura: régua, pintura e bolinha
+   ============================================================ */
+
+/* a régua: dois traços nas laterais, sem cruzar a letra */
+.regua{
+  position:fixed; left:0; right:0; z-index:38;
+  display:flex; align-items:center; gap:0;
+  pointer-events:none;
+  transform:translateY(-50%);
 }
+.regua-traco{
+  flex:none; width:clamp(26px, 7vw, 92px); height:3px; border-radius:2px;
+  background:var(--destaque); opacity:.85;
+  pointer-events:auto; cursor:ns-resize;
+  box-shadow:0 0 10px -2px var(--destaque);
+}
+/* o meio fica vazio de propósito: a risca não cruza a letra */
+.regua-meio{ flex:1; height:1px; background:none; }
+.regua-pega{
+  position:absolute; right:6px; top:50%; transform:translateY(-50%);
+  width:28px; height:28px; border-radius:50%; cursor:ns-resize;
+  border:1px solid var(--destaque); background:var(--fundo-card);
+  color:var(--destaque); font-size:.85rem; line-height:1;
+  pointer-events:auto; display:grid; place-items:center;
+  box-shadow:var(--sombra);
+}
+.regua.arrastando .regua-traco{ opacity:1; height:4px; }
+.regua.arrastando .regua-meio{ background:var(--destaque); opacity:.28; }
+
+/* a tinta que avança da esquerda para a direita */
+.cifra .pintando{
+  background-image:linear-gradient(to right,
+      color-mix(in srgb, var(--destaque) 26%, transparent),
+      color-mix(in srgb, var(--destaque) 26%, transparent));
+  background-repeat:no-repeat;
+  background-size:var(--ate, 0px) 100%;
+  border-radius:4px;
+}
+.cifra .l-acorde.pintando{
+  background-image:linear-gradient(to right,
+      color-mix(in srgb, var(--destaque) 16%, transparent),
+      color-mix(in srgb, var(--destaque) 16%, transparent));
+}
+.cifra .l-acorde b.acorde-agora{
+  background:var(--destaque); color:#fff;
+  border-radius:4px; box-shadow:0 0 12px -2px var(--destaque);
+}
+
+/* a bolinha viaja na frente da tinta */
+.bolinha{
+  position:absolute; left:0; top:0; width:10px; height:10px;
+  border-radius:50%; background:var(--destaque);
+  box-shadow:0 0 0 3px color-mix(in srgb, var(--destaque) 26%, transparent);
+  opacity:0; pointer-events:none; z-index:2;
+  transition:opacity .2s;
+}
+.bolinha.pula{ animation:pulinho .34s ease-out; }
+@keyframes pulinho{
+  0%   { margin-top:0; }
+  45%  { margin-top:-9px; }
+  100% { margin-top:0; }
+}
+@media (prefers-reduced-motion: reduce){ .bolinha.pula{ animation:none; } }
