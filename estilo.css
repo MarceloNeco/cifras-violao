@@ -646,3 +646,10 @@ html[data-tema="escuro"] .recado.erro{ color:#f2837a; }
   .bolinha{ transition:opacity .2s; }
   .bolinha.pula{ animation:none; }
 }
+
+/* a sílaba que está embaixo do acorde do momento */
+.cifra mark.letra-agora{
+  background:color-mix(in srgb, var(--destaque) 30%, transparent);
+  color:var(--texto); border-radius:4px;
+  box-shadow:0 0 0 1px color-mix(in srgb, var(--destaque) 40%, transparent);
+}

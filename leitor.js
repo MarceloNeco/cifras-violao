@@ -380,22 +380,94 @@ let acordeAtual = null, ultimoSom = 0, bolinha = null;
 /* a "linha de leitura" fica logo abaixo da barra fixa, nunca escondida atrás dela */
 function alturaDeLeitura(){
   const fixo = document.querySelector('.fixavel');
+  const folga = 78;   // espaço para a bolinha pular sem sumir atrás da barra
   const abaixoDaBarra = (fixo && !document.body.classList.contains('modo-palco'))
-    ? fixo.getBoundingClientRect().bottom + 46 : 0;
+    ? fixo.getBoundingClientRect().bottom + folga : 0;
   const topoDaPagina = document.querySelector('.topo');
-  const abaixoDoTopo = (topoDaPagina ? topoDaPagina.getBoundingClientRect().bottom : 0) + 46;
-  return Math.min(window.innerHeight * 0.62,
-                  Math.max(window.innerHeight * 0.30, abaixoDaBarra, abaixoDoTopo));
+  const abaixoDoTopo = (topoDaPagina ? topoDaPagina.getBoundingClientRect().bottom : 0) + folga;
+  return Math.max(window.innerHeight * 0.34, abaixoDaBarra, abaixoDoTopo);
+}
+
+let larguraDeUmChar = 8;
+
+/* mede quanto ocupa um caractere na fonte da cifra (ela é monoespaçada) */
+function medirLarguraChar(){
+  const area = $('#cifra');
+  if (!area) return 8;
+  const teste = document.createElement('span');
+  teste.textContent = '0'.repeat(20);
+  teste.style.cssText = 'position:absolute;visibility:hidden;white-space:pre';
+  area.appendChild(teste);
+  const w = teste.getBoundingClientRect().width / 20;
+  teste.remove();
+  return w || 8;
 }
 
 function medirLinhas(){
   const area = $('#cifra');
   if (!area) return;
-  linhasDeAcorde = [...area.querySelectorAll('.l-acorde')].map(el => ({
-    el,
-    topo: el.offsetTop,
-    acordes: [...el.querySelectorAll('b')]
-  })).filter(l => l.acordes.length);
+  larguraDeUmChar = medirLarguraChar();
+  linhasDeAcorde = [...area.querySelectorAll('.l-acorde')].map(el => {
+    /* a linha de letra que vem logo depois desta linha de acordes */
+    let letra = el.nextElementSibling;
+    while (letra && !letra.classList.contains('l-letra')
+                 && !letra.classList.contains('l-acorde')) letra = letra.nextElementSibling;
+    if (letra && !letra.classList.contains('l-letra')) letra = null;
+    return {
+      el,
+      topo: el.offsetTop,
+      acordes: [...el.querySelectorAll('b')],
+      letra,
+      textoDaLetra: letra ? letra.textContent : null
+    };
+  }).filter(l => l.acordes.length);
+}
+
+/* em que coluna (nº do caractere) cada acorde está */
+function colunaDo(b){
+  return Math.round(b.offsetLeft / larguraDeUmChar);
+}
+
+let letraPintada = null;
+function despintarLetra(){
+  if (letraPintada){
+    letraPintada.el.textContent = letraPintada.texto;
+    letraPintada = null;
+  }
+}
+
+/* o acorde costuma ficar uma casa à frente da sílaba, então o trecho
+   é encaixado no começo da palavra em vez de cortar no meio dela */
+function inicioDaPalavra(texto, i){
+  i = Math.max(0, Math.min(texto.length, i));
+  while (i > 0 && texto[i-1] !== ' ') i--;
+  return i;
+}
+function fimDaPalavra(texto, i){
+  while (i < texto.length && texto[i] !== ' ') i++;
+  return i;
+}
+
+/* acende o pedaço da letra que fica embaixo do acorde do momento */
+function pintarLetra(linha, qual){
+  despintarLetra();
+  if (!linha.letra || linha.textoDaLetra === null) return;
+  const texto = linha.textoDaLetra;
+  const inicio = inicioDaPalavra(texto, colunaDo(linha.acordes[qual]));
+  const proximo = linha.acordes[qual + 1];
+  let fim = proximo ? inicioDaPalavra(texto, colunaDo(proximo)) : texto.length;
+  if (fim <= inicio) fim = fimDaPalavra(texto, inicio + 1);
+  fim = Math.min(fim, texto.length);
+  if (fim <= inicio) return;
+
+  letraPintada = {el: linha.letra, texto};
+  const pedaco = document.createElement('mark');
+  pedaco.className = 'letra-agora';
+  pedaco.textContent = texto.slice(inicio, fim);
+  linha.letra.textContent = '';
+  linha.letra.append(document.createTextNode(texto.slice(0, inicio)),
+                     pedaco,
+                     document.createTextNode(texto.slice(fim)));
 }
 
 function criarBolinha(){
@@ -410,6 +482,7 @@ function criarBolinha(){
 function limparGuia(){
   document.querySelectorAll('.l-ativa').forEach(e => e.classList.remove('l-ativa'));
   document.querySelectorAll('.acorde-agora').forEach(e => e.classList.remove('acorde-agora'));
+  despintarLetra();
   if (bolinha) bolinha.style.opacity = '0';
   acordeAtual = null;
 }
@@ -440,6 +513,7 @@ function atualizarGuia(){
   document.querySelectorAll('.acorde-agora').forEach(e => e.classList.remove('acorde-agora'));
   linha.el.classList.add('l-ativa');
   alvo.classList.add('acorde-agora');
+  pintarLetra(linha, qual);
 
   const b = criarBolinha();
   b.style.opacity = '1';

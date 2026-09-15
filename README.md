@@ -217,8 +217,9 @@ Tocar em qualquer desenho faz o acorde soar.
 
 Tocando em qualquer acorde (no texto ou no desenho) você **ouve** como ele soa.
 
-O **Guia** acende a linha de acordes que está na altura de leitura e põe uma
-bolinha sobre o acorde do momento. Ele segue a **rolagem**, não a música: cifra
+O **Guia** acende a linha de acordes que está na altura de leitura, põe uma
+bolinha sobre o acorde do momento e pinta o trecho da letra que fica embaixo
+dele — o trecho é encaixado no começo das palavras, não cortado no meio. Ele segue a **rolagem**, não a música: cifra
 não guarda ritmo, então a bolinha anda quando a página anda e para quando a
 rolagem para. Serve para não perder o lugar e para saber qual acorde vem a
 seguir — não para marcar o compasso.
