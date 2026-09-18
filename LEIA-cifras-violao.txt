@@ -1,0 +1,66 @@
+CIFRAS E ACORDES — correcao 1.5
+================================
+
+O QUE ESTE PACOTE RESOLVE
+-------------------------
+No Modo Celular, ao rolar a cifra para baixo, a barra de ferramentas
+(- / Bb / + / Pause / velocidade / Guia / A- / A+) esticava pela tela
+inteira e os botoes se espalhavam pelo meio.
+
+Causa: uma regra que manda a barra subir para o alto da tela quando a
+pagina rola. Ela serve para o modo normal, mas nao estava sendo
+desligada no Modo Celular. Com a barra presa em cima E embaixo ao
+mesmo tempo, ela esticava.
+
+Agora essa regra nao alcanca o Modo Celular, e a barra fica ancorada
+no rodape.
+
+
+PASSO 1 — subir o estilo.css
+----------------------------
+1. Descompacte este .zip (botao direito > Extrair tudo).
+2. Abra https://github.com/MarceloNeco/cifras-violao
+3. Clique em "Add file" > "Upload files".
+4. Arraste o arquivo estilo.css para a area do navegador.
+   (So o estilo.css. O LEIA nao vai para o repositorio.)
+5. Clique em "Commit changes".
+
+O GitHub substitui o arquivo antigo automaticamente. Nao precisa
+apagar nada antes.
+
+
+PASSO 2 — duas linhas no comum.js
+---------------------------------
+Este arquivo NAO esta no pacote de proposito: e ele que o Windows
+Defender marcou como falso positivo (os enderecos de busca do
+Spotify, YouTube e Google, dentro do codigo, disparam o alerta).
+Editar direto no site do GitHub nao passa por download nenhum.
+
+1. No repositorio, abra comum.js e clique no lapis (icone de editar).
+2. Linha 7:  troque  '1.4'  por  '1.5'
+3. Linha 8:  troque a data por  '18/09/2026'
+4. "Commit changes".
+
+Depois disso as duas linhas ficam assim:
+
+   const VERSAO = '1.5';
+   const VERSAO_DATA = '18/09/2026';
+
+
+PASSO 3 — conferir
+------------------
+1. No computador, abra marceloneco.github.io/cifras-violao e aperte
+   Ctrl+F5. No rodape tem que aparecer "versao 1.5".
+
+2. No celular, abra uma musica, entre no Modo Celular e role a cifra
+   para baixo. A barra tem que continuar colada no rodape, sem
+   esticar.
+
+   Se ainda esticar, e o arquivo antigo guardado no aparelho: abra o
+   site numa aba anonima para conferir.
+
+
+DEPOIS DISSO
+------------
+Falta rodar Importar > "Conferir a lista" > "Conferir agora", que e o
+passo que traz a musica "A Little Respect" de volta para o indice.
