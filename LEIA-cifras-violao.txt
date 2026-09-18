@@ -1,66 +1,89 @@
-CIFRAS E ACORDES — correcao 1.5
-================================
+CIFRAS E ACORDES — por que a correcao nao aparecia no celular
+=============================================================
 
-O QUE ESTE PACOTE RESOLVE
+O DIAGNOSTICO
+-------------
+O estilo.css corrigido JA ESTA no ar. Conferi direto no endereco
+marceloneco.github.io/cifras-violao/estilo.css e as linhas da correcao
+estao la.
+
+O aparelho e que nao estava usando ele.
+
+O site tem um "service worker" (arquivo sw.js) — um ajudante que guarda
+copias dos arquivos no proprio aparelho para o site abrir sem internet.
+Ele veio junto com o pacote de diretrizes instalado por outro chat.
+
+O problema: esse ajudante estava configurado para ENTREGAR SEMPRE A
+COPIA GUARDADA PRIMEIRO, e so depois buscar a versao nova em segundo
+plano. Resultado: toda correcao so aparecia na segunda ou terceira vez
+que o site fosse aberto — e, no caso do celular, nem isso, porque o
+numero de versao dele (VERSAO = 'v1') nunca mudou, entao a gaveta de
+copias antigas nunca foi esvaziada.
+
+Nao era erro do CSS, nem do seu aparelho, nem do GitHub.
+
+
+O QUE MUDA NESTE sw.js
+----------------------
+1. VERSAO passa de 'v1' para 'v2'.
+   Isso esvazia a gaveta de copias antigas uma vez, agora.
+
+2. Arquivos .css, .js e .json passam a ser buscados NA REDE PRIMEIRO.
+   Sao justamente os que mudam a cada correcao. Sem internet, a copia
+   guardada continua atendendo normalmente — o site segue funcionando
+   offline.
+   Imagens, fontes e as cifras continuam vindo da copia guardada, que
+   e o que deixa o site rapido.
+
+3. O nome da gaveta passa de "dgo-v1" para "cifras-violao-v2".
+   Todos os seus apps moram no mesmo endereco (marceloneco.github.io) e
+   estavam usando o MESMO nome de gaveta. Como cada um apaga "as gavetas
+   que nao sao a minha" ao atualizar, um app estava apagando os arquivos
+   guardados do outro. Agora cada app mexe so na propria gaveta.
+
+
+PASSO 1 — subir o arquivo
 -------------------------
-No Modo Celular, ao rolar a cifra para baixo, a barra de ferramentas
-(- / Bb / + / Pause / velocidade / Guia / A- / A+) esticava pela tela
-inteira e os botoes se espalhavam pelo meio.
-
-Causa: uma regra que manda a barra subir para o alto da tela quando a
-pagina rola. Ela serve para o modo normal, mas nao estava sendo
-desligada no Modo Celular. Com a barra presa em cima E embaixo ao
-mesmo tempo, ela esticava.
-
-Agora essa regra nao alcanca o Modo Celular, e a barra fica ancorada
-no rodape.
-
-
-PASSO 1 — subir o estilo.css
-----------------------------
 1. Descompacte este .zip (botao direito > Extrair tudo).
 2. Abra https://github.com/MarceloNeco/cifras-violao
-3. Clique em "Add file" > "Upload files".
-4. Arraste o arquivo estilo.css para a area do navegador.
-   (So o estilo.css. O LEIA nao vai para o repositorio.)
-5. Clique em "Commit changes".
-
-O GitHub substitui o arquivo antigo automaticamente. Nao precisa
-apagar nada antes.
+3. "Add file" > "Upload files".
+4. Arraste o sw.js. (So o sw.js. O LEIA nao vai para o repositorio.)
+5. "Commit changes".
 
 
-PASSO 2 — duas linhas no comum.js
----------------------------------
-Este arquivo NAO esta no pacote de proposito: e ele que o Windows
-Defender marcou como falso positivo (os enderecos de busca do
-Spotify, YouTube e Google, dentro do codigo, disparam o alerta).
-Editar direto no site do GitHub nao passa por download nenhum.
+PASSO 2 — conferir no celular
+-----------------------------
+Aguarde cerca de um minuto (o GitHub leva um tempo para publicar).
 
-1. No repositorio, abra comum.js e clique no lapis (icone de editar).
-2. Linha 7:  troque  '1.4'  por  '1.5'
-3. Linha 8:  troque a data por  '18/09/2026'
-4. "Commit changes".
+1. Feche TODAS as abas do site no celular. Isso importa: o ajudante
+   antigo so sai de cena quando nenhuma aba dele esta aberta.
+2. Abra o site de novo.
+3. Entre numa musica e va para o Modo Celular.
 
-Depois disso as duas linhas ficam assim:
+A barra de ferramentas tem que ficar colada no rodape, sem esticar.
 
-   const VERSAO = '1.5';
-   const VERSAO_DATA = '18/09/2026';
+Se ainda esticar, force a limpeza uma vez:
+   Chrome no Android > toque nos 3 pontinhos > Configuracoes >
+   Configuracoes do site > Todos os sites > marceloneco.github.io >
+   "Limpar e redefinir"
+Depois abra o site outra vez.
 
 
-PASSO 3 — conferir
+DE AGORA EM DIANTE
 ------------------
-1. No computador, abra marceloneco.github.io/cifras-violao e aperte
-   Ctrl+F5. No rodape tem que aparecer "versao 1.5".
-
-2. No celular, abra uma musica, entre no Modo Celular e role a cifra
-   para baixo. A barra tem que continuar colada no rodape, sem
-   esticar.
-
-   Se ainda esticar, e o arquivo antigo guardado no aparelho: abra o
-   site numa aba anonima para conferir.
+Toda vez que um arquivo do site mudar, o numero em VERSAO (linha 5 do
+sw.js) precisa subir: 'v2' para 'v3', depois 'v4', e assim por diante.
+Essa regra ja estava escrita nas suas diretrizes gerais; eu e que nao
+sabia que o sw.js tinha sido instalado neste repositorio.
 
 
-DEPOIS DISSO
-------------
-Falta rodar Importar > "Conferir a lista" > "Conferir agora", que e o
-passo que traz a musica "A Little Respect" de volta para o indice.
+UM AVISO SEPARADO, PARA DEPOIS
+------------------------------
+O site esta carregando, ao mesmo tempo, idioma.js E diretrizes.js —
+dois pacotes diferentes que fazem a mesma coisa (troca de idioma), cada
+um com a propria chave. Suas diretrizes gerais alertam que os dois nao
+deveriam conviver no mesmo repositorio: juntos produzem dois botoes de
+idioma que nao se falam.
+
+Nao mexi nisso agora para nao misturar dois problemas. Vale resolver
+depois, decidindo qual dos dois fica.

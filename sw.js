@@ -1,9 +1,14 @@
 /* Service worker — faz o site abrir mesmo sem internet e permite instalar
    como app no celular e no computador.
    Ao publicar uma versao nova do seu site, troque o numero de VERSAO
-   abaixo (ex.: 'v1' -> 'v2') para o aparelho pegar os arquivos novos. */
-var VERSAO = 'v1';
-var CACHE = 'dgo-' + VERSAO;
+   abaixo (ex.: 'v2' -> 'v3') para o aparelho pegar os arquivos novos. */
+var VERSAO = 'v2';
+
+/* O nome da gaveta leva o nome do app. Todos os sites moram no mesmo
+   endereco (marceloneco.github.io), entao um nome generico faria um app
+   apagar os arquivos guardados do outro. */
+var PREFIXO = 'cifras-violao-';
+var CACHE = PREFIXO + VERSAO;
 
 self.addEventListener('install', function (e) {
   self.skipWaiting();
@@ -14,7 +19,11 @@ self.addEventListener('install', function (e) {
 
 self.addEventListener('activate', function (e) {
   e.waitUntil(caches.keys().then(function (nomes) {
-    return Promise.all(nomes.map(function (n) { return n === CACHE ? null : caches.delete(n); }));
+    return Promise.all(nomes.map(function (n) {
+      /* so mexe nas gavetas deste app; as dos outros ficam onde estao */
+      if (n.indexOf(PREFIXO) !== 0) return null;
+      return n === CACHE ? null : caches.delete(n);
+    }));
   }).then(function () { return self.clients.claim(); }));
 });
 
@@ -22,7 +31,7 @@ self.addEventListener('fetch', function (e) {
   var req = e.request;
   if (req.method !== 'GET') return;
   var url = new URL(req.url);
-  if (url.origin !== self.location.origin) return;   // nao mexe em API externa
+  if (url.origin !== self.location.origin) return; // nao mexe em API externa
 
   /* paginas: tenta a rede primeiro (conteudo sempre atual), cache como reserva */
   if (req.mode === 'navigate') {
@@ -38,7 +47,29 @@ self.addEventListener('fetch', function (e) {
     return;
   }
 
-  /* demais arquivos: cache primeiro, atualizando em segundo plano */
+  /* aparencia e comportamento (.css, .js, .json): rede primeiro, igual as
+     paginas. Sao os arquivos que mudam a cada correcao — servir a copia
+     guardada primeiro deixava o aparelho sempre uma versao atrasada.
+     Sem internet, a copia guardada continua atendendo. */
+  var caminho = url.pathname;
+  var vivo = /\.(css|js|mjs|json)$/i.test(caminho);
+  if (vivo) {
+    e.respondWith(
+      fetch(req).then(function (r) {
+        if (r && r.status === 200) {
+          var copia = r.clone();
+          caches.open(CACHE).then(function (c) { c.put(req, copia); });
+        }
+        return r;
+      }).catch(function () {
+        return caches.match(req);
+      })
+    );
+    return;
+  }
+
+  /* demais arquivos (imagens, fontes, cifras): cache primeiro, atualizando
+     em segundo plano — sao pesados e quase nunca mudam */
   e.respondWith(
     caches.match(req).then(function (cacheado) {
       var rede = fetch(req).then(function (r) {
