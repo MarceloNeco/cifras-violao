@@ -58,7 +58,7 @@ async function carregarTudo(){
     /* na primeira visita, ajusta a letra para a cifra caber na largura da tela */
     if (!tinhaPreferencia) setTimeout(ajustarAoEcra, 60);
   }catch(erro){
-    $('#titulo').textContent = 'Não deu certo';
+    $('#titulo').textContent = t('cifra.erroTitulo');
     $('#cifra').innerHTML = `<span class="l-letra">${escapar(erro.message)}
 
 Se você abriu o arquivo com dois cliques no computador, o navegador bloqueia
@@ -71,10 +71,10 @@ function montarLinks(){
   const l = linksDaMusica(MUSICA);
   $('#ouvir').innerHTML =
     `<a class="botao" href="${l.spotify}" target="_blank" rel="noopener">
-       <span class="ponto verde"></span> Ouvir no Spotify</a>
+       <span class="ponto verde"></span> ${t('cifra.spotify')}</a>
      <a class="botao" href="${l.youtube}" target="_blank" rel="noopener">
-       <span class="ponto vermelho"></span> Ver no YouTube</a>` +
-    (MUSICA.pendente ? `<a class="botao" href="${l.cifra}" target="_blank" rel="noopener">🔎 Procurar a cifra</a>` : '');
+       <span class="ponto vermelho"></span> ${t('cifra.youtube')}</a>` +
+    (MUSICA.pendente ? `<a class="botao" href="${l.cifra}" target="_blank" rel="noopener">${t('cifra.procurar')}</a>` : '');
 }
 
 /* músicas que estão na lista mas ainda não têm o arquivo da cifra */
@@ -84,14 +84,14 @@ function semCifraAinda(){
   $('#diagramas').hidden = true;
   const arquivo = (MUSICA.arquivo || MUSICA.id + '.txt');
   $('#cifra').innerHTML = `<div class="vazio aviso-cifra">
-    <strong>Esta música ainda não tem cifra</strong>
-    Ela já está na sua lista, mas falta criar o arquivo <b>${escapar(arquivo)}</b>.
+    <strong>${t('cifra.semTitulo')}</strong>
+    ${t('cifra.semTexto', {arquivo: '<b>' + escapar(arquivo) + '</b>'})}
     <ol>
-      <li>Use o botão <b>Procurar a cifra</b> aqui em cima e copie a cifra de onde você preferir.</li>
-      <li>Cole na página <a href="importar.html">Importar cifra</a> — ela arruma o texto e monta o arquivo pronto.</li>
-      <li>No GitHub: <b>Add file → Create new file</b>, nome do arquivo <b>${escapar(arquivo)}</b>, e cole o que a página gerou.</li>
+      <li>${t('cifra.semPasso1')}</li>
+      <li>${t('cifra.semPasso2')}</li>
+      <li>${t('cifra.semPasso3', {arquivo: escapar(arquivo)})}</li>
     </ol>
-    Assim que o arquivo existir, esta página passa a mostrar a cifra com rolagem, tom e desenhos.
+    ${t('cifra.semFim')}
   </div>`;
 }
 
@@ -126,7 +126,7 @@ function desenharCifra(){
 
   const forma = transporAcorde(TOM_ORIGINAL, total, bemol);
   $('#meta').textContent = [MUSICA.artista, MUSICA.categoria, MUSICA.ritmo].filter(Boolean).join(' · ')
-    + (capo ? ` · capotraste na ${capo}ª casa (você faz o formato de ${forma})` : '');
+    + (capo ? ' · ' + t('cifra.capoMeta', {n: capo, forma}) : '');
 
   desenharDiagramas(total, bemol);
   guardarPreferencias();
@@ -136,16 +136,34 @@ function desenharCifra(){
 function desenharDiagramas(total, bemol){
   const lista = acordesDaMusica(LINHAS, total, bemol);
   $('#diagramas').innerHTML =
-    `<div class="aviso">Acordes usados${capo ? ' (formatos com o capotraste na ' + capo + 'ª casa)' : ''} — toque num desenho para ouvir</div>`
+    `<div class="aviso">${t('cifra.acordesUsados')}${capo ? ' (' + t('cifra.acordesCapo', {n: capo}) + ')' : ''} — ${t('cifra.toqueDesenho')}</div>`
     + lista.map(a => `<span data-som="${a}">${diagramaSVG(a)}</span>`).join('');
   $('#diagramas').querySelectorAll('[data-som]').forEach(el=>{
     el.addEventListener('click', ()=> tocarAcorde(el.dataset.som));
   });
 }
 
-/* ---------------- rolagem automática ---------------- */
+/* ---------------- rolagem automática ----------------
+   Regras que valem no celular:
+   1) enquanto o dedo está na tela, a rolagem automática para de empurrar —
+      assim ela não briga com o arrasto do usuário;
+   2) durante o Play a barra do topo fica quieta (não pisca por cima da cifra);
+   3) no modo celular a barra de controles se recolhe sozinha depois de
+      alguns segundos e vira um botão redondo de Play/Pause no canto.
+      Um toque na cifra traz a barra de volta.
+   ---------------------------------------------------- */
+
+const ROTULO_PLAY  = '▶ Play';
+const ROTULO_PAUSE = '⏸ Pause';
+
+let dedoNaTela = false;      // o usuário está arrastando com o dedo
+let botaoFlutuante = null;
+let relogioRecolher = null;
+
 function quadro(agora){
   if (!rolando) return;
+  /* dedo na tela: deixa o usuário mandar, sem empurrar por baixo */
+  if (dedoNaTela){ ultimoQuadro = agora; animacao = requestAnimationFrame(quadro); return; }
   const passou = Math.min(100, agora - ultimoQuadro);
   ultimoQuadro = agora;
   sobra += (velocidade * 2.2) * (passou / 1000);   // pixels por segundo
@@ -158,21 +176,91 @@ function quadro(agora){
   }
   animacao = requestAnimationFrame(quadro);
 }
+
+function pintarBotoesPlay(){
+  const b = $('#btn-rolar');
+  if (b){
+    b.innerHTML = rolando ? ROTULO_PAUSE : ROTULO_PLAY;
+    b.classList.toggle('ativo', rolando);
+    b.setAttribute('aria-pressed', rolando);
+    b.title = rolando ? 'Pause (barra de espaço)' : 'Play (barra de espaço)';
+  }
+  const f = criarBotaoFlutuante();
+  f.textContent = rolando ? '⏸' : '▶';
+  f.classList.toggle('ativo', rolando);
+  f.setAttribute('aria-label', rolando ? 'Pause' : 'Play');
+}
+
 function comecarRolagem(){
   rolando = true; sobra = 0; ultimoQuadro = performance.now();
-  $('#btn-rolar').innerHTML = '⏸ Pausar';
-  $('#btn-rolar').classList.add('ativo');
+  pintarBotoesPlay();
   animacao = requestAnimationFrame(quadro);
   manterTelaAcesa();
+  agendarRecolher();
 }
 function pararRolagem(){
   rolando = false;
   if (animacao) cancelAnimationFrame(animacao);
-  $('#btn-rolar').innerHTML = '▶ Rolar';
-  $('#btn-rolar').classList.remove('ativo');
+  pintarBotoesPlay();
   soltarTela();
+  mostrarBarra(false);
 }
 function alternarRolagem(){ rolando ? pararRolagem() : comecarRolagem(); }
+
+/* ---------- botão redondo de Play/Pause (modo celular) ---------- */
+function criarBotaoFlutuante(){
+  if (botaoFlutuante) return botaoFlutuante;
+  botaoFlutuante = document.createElement('button');
+  botaoFlutuante.className = 'play-flutuante';
+  botaoFlutuante.id = 'play-flutuante';
+  botaoFlutuante.type = 'button';
+  botaoFlutuante.textContent = '▶';
+  botaoFlutuante.addEventListener('click', e=>{ e.stopPropagation(); alternarRolagem(); });
+  document.body.appendChild(botaoFlutuante);
+  return botaoFlutuante;
+}
+
+/* ---------- a barra que se recolhe ---------- */
+function agendarRecolher(){
+  clearTimeout(relogioRecolher);
+  if (!rolando) return;
+  if (!document.body.classList.contains('modo-palco')) return;
+  relogioRecolher = setTimeout(()=>{
+    if (rolando) document.body.classList.add('barra-oculta');
+  }, 2600);
+}
+function mostrarBarra(reagendar = true){
+  clearTimeout(relogioRecolher);
+  document.body.classList.remove('barra-oculta');
+  if (reagendar) agendarRecolher();
+}
+
+/* um toque na cifra traz a barra de volta; um arrasto pausa o empurrão */
+function ligarGestos(){
+  const acabou = ()=>{
+    if (!dedoNaTela) return;
+    dedoNaTela = false;
+    ultimoQuadro = performance.now();   // recomeça a contar do zero, sem salto
+    sobra = 0;
+    agendarRecolher();
+  };
+  document.addEventListener('touchstart', e=>{
+    if (e.target.closest('.painel, .faixa-palco, .play-flutuante, .gaveta, .regua')) return;
+    dedoNaTela = true;
+    mostrarBarra(false);
+  }, {passive:true});
+  document.addEventListener('touchend', acabou, {passive:true});
+  document.addEventListener('touchcancel', acabou, {passive:true});
+  /* no computador, o clique na cifra também traz a barra de volta */
+  document.addEventListener('mousedown', e=>{
+    if (e.target.closest('.painel, .faixa-palco, .play-flutuante, .gaveta, .regua')) return;
+    mostrarBarra();
+  });
+  /* mexeu na barra? ela fica mais um tempo na tela */
+  document.addEventListener('pointerdown', e=>{
+    if (e.target.closest('.painel, .faixa-palco')) mostrarBarra();
+  });
+}
 
 /* impede o celular de apagar a tela enquanto você toca */
 let trava = null;
@@ -185,12 +273,19 @@ document.addEventListener('visibilitychange', ()=>{
 });
 
 /* no celular, some com a barra do topo quando você rola para baixo:
-   são 53 pixels de tela que voltam para a cifra */
+   são 53 pixels de tela que voltam para a cifra.
+   Durante o Play a barra fica quieta — antes ela reaparecia assim que
+   você arrastava para cima e tapava a cifra. */
 function esconderTopoAoRolar(){
   if (!window.matchMedia('(max-width:640px)').matches) return;
   let ultimo = window.scrollY, parado = null;
   window.addEventListener('scroll', ()=>{
     const agora = window.scrollY;
+    if (rolando){
+      document.body.classList.toggle('topo-oculto', agora > 120);
+      ultimo = agora;
+      return;
+    }
     if (Math.abs(agora - ultimo) > 6){
       document.body.classList.toggle('topo-oculto', agora > ultimo && agora > 120);
       ultimo = agora;
@@ -226,7 +321,7 @@ function ligarBotoes(){
     const b = $('#btn-so-cifra');
     b.classList.toggle('ativo', ligado);
     b.setAttribute('aria-pressed', ligado);
-    b.innerHTML = ligado ? '▥ Mostrar tudo' : '▤ Só a cifra';
+    b.innerHTML = ligado ? t('cifra.mostrarTudo') : t('cifra.soCifra');
     try{ localStorage.setItem(chaveSoCifra, ligado ? 'sim' : 'nao'); }catch(e){}
   }
   let guardadoSoCifra = null;
@@ -253,7 +348,40 @@ function ligarBotoes(){
     fav.textContent = agora ? '★' : '☆';
   };
 
+  const compartilhador = $('#btn-compartilhar');
+  if (compartilhador) compartilhador.onclick = async ()=>{
+    let r = 'nada';
+    if (window.DGO && DGO.compartilhar){
+      /* compartilhamento nativo do módulo — o mesmo nos três apps */
+      try{ await DGO.compartilhar({titulo: MUSICA.titulo,
+                                   texto: buscaDaMusica(MUSICA),
+                                   url: location.href}); r = 'compartilhado'; }
+      catch(e){ r = 'nada'; }
+    }else if (navigator.share){
+      try{ await navigator.share({title: MUSICA.titulo, url: location.href}); r = 'compartilhado'; }
+      catch(e){ r = 'nada'; }
+    }else{
+      try{ await navigator.clipboard.writeText(MUSICA.titulo + '\n' + location.href); r = 'copiado'; }
+      catch(e){}
+    }
+    if (r === 'copiado'){
+      compartilhador.textContent = '✓';
+      setTimeout(()=>{ compartilhador.textContent = '⤴'; }, 1600);
+    }
+  };
+
+  /* trocou o idioma? redesenha o que é feito em JavaScript */
+  document.addEventListener('idioma-mudou', ()=>{
+    if (!LINHAS.length) return;
+    montarLinks();
+    montarAfinador();
+    desenharCifra();
+    pintarBotoesPlay();
+  });
+
   esconderTopoAoRolar();
+  ligarGestos();
+  pintarBotoesPlay();
   iniciarGuia();
   $('#btn-afinador').onclick = ()=> abrirAfinador(true);
   $('#fechar-afinador').onclick = ()=> abrirAfinador(false);
@@ -308,26 +436,29 @@ function modoPalco(ligar){
     document.documentElement.style.setProperty('--tamanho-cifra', tamanho + 'px');
     setTimeout(ajustarAoEcra, 30);
     manterTelaAcesa();
+    mostrarBarra(false);
     if (document.documentElement.requestFullscreen)
       document.documentElement.requestFullscreen().catch(()=>{});
   }else{
     pararRolagem();
+    document.body.classList.remove('barra-oculta');
     if (document.fullscreenElement && document.exitFullscreen) document.exitFullscreen().catch(()=>{});
   }
 }
 
 /* ---------------- afinador ---------------- */
 const CORDAS = [
-  {nome:'E', midi:40, obs:'6ª (mais grossa)'},
+  {nome:'E', midi:40, obs:'afinador.grossa'},
   {nome:'A', midi:45, obs:'5ª'},
   {nome:'D', midi:50, obs:'4ª'},
   {nome:'G', midi:55, obs:'3ª'},
   {nome:'B', midi:59, obs:'2ª'},
-  {nome:'E', midi:64, obs:'1ª (mais fina)'}
+  {nome:'E', midi:64, obs:'afinador.fina'}
 ];
+function textoDaCorda(c){ return c.obs.includes('.') ? t(c.obs) : c.obs; }
 function montarAfinador(){
   $('#cordas').innerHTML = CORDAS.map((c,i)=>
-    `<button class="corda" data-i="${i}"><b>${c.nome}</b><small>${c.obs}</small></button>`).join('');
+    `<button class="corda" data-i="${i}"><b>${c.nome}</b><small>${textoDaCorda(c)}</small></button>`).join('');
   $('#cordas').querySelectorAll('.corda').forEach(b=>{
     b.addEventListener('click', ()=>{
       const c = CORDAS[+b.dataset.i];
@@ -605,7 +736,7 @@ function ligarSomDoGuia(ligado){
   b.classList.toggle('ativo', ligado);
   b.setAttribute('aria-pressed', ligado);
   b.textContent = ligado ? '🔊' : '🔇';
-  b.title = ligado ? 'Desligar o som do guia' : 'Ligar o som do guia';
+  b.title = t('cifra.guiaSom');
   try{ localStorage.setItem('cifras:guia-som', ligado ? 'sim' : 'nao'); }catch(e){}
 }
 

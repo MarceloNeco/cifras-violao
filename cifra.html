@@ -5,26 +5,17 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Cifra</title>
 <meta name="theme-color" content="#a8501e">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icone-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Cifras">
 <link rel="stylesheet" href="estilo.css">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎸</text></svg>">
 </head>
-<body>
+<body data-pagina="cifra">
 
 <header class="topo">
-  <div class="topo-interno">
-    <a class="marca" href="index.html">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round">
-        <path d="m14 6-8 8M9 3 6 6M4 9l3-3"/><path d="M11.5 12.5 19 5M17 3l4 4M6.5 21a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7Z"/>
-      </svg>
-      <span>Voltar</span>
-    </a>
-    <div class="espaco"></div>
-    <a class="botao some-no-palco" href="acordes.html" title="Dicionário de acordes">Acordes</a>
-    <button class="botao icone" id="btn-favorito" aria-pressed="false" title="Favoritar">☆</button>
-    <button class="botao icone" id="btn-afinador" title="Afinador">🎵</button>
-    <button class="botao icone" data-botao-fundo title="Imagem de fundo">▨</button>
-    <button class="botao icone" data-botao-tema title="Mudar o tema">☾</button>
-  </div>
+  <div class="topo-interno"></div>
 </header>
 
 <!-- faixa fina que aparece só no modo celular -->
@@ -32,12 +23,12 @@
   <span class="nome" id="nome-palco"></span>
   <span class="espaco"></span>
   <span class="valor" id="tom-palco"></span>
-  <button class="botao icone" id="sair-palco" title="Sair do modo celular">✕</button>
+  <button class="botao icone" id="sair-palco" data-i18n-title="cifra.sairPalco">✕</button>
 </div>
 
-<main class="conteudo">
+<main class="conteudo" data-dgo-ignorar>
   <div class="cabecalho-musica">
-    <h1 id="titulo">Carregando…</h1>
+    <h1 id="titulo" data-i18n="cifra.carregando">Carregando…</h1>
     <div class="meta" id="meta"></div>
   </div>
 
@@ -46,45 +37,45 @@
   <div class="fixavel" id="fixavel">
   <div class="painel" id="painel">
     <div class="grupo">
-      <span class="rotulo some-no-palco">Tom</span>
-      <button class="botao icone" id="tom-menos" title="Abaixar meio tom">−</button>
+      <span class="rotulo some-no-palco" data-i18n="cifra.tom">Tom</span>
+      <button class="botao icone" id="tom-menos" data-i18n-title="cifra.abaixar">−</button>
       <span class="valor" id="tom-atual">C</span>
-      <button class="botao icone" id="tom-mais" title="Subir meio tom">+</button>
-      <button class="botao icone some-no-palco" id="tom-zero" title="Voltar ao tom original">↺</button>
+      <button class="botao icone" id="tom-mais" data-i18n-title="cifra.subir">+</button>
+      <button class="botao icone some-no-palco" id="tom-zero" data-i18n-title="cifra.tomOriginal">↺</button>
     </div>
 
     <div class="grupo some-no-palco">
-      <span class="rotulo">Capo</span>
-      <button class="botao icone" id="capo-menos" title="Menos uma casa">−</button>
+      <span class="rotulo" data-i18n="cifra.capo">Capo</span>
+      <button class="botao icone" id="capo-menos" data-i18n-title="cifra.capoMenos">−</button>
       <span class="valor" id="capo-atual">0</span>
-      <button class="botao icone" id="capo-mais" title="Mais uma casa">+</button>
+      <button class="botao icone" id="capo-mais" data-i18n-title="cifra.capoMais">+</button>
     </div>
 
     <div class="grupo">
-      <button class="botao" id="btn-rolar" title="Rolagem automática (barra de espaço)">▶ Rolar</button>
+      <button class="botao" id="btn-rolar" title="Play (barra de espaço)">▶ Play</button>
       <input class="velocidade" id="velocidade" type="range" min="1" max="30" value="8"
-             aria-label="Velocidade da rolagem">
+             data-i18n-aria="cifra.velocidade" aria-label="Velocidade da rolagem">
       <span class="valor" id="velocidade-valor">8</span>
     </div>
 
     <div class="grupo">
       <button class="botao" id="btn-guia" aria-pressed="false"
-              title="Bolinha que acompanha a cifra conforme ela rola">◉ Guia</button>
+              data-i18n="cifra.guia" data-i18n-title="cifra.guiaTitulo">◉ Guia</button>
       <button class="botao icone" id="btn-guia-som" aria-pressed="false" hidden
-              title="Ligar o som da bolinha">🔇</button>
+              data-i18n-title="cifra.guiaSom">🔇</button>
     </div>
 
     <div class="grupo">
-      <span class="rotulo some-no-palco">Letra</span>
-      <button class="botao icone" id="fonte-menos" title="Diminuir a letra">A−</button>
-      <button class="botao icone" id="fonte-mais" title="Aumentar a letra">A+</button>
-      <button class="botao icone" id="btn-caber" title="Ajustar para caber na tela">⤢</button>
+      <span class="rotulo some-no-palco" data-i18n="cifra.letra">Letra</span>
+      <button class="botao icone" id="fonte-menos" data-i18n-title="cifra.menor">A−</button>
+      <button class="botao icone" id="fonte-mais" data-i18n-title="cifra.maior">A+</button>
+      <button class="botao icone" id="btn-caber" data-i18n-title="cifra.caber">⤢</button>
     </div>
 
     <div class="grupo some-no-palco">
       <button class="botao so-no-computador" id="btn-so-cifra" aria-pressed="false"
-              title="Esconder o cabeçalho e os desenhos, e deixar só a cifra">▤ Só a cifra</button>
-      <button class="botao" id="btn-palco" title="Tela cheia para tocar">📱 Modo celular</button>
+              data-i18n-title="cifra.soCifraTitulo">▤ Só a cifra</button>
+      <button class="botao" id="btn-palco" data-i18n="cifra.palco" data-i18n-title="cifra.palcoTitulo">📱 Modo celular</button>
     </div>
   </div>
 
@@ -97,20 +88,25 @@
 <!-- afinador -->
 <div class="gaveta" id="afinador" aria-hidden="true">
   <div class="gaveta-interna">
-    <h2>Afinador</h2>
-    <p>Toque numa corda para ouvir a nota certa e afinar de ouvido.
-       Da mais grossa para a mais fina.</p>
+    <h2 data-i18n="afinador.titulo">Afinador</h2>
+    <p data-i18n="afinador.texto">Toque numa corda para ouvir a nota certa e afinar de ouvido.</p>
     <div class="cordas" id="cordas"></div>
     <div style="text-align:center;margin-top:12px">
-      <button class="botao" id="fechar-afinador">Fechar</button>
+      <button class="botao" id="fechar-afinador" data-i18n="afinador.fechar">Fechar</button>
     </div>
   </div>
 </div>
 
-<footer class="rodape">
-  Espaço = rolar · setas ↑ ↓ = velocidade · + e − = tom
+<footer class="rodape" data-dgo-ignorar>
+  <span data-i18n="cifra.rodape">Espaço = Play/Pause · setas ↑ ↓ = velocidade · + e − = tom</span>
 </footer>
 
+<script src="idioma.js"></script>
+<!-- Diretrizes gerais: idioma, anúncio, conta, avisos, nuvem e instalação.
+     Estes dois arquivos são o padrão dos seus apps. O diretrizes.js é
+     igual nos três; o que muda é só o diretrizes-config.js. -->
+<script src="diretrizes.js"></script>
+<script src="diretrizes-config.js"></script>
 <script src="acordes.js"></script>
 <script src="comum.js"></script>
 <script src="aviso.js"></script>

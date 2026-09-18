@@ -657,3 +657,34 @@ $('#conferir').onclick = async ()=>{
     setTimeout(()=> URL.revokeObjectURL(a.href), 2000);
   };
 };
+
+
+/* ------------------------------------------------------------
+   Texto que veio da página da FOTO (ocr.html).
+   Ele chega pela memória curta do navegador, já cai na caixa de
+   colar e a página trata igual a qualquer cifra copiada.
+   ------------------------------------------------------------ */
+(function receberDaFoto(){
+  let texto = null, titulo = '';
+  try{
+    texto = sessionStorage.getItem('cifras:ocr-texto');
+    titulo = sessionStorage.getItem('cifras:ocr-titulo') || '';
+    sessionStorage.removeItem('cifras:ocr-texto');
+    sessionStorage.removeItem('cifras:ocr-titulo');
+  }catch(e){}
+  if (!texto) return;
+
+  const caixa = document.querySelector('#entrada');
+  if (!caixa) return;
+  caixa.value = texto;
+  if (titulo) document.querySelector('#titulo').value = titulo;
+
+  const recado = document.querySelector('#relatorio');
+  if (recado) recado.textContent = (typeof t === 'function')
+    ? t('importar.veioDaFoto').replace(/<[^>]+>/g,'')
+    : 'Este texto veio de uma foto. Confira antes de guardar.';
+
+  const botao = document.querySelector('#processar');
+  if (botao) botao.click();
+  caixa.scrollIntoView({behavior:'smooth', block:'center'});
+})();

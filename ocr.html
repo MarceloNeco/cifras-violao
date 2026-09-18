@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="pt-BR" data-tema="claro">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Foto vira cifra</title>
+<meta name="theme-color" content="#a8501e">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icone-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Cifras">
+<link rel="stylesheet" href="estilo.css">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎸</text></svg>">
+</head>
+<body data-pagina="ocr">
+
+<header class="topo">
+  <div class="topo-interno"></div>
+</header>
+
+<main class="conteudo" data-dgo-ignorar>
+  <div class="chamada">
+    <h1 data-i18n="ocr.titulo">Foto vira cifra</h1>
+    <p data-i18n="ocr.sub"></p>
+    <p class="dica" data-i18n="ocr.tudoAqui"></p>
+  </div>
+
+  <div class="passo">
+    <div class="linha-botoes">
+      <button class="botao forte" id="abrir-camera" data-i18n="ocr.camera"></button>
+      <label class="botao" for="arquivo" data-i18n="ocr.arquivo"></label>
+      <input id="arquivo" type="file" accept="image/*" capture="environment" hidden>
+      <span class="recado" id="recado"></span>
+    </div>
+
+    <div id="area-camera" hidden>
+      <video id="video" playsinline muted class="video-ocr"></video>
+      <div class="linha-botoes">
+        <button class="botao forte" id="tirar" data-i18n="ocr.tirar"></button>
+        <button class="botao" id="trocar-camera" data-i18n="ocr.trocar"></button>
+        <button class="botao" id="parar-camera" data-i18n="ocr.parar"></button>
+      </div>
+    </div>
+  </div>
+
+  <div class="passo" id="bloco-previa" hidden>
+    <div class="linha-botoes">
+      <button class="botao" id="girar" data-i18n="ocr.girar"></button>
+      <label class="campo curto">
+        <span data-i18n="ocr.contraste">Contraste</span>
+        <input id="contraste" type="range" min="0" max="100" value="40" class="velocidade">
+      </label>
+      <label class="campo">
+        <span data-i18n="ocr.idiomaOcr">Idioma da cifra</span>
+        <select id="idioma-ocr" class="selecao">
+          <option value="por" data-i18n="ocr.portugues">Português</option>
+          <option value="eng" data-i18n="ocr.ingles">Inglês</option>
+          <option value="por+eng" data-i18n="ocr.ambos">Português e inglês</option>
+        </select>
+      </label>
+    </div>
+    <canvas id="previa" class="previa-ocr"></canvas>
+    <div class="linha-botoes">
+      <button class="botao forte" id="ler" data-i18n="ocr.ler"></button>
+      <button class="botao" id="limpar" data-i18n="ocr.limpar"></button>
+    </div>
+  </div>
+
+  <div class="passo" id="bloco-saida" hidden>
+    <h2 data-i18n="ocr.resultado">O que eu li</h2>
+    <div class="campos">
+      <label class="campo largo">
+        <span data-i18n="ocr.titulo2">Título da música</span>
+        <input id="titulo-musica" type="text" autocomplete="off">
+      </label>
+    </div>
+    <textarea id="saida" class="area cifra-crua" spellcheck="false"></textarea>
+    <div class="linha-botoes">
+      <button class="botao forte" id="mandar" data-i18n="ocr.mandar"></button>
+    </div>
+  </div>
+
+  <div class="passo">
+    <h2 data-i18n="ocr.dicaTitulo">Para sair bom</h2>
+    <ul class="lista-dicas">
+      <li data-i18n="ocr.dica1"></li>
+      <li data-i18n="ocr.dica2"></li>
+      <li data-i18n="ocr.dica3"></li>
+      <li data-i18n="ocr.dica4"></li>
+    </ul>
+  </div>
+</main>
+
+<footer class="rodape" data-dgo-ignorar></footer>
+
+<script src="idioma.js"></script>
+<!-- Diretrizes gerais: idioma, anúncio, conta, avisos, nuvem e instalação.
+     Estes dois arquivos são o padrão dos seus apps. O diretrizes.js é
+     igual nos três; o que muda é só o diretrizes-config.js. -->
+<script src="diretrizes.js"></script>
+<script src="diretrizes-config.js"></script>
+<script src="acordes.js"></script>
+<script src="comum.js"></script>
+<script src="aviso.js"></script>
+<script src="ocr.js"></script>
+</body>
+</html>

@@ -6,100 +6,50 @@
 <title>Aviso — Cifras de Violão</title>
 <meta name="robots" content="noindex, nofollow">
 <meta name="theme-color" content="#a8501e">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icone-192.png">
 <link rel="stylesheet" href="estilo.css">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎸</text></svg>">
 </head>
-<body>
+<body data-pagina="aviso">
 
 <header class="topo">
-  <div class="topo-interno">
-    <a class="marca" href="index.html">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round">
-        <path d="M11.5 12.5 19 5M17 3l4 4M6.5 21a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7Z"/>
-      </svg>
-      <span>Cifras de Violão</span>
-    </a>
-    <div class="espaco"></div>
-    <button class="botao icone" data-botao-fundo title="Imagem de fundo">▨</button>
-    <button class="botao icone" data-botao-tema title="Mudar o tema">☾</button>
-  </div>
+  <div class="topo-interno"></div>
 </header>
 
-<main class="conteudo texto-legal">
-  <h1>Aviso</h1>
-  <p class="atualizado">Última atualização: 15 de setembro de 2026</p>
+<!-- O texto vem do arquivo aviso.js, o mesmo que a janela do rodapé usa.
+     Assim existe UM lugar só para corrigir o aviso. -->
+<main class="conteudo texto-legal" id="corpo-aviso" data-dgo-ignorar></main>
 
-  <h2>1. Natureza e finalidade</h2>
-  <p>Este site é um acervo particular de cifras de violão, mantido para estudo e
-     prática musical individual. Não se trata de serviço, produto ou publicação
-     dirigida ao público.</p>
-  <p>Não há publicidade, patrocínio, assinatura, venda de qualquer espécie, doação
-     ou outra forma de monetização, direta ou indireta. Nada aqui é comercializado
-     e nenhuma receita é obtida a partir do conteúdo reunido.</p>
+<footer class="rodape" data-dgo-ignorar></footer>
 
-  <h2>2. Direitos autorais</h2>
-  <p>As letras e as harmonias aqui reunidas pertencem aos respectivos autores,
-     intérpretes e editoras. Nenhuma titularidade é reivindicada sobre esse
-     material, e a presença neste acervo não implica cessão, licença ou
-     autorização de uso por terceiros.</p>
-  <p>A compilação tem caráter de anotação pessoal de estudo, na linha do que dispõe
-     o art. 46 da Lei nº 9.610/1998. Não substitui, nem pretende substituir, a
-     aquisição de songbooks, partituras, fonogramas ou o acesso a serviços
-     devidamente licenciados, que seguem sendo o caminho recomendado para quem
-     deseja o material de forma completa e autorizada.</p>
-  <p>Este acervo não hospeda áudio, vídeo ou partitura digitalizada. As indicações
-     de Spotify e YouTube são apenas links de busca para os serviços oficiais.</p>
-
-  <h2>3. Pedidos de remoção</h2>
-  <p>Qualquer autor, editora, intérprete ou representante legal que identifique
-     conteúdo de titularidade própria neste acervo pode solicitar a retirada. A remoção
-     é feita de imediato, sem necessidade de ordem judicial, exigência de
-     comprovação formal ou qualquer contrapartida.</p>
-  <p>Canal para solicitações:
-     <a href="https://github.com/MarceloNeco/cifras-violao/issues" target="_blank" rel="noopener">
-     github.com/MarceloNeco/cifras-violao/issues</a></p>
-
-  <h2>4. Dados pessoais</h2>
-  <p>Este site é estático. Não possui servidor de aplicação, banco de dados,
-     cadastro, login, formulário de contato ou área restrita. Não há coleta,
-     armazenamento ou transmissão de dados pessoais de quem o acessa.</p>
-  <p>Não são utilizados cookies de rastreamento, pixels, ferramentas de analytics,
-     mapas de calor ou qualquer instrumento de medição de audiência.</p>
-  <p>As preferências de uso — tema, imagem de fundo, músicas favoritas, tom escolhido,
-     tamanho da letra e a fila da página de importação — ficam gravadas exclusivamente
-     no armazenamento local do navegador utilizado, permanecem no próprio aparelho e
-     não trafegam para lugar algum. Limpar os dados do navegador apaga todas elas.</p>
-  <p>Arquivos abertos na página de importação, inclusive PDFs, são processados dentro
-     do próprio navegador e não são enviados a nenhum servidor.</p>
-  <p>Pelo caráter exclusivamente pessoal e não econômico da atividade, não se
-     configura tratamento de dados sujeito à Lei nº 13.709/2018, conforme o art. 4º,
-     inciso II, alínea "a".</p>
-  <p>A hospedagem é feita pelo GitHub Pages. Como ocorre com qualquer site, o
-     provedor de hospedagem mantém registros técnicos de acesso próprios,
-     regidos pelas políticas do GitHub, fora do controle deste acervo.</p>
-
-  <h2>5. Conteúdo de terceiros</h2>
-  <p>Os links para serviços externos levam a buscas nas plataformas correspondentes.
-     O conteúdo, a disponibilidade e as políticas desses serviços são de
-     responsabilidade exclusiva dos respectivos operadores.</p>
-
-  <h2>6. Ausência de garantias</h2>
-  <p>As cifras podem conter erros de transcrição, tom ou digitação, e representam
-     uma entre várias interpretações possíveis de cada obra. O material é
-     disponibilizado no estado em que se encontra, sem garantia de exatidão,
-     integralidade ou adequação a qualquer finalidade específica.</p>
-
-  <h2>7. Alterações</h2>
-  <p>Este aviso pode ser alterado a qualquer tempo, sem comunicação prévia. A data
-     no topo indica a última revisão.</p>
-
-  <p class="volta"><a class="botao" href="index.html">← Voltar para as cifras</a></p>
-</main>
-
-<footer class="rodape"></footer>
-
+<script src="idioma.js"></script>
+<!-- Diretrizes gerais: idioma, anúncio, conta, avisos, nuvem e instalação.
+     Estes dois arquivos são o padrão dos seus apps. O diretrizes.js é
+     igual nos três; o que muda é só o diretrizes-config.js. -->
+<script src="diretrizes.js"></script>
+<script src="diretrizes-config.js"></script>
 <script src="acordes.js"></script>
 <script src="comum.js"></script>
-<script>iniciarTema();</script>
+<script src="aviso.js"></script>
+<script>
+  iniciarTema();
+  function desenharAviso(){
+    document.querySelector('#corpo-aviso').innerHTML = textoDoAviso() +
+      '<p class="volta"><a class="botao" href="index.html">\u2190 <span data-i18n="topo.voltar">Voltar</span></a></p>';
+    aplicarIdioma(document.querySelector('#corpo-aviso'));
+    const form = document.querySelector('#form-remocao');
+    if (form) form.addEventListener('submit', enviarPedido);
+  }
+  desenharAviso();
+  document.addEventListener('idioma-mudou', ()=>{
+    const alvo = document.querySelector('#corpo-aviso');
+    if (alvo && !alvo.dataset.desenhando){
+      alvo.dataset.desenhando = '1';
+      alvo.innerHTML = textoDoAviso();
+      delete alvo.dataset.desenhando;
+    }
+  });
+</script>
 </body>
 </html>

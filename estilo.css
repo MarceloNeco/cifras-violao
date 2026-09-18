@@ -200,15 +200,49 @@ a{ color:inherit; text-decoration:none; }
 body.modo-palco .topo,
 body.modo-palco .cabecalho-musica,
 body.modo-palco .diagramas,
+body.modo-palco .ouvir,
 body.modo-palco .rodape{ display:none; }
 body.modo-palco .conteudo{ max-width:none; padding:0 14px 0; }
 body.modo-palco .cifra{ font-size:var(--tamanho-cifra, 21px); line-height:1.6; padding-bottom:75vh; }
 body.modo-palco .painel{
-  position:fixed; left:8px; right:8px; bottom:8px; top:auto;
+  position:fixed; left:8px; right:8px; top:auto;
+  bottom:calc(8px + env(safe-area-inset-bottom, 0px));
   border-radius:16px; box-shadow:var(--sombra);
   background:color-mix(in srgb, var(--fundo-card) 96%, transparent);
   justify-content:center; padding:9px 10px;
+  transition:transform .24s ease, opacity .24s ease;
 }
+
+/* ---------- a barra que sai da frente enquanto toca ----------
+   Antes, arrastar a cifra para cima durante o Play fazia as barras
+   piscarem por cima da música. Agora elas se recolhem sozinhas e
+   sobra só o botão redondo no canto. Um toque na cifra traz tudo de volta. */
+body.modo-palco.barra-oculta .painel{
+  transform:translateY(calc(100% + 22px)); opacity:0; pointer-events:none;
+}
+body.modo-palco.barra-oculta .faixa-palco{
+  transform:translateY(-100%); opacity:0; pointer-events:none;
+}
+.faixa-palco{ transition:transform .24s ease, opacity .24s ease; }
+
+.play-flutuante{
+  display:none; position:fixed; z-index:55;
+  right:calc(14px + env(safe-area-inset-right, 0px));
+  bottom:calc(16px + env(safe-area-inset-bottom, 0px));
+  width:60px; height:60px; border-radius:50%;
+  align-items:center; justify-content:center;
+  font-size:1.5rem; line-height:1; cursor:pointer;
+  border:1px solid var(--borda);
+  background:color-mix(in srgb, var(--fundo-card) 92%, transparent);
+  backdrop-filter:blur(10px);
+  color:var(--texto); box-shadow:var(--sombra);
+  -webkit-tap-highlight-color:transparent;
+}
+.play-flutuante.ativo{
+  border-color:var(--destaque); color:var(--destaque);
+}
+body.modo-palco.barra-oculta .play-flutuante{ display:flex; }
+@media (min-width:761px){ .play-flutuante{ display:none !important; } }
 body.modo-palco .painel .some-no-palco{ display:none; }
 body.modo-palco .painel .botao{ min-height:34px; padding:0 9px; font-size:.85rem; }
 body.modo-palco .painel .botao.icone{ width:34px; padding:0; }
@@ -711,3 +745,95 @@ html[data-tema="escuro"] .recado.erro{ color:#f2837a; }
   100% { margin-top:0; }
 }
 @media (prefers-reduced-motion: reduce){ .bolinha.pula{ animation:none; } }
+
+/* ============================================================
+   NOVO NA VERSÃO 2.0
+   Faixa de anúncio · menu do topo · botão de idioma · contas ·
+   página da foto (OCR)
+   ============================================================ */
+
+/* ---------- menu do topo ---------- */
+.topo-interno{ position:relative; }
+.menu-topo{ display:flex; align-items:center; gap:8px; }
+.abre-menu{ display:none; }
+.botao.conta{ font-size:1rem; }
+
+@media (max-width:760px){
+  .abre-menu{ display:inline-flex; }
+  .menu-topo{
+    display:none; position:absolute; right:0; top:calc(100% + 8px);
+    flex-direction:column; align-items:stretch; gap:6px; min-width:210px;
+    background:var(--fundo-card); border:1px solid var(--borda);
+    border-radius:14px; box-shadow:var(--sombra); padding:9px; z-index:70;
+  }
+  .menu-topo.aberto{ display:flex; }
+  .menu-topo .botao{ justify-content:flex-start; width:100%; min-height:40px; }
+  .menu-topo .botao.icone{ width:100%; padding:0 10px; }
+}
+
+/* ---------- página da conta ---------- */
+.perfis{ display:grid; grid-template-columns:repeat(auto-fit, minmax(190px,1fr)); gap:10px; margin-bottom:14px; }
+.cartao-perfil{
+  display:flex; flex-direction:column; gap:5px; text-align:left;
+  border:1px solid var(--borda); border-radius:var(--raio);
+  background:var(--fundo-card); color:var(--texto);
+  padding:13px 14px; cursor:pointer; font:inherit;
+}
+.cartao-perfil:hover{ border-color:var(--destaque); }
+.cartao-perfil.ativo{ border-color:var(--destaque); background:var(--destaque-claro); }
+.cartao-perfil b{ font-size:1rem; }
+.cartao-perfil small{ color:var(--texto-fraco); font-size:.82rem; line-height:1.45; }
+
+.numeros{ display:flex; flex-wrap:wrap; gap:14px; margin:12px 0; }
+.numero-grande{
+  flex:1; min-width:150px; border:1px solid var(--borda); border-radius:var(--raio);
+  background:var(--fundo-card); padding:14px; text-align:center;
+}
+.numero-grande b{ display:block; font-size:1.9rem; color:var(--destaque); font-family:var(--fonte-cifra); }
+.numero-grande small{ color:var(--texto-fraco); font-size:.8rem; }
+.botao.apagado{ opacity:.55; }
+
+/* ---------- página da foto (OCR) ---------- */
+.video-ocr{
+  width:100%; max-height:62vh; border-radius:var(--raio);
+  background:#000; margin:10px 0; object-fit:contain;
+}
+.previa-ocr{
+  width:100%; height:auto; border:1px solid var(--borda);
+  border-radius:var(--raio); background:var(--fundo-card); margin:10px 0;
+}
+.area.cifra-crua{
+  font-family:var(--fonte-cifra); font-size:13px; line-height:1.45;
+  white-space:pre; overflow-x:auto; min-height:300px;
+}
+.lista-dicas{ margin:0; padding-left:20px; color:var(--texto-fraco); font-size:.88rem; line-height:1.7; }
+.recado.trabalhando{ color:var(--destaque); }
+
+.linha-opcao{ display:flex; align-items:flex-start; gap:9px; margin:10px 0 2px; cursor:pointer; }
+.linha-opcao input{ margin-top:3px; flex:none; accent-color:var(--destaque); width:17px; height:17px; }
+
+/* ============================================================
+   Encaixe com o módulo das diretrizes (diretrizes.js)
+   O módulo desenha o banner, o botão PT/EN e as telas de conta,
+   avisos e configurações. Aqui só dizemos onde eles não devem
+   aparecer neste site.
+   ============================================================ */
+
+/* a barra do banner vem azul-escura de fábrica (o módulo é o mesmo
+   nos três apps); aqui ela veste o marrom do site */
+.dgo-banner{ background:#1a1614 !important; border-bottom-color:var(--borda) !important; }
+.dgo-idioma{ background:rgba(26,22,20,.94) !important; }
+.dgo-idioma button.dgo-on{ background:var(--destaque) !important; color:#fff !important; }
+
+/* no modo celular a tela é da cifra: nada de banner nem de botão
+   de idioma flutuando por cima da música */
+body.modo-palco .dgo-banner,
+body.modo-palco .dgo-idioma{ display:none !important; }
+
+/* o botão PT/EN do módulo fica embaixo à esquerda; o botão redondo
+   de Play/Pause fica embaixo à direita. Um não encosta no outro. */
+.dgo-idioma{ z-index:54; }
+
+/* com o banner do módulo no ar, a barra do topo desce sozinha
+   (ele usa a lista seletoresTopoFixo do diretrizes-config.js) */
+@media print{ .dgo-banner, .dgo-idioma{ display:none !important; } }

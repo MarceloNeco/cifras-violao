@@ -4,16 +4,89 @@
 
 /* Versão do site. Ao publicar uma mudança, altere estas duas linhas:
    o número aparece no rodapé de todas as páginas. */
-const VERSAO = '1.4';
-const VERSAO_DATA = '15/09/2026';
+const VERSAO = '2.1';
+const VERSAO_DATA = '2026-09-18';
 
 /* assinatura com a versão e o link do aviso, no rodapé de cada página */
 function montarRodape(){
   document.querySelectorAll('.rodape').forEach(r=>{
     if (r.querySelector('.assinatura')) return;
     r.insertAdjacentHTML('beforeend',
-      `<div class="assinatura">versão ${VERSAO} · ${VERSAO_DATA}` +
-      ` · <a href="#aviso" data-abre-aviso>Aviso</a></div>`);
+      `<div class="assinatura"><span data-i18n="rodape.versao">versão</span> ${VERSAO}` +
+      ` · <span data-i18n-data="${VERSAO_DATA}">${VERSAO_DATA}</span>` +
+      ` · <a href="#aviso" data-abre-aviso data-i18n="rodape.aviso">Aviso</a></div>`);
+  });
+}
+
+/* ============================================================
+   A barra do topo, igual em todas as páginas.
+   Cada página só diz quem ela é: <body data-pagina="cifra">.
+   Assim o botão de idioma e o de conta aparecem em todo lugar
+   sem precisar repetir o mesmo HTML seis vezes.
+   ============================================================ */
+const VIOLAO_SVG = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+    stroke-width="1.8" stroke-linecap="round">
+    <path d="M11.5 12.5 19 5M17 3l4 4M6.5 21a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7Z"/></svg>`;
+
+function montarTopo(){
+  const barra = document.querySelector('.topo .topo-interno');
+  if (!barra || barra.dataset.pronta) return;
+  const pagina = document.body.dataset.pagina || 'inicio';
+  const naCifra = pagina === 'cifra';
+
+  const elo = (nome, endereco, chave) =>
+    `<a class="botao${pagina === nome ? ' ativo' : ''}" href="${endereco}" data-i18n="${chave}"></a>`;
+
+  barra.innerHTML = `
+    <a class="marca" href="index.html">
+      ${VIOLAO_SVG}<span data-i18n="${naCifra ? 'topo.voltar' : 'topo.marca'}"></span>
+    </a>
+    <div class="espaco"></div>
+    ${naCifra ? `
+      <button class="botao icone" id="btn-favorito" aria-pressed="false"
+              data-i18n-title="cifra.favoritar">☆</button>
+      <button class="botao icone some-no-palco" id="btn-compartilhar"
+              data-i18n-title="cifra.compartilhar">⤴</button>
+      <button class="botao icone" id="btn-afinador" data-i18n-title="cifra.afinador">🎵</button>` : ''}
+    <button class="botao icone" data-abre-conta data-i18n-title="topo.conta">☺</button>
+    <button class="botao icone abre-menu" data-botao-menu
+            aria-expanded="false" aria-label="Menu">☰</button>
+    <nav class="menu-topo" id="menu-topo">
+      ${elo('acordes',  'acordes.html',  'topo.acordes')}
+      ${elo('importar', 'importar.html', 'topo.importar')}
+      ${elo('ocr',      'ocr.html',      'topo.foto')}
+      <button class="botao" data-abre-config data-i18n="topo.config"></button>
+      <button class="botao" data-abre-instalar data-i18n="topo.instalar"></button>
+      <button class="botao icone" data-botao-fundo data-i18n-title="topo.fundo">▨</button>
+      <button class="botao icone" data-botao-tema data-i18n-title="topo.tema">☾</button>
+    </nav>`;
+  barra.dataset.pronta = 'sim';
+
+  /* Conta, Configurações e Instalar são do módulo das diretrizes
+     (diretrizes.js). Aqui só existe o botão; quem abre a tela é ele. */
+  barra.querySelector('[data-abre-conta]').addEventListener('click', ()=>{
+    if (window.DGO) DGO.abrirLogin(); else location.href = 'index.html';
+  });
+  barra.querySelector('[data-abre-config]').addEventListener('click', ()=>{
+    if (window.DGO) DGO.abrirConfiguracoes();
+  });
+  barra.querySelector('[data-abre-instalar]').addEventListener('click', ()=>{
+    if (window.DGO && DGO.pwa) DGO.pwa.instalar();
+  });
+
+  const botaoMenu = barra.querySelector('[data-botao-menu]');
+  const menu = barra.querySelector('#menu-topo');
+  botaoMenu.addEventListener('click', e=>{
+    e.stopPropagation();
+    const abrir = !menu.classList.contains('aberto');
+    menu.classList.toggle('aberto', abrir);
+    botaoMenu.setAttribute('aria-expanded', abrir);
+  });
+  document.addEventListener('click', e=>{
+    if (!menu.contains(e.target) && e.target !== botaoMenu){
+      menu.classList.remove('aberto');
+      botaoMenu.setAttribute('aria-expanded', 'false');
+    }
   });
 }
 
@@ -32,11 +105,13 @@ function temaSalvo(){
   try{ return localStorage.getItem(TEMA_CHAVE); }catch(e){ return null; }
 }
 function iniciarTema(){
+  montarTopo();
   const escuroNoSistema = window.matchMedia &&
         window.matchMedia('(prefers-color-scheme: dark)').matches;
   aplicarTema(temaSalvo() || (escuroNoSistema ? 'escuro' : 'claro'));
   iniciarFundo();
   montarRodape();
+  if (typeof iniciarIdioma === 'function') iniciarIdioma();
   document.querySelectorAll('[data-botao-tema]').forEach(b=>{
     b.addEventListener('click', ()=>{
       aplicarTema(document.documentElement.dataset.tema === 'escuro' ? 'claro' : 'escuro');

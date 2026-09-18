@@ -5,42 +5,34 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Importar cifra</title>
 <meta name="theme-color" content="#a8501e">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icone-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Cifras">
 <link rel="stylesheet" href="estilo.css">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎸</text></svg>">
 </head>
-<body>
+<body data-pagina="importar">
 
 <header class="topo">
-  <div class="topo-interno">
-    <a class="marca" href="index.html">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round">
-        <path d="M11.5 12.5 19 5M17 3l4 4M6.5 21a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7Z"/>
-      </svg>
-      <span>Cifras de Violão</span>
-    </a>
-    <div class="espaco"></div>
-    <a class="botao" href="acordes.html">Acordes</a>
-    <button class="botao icone" data-botao-fundo title="Imagem de fundo">▨</button>
-    <button class="botao icone" data-botao-tema title="Mudar o tema">☾</button>
-  </div>
+  <div class="topo-interno"></div>
 </header>
 
-<main class="conteudo">
+<main class="conteudo" data-dgo-ignorar>
   <div class="chamada">
-    <h1>Importar cifra</h1>
-    <p>Cole a cifra copiada de qualquer site. Esta página arruma o texto e monta
-       o arquivo pronto para você subir no GitHub.</p>
+    <h1 data-i18n="importar.titulo">Importar cifra</h1>
+    <p data-i18n="importar.sub">Cole a cifra copiada de qualquer site.</p>
+    <p><a class="botao" href="ocr.html" data-i18n="importar.foto">Ou tire uma foto da cifra</a></p>
   </div>
 
   <div class="modos">
-    <button class="etiqueta" id="modo-uma" aria-pressed="true">Uma música por vez</button>
-    <button class="etiqueta" id="modo-varias" aria-pressed="false">Um arquivo com várias</button>
+    <button class="etiqueta" id="modo-uma" aria-pressed="true" data-i18n="importar.modoUma">Uma música por vez</button>
+    <button class="etiqueta" id="modo-varias" aria-pressed="false" data-i18n="importar.modoVarias">Um arquivo com várias</button>
   </div>
 
   <div class="passo" id="bloco-varias" hidden>
-    <h2><span class="numero">A</span> Arquivo com várias cifras</h2>
-    <p class="dica">Monte um arquivo de texto com todas as cifras, separando cada música
-       por uma linha que comece com <b>===</b> seguida do título:</p>
+    <h2><span class="numero">A</span> <span data-i18n="importar.varias">Arquivo com várias cifras</span></h2>
+    <p class="dica" data-i18n-html="importar.variasDica"></p>
     <pre class="exemplo">=== Evidências
 [Intro] Gm7  C7  F
  F                Dm
@@ -50,125 +42,120 @@ aqui vai a cifra inteira
 [Intro] Am  E7
  Am              E7
 aqui vai a outra cifra</pre>
-    <p class="dica"><b>Tem uma coletânea de cifras em PDF?</b> Abra o PDF pelo botão acima:
-       a página separa as músicas sozinha, uma por uma, e já monta este formato.</p>
-    <p class="dica">Só o título é obrigatório — se ele bater com uma música da sua lista,
-       o artista, a categoria e o nome do arquivo vêm sozinhos. Se quiser mandar tudo
-       na mão, use barras:
-       <b>=== Título | Artista | Categoria | tom: G | capo: 2</b></p>
+    <p class="dica" data-i18n-html="importar.pdfDica"></p>
+    <p class="dica" data-i18n-html="importar.barrasDica"></p>
 
     <div class="linha-botoes">
-      <label class="botao forte" for="arquivo-varias">📂 Abrir um arquivo .txt ou .pdf</label>
+      <label class="botao forte" for="arquivo-varias" data-i18n="importar.abrirArquivo">📂 Abrir um arquivo .txt ou .pdf</label>
       <input id="arquivo-varias" type="file" accept=".txt,.pdf,text/plain,application/pdf" hidden>
       <span class="relatorio" id="nome-lote"></span>
     </div>
     <textarea id="entrada-varias" class="area" spellcheck="false"
-      placeholder="Cole aqui o arquivo inteiro, ou use o botão acima para abrir um .txt"></textarea>
+      data-i18n-ph="importar.colarLote"></textarea>
     <div class="linha-botoes">
-      <button class="botao forte" id="processar-varias">Separar e mandar tudo para a fila</button>
-      <button class="botao" id="modelo-varias">Ver o modelo</button>
+      <button class="botao forte" id="processar-varias" data-i18n="importar.separar">Separar e mandar tudo para a fila</button>
+      <button class="botao" id="modelo-varias" data-i18n="importar.modelo">Ver o modelo</button>
     </div>
     <div id="relatorio-varias"></div>
   </div>
 
   <div class="passo bloco-uma">
-    <h2><span class="numero">1</span> Que música é?</h2>
+    <h2><span class="numero">1</span> <span data-i18n="importar.p1">Que música é?</span></h2>
     <div class="campos">
       <label class="campo largo">
-        <span>Escolha da sua lista</span>
+        <span data-i18n="importar.escolher">Escolha da sua lista</span>
         <select id="escolher" class="selecao larga"></select>
       </label>
-      <label class="campo"><span>Título</span><input id="titulo" type="text" placeholder="Evidências"></label>
-      <label class="campo"><span>Artista</span><input id="artista" type="text" placeholder="Chitãozinho &amp; Xororó"></label>
-      <label class="campo"><span>Categoria</span><input id="categoria" type="text" list="lista-categorias" placeholder="Sertanejo">
+      <label class="campo"><span data-i18n="importar.titulo2">Título</span><input id="titulo" type="text" placeholder="Evidências"></label>
+      <label class="campo"><span data-i18n="importar.artista">Artista</span><input id="artista" type="text" placeholder="Chitãozinho &amp; Xororó"></label>
+      <label class="campo"><span data-i18n="importar.categoria">Categoria</span><input id="categoria" type="text" list="lista-categorias" placeholder="Sertanejo">
         <datalist id="lista-categorias"></datalist></label>
-      <label class="campo curto"><span>Tom</span><input id="tom" type="text" placeholder="G"></label>
-      <label class="campo curto"><span>Capo</span><input id="capo" type="number" min="0" max="11" value="0"></label>
-      <label class="campo"><span>Ritmo (opcional)</span><input id="ritmo" type="text" placeholder="Balada"></label>
-      <label class="campo"><span>Nome do arquivo</span><input id="arquivo" type="text" placeholder="evidencias.txt"></label>
+      <label class="campo curto"><span data-i18n="importar.tom">Tom</span><input id="tom" type="text" placeholder="G"></label>
+      <label class="campo curto"><span data-i18n="importar.capo">Capo</span><input id="capo" type="number" min="0" max="11" value="0"></label>
+      <label class="campo"><span data-i18n="importar.ritmo">Ritmo (opcional)</span><input id="ritmo" type="text" placeholder="Balada"></label>
+      <label class="campo"><span data-i18n="importar.nomeArquivo">Nome do arquivo</span><input id="arquivo" type="text" placeholder="evidencias.txt"></label>
     </div>
   </div>
 
   <div class="passo bloco-uma">
-    <h2><span class="numero">2</span> Cole a cifra aqui</h2>
-    <p class="dica">Copie a cifra inteira do site (letra com os acordes em cima) e cole no quadro.
-       Pode colar com a bagunça de espaços que vier — eu arrumo.</p>
+    <h2><span class="numero">2</span> <span data-i18n="importar.p2">Cole a cifra aqui</span></h2>
+    <p class="dica" data-i18n="importar.p2dica"></p>
     <textarea id="entrada" class="area" spellcheck="false"
-      placeholder="[Intro] G  D  Em  C&#10;&#10; G              D&#10;Cole a cifra aqui…"></textarea>
+      data-i18n-ph="importar.colar"></textarea>
     <div class="linha-botoes">
-      <button class="botao forte" id="processar">Arrumar e conferir</button>
-      <button class="botao" id="limpar-tudo">Limpar</button>
+      <button class="botao forte" id="processar" data-i18n="importar.arrumar">Arrumar e conferir</button>
+      <button class="botao" id="limpar-tudo" data-i18n="importar.limpar">Limpar</button>
       <span class="relatorio" id="relatorio"></span>
     </div>
   </div>
 
   <div class="passo bloco-uma" id="passo3" hidden>
-    <h2><span class="numero">3</span> Confira como ficou</h2>
+    <h2><span class="numero">3</span> <span data-i18n="importar.p3">Confira como ficou</span></h2>
     <div class="diagramas" id="diagramas"></div>
     <div class="cifra previa" id="previa"></div>
   </div>
 
   <div class="passo bloco-uma" id="passo4" hidden>
-    <h2><span class="numero">4</span> Guardar esta música</h2>
+    <h2><span class="numero">4</span> <span data-i18n="importar.p4">Guardar esta música</span></h2>
     <div class="linha-botoes">
-      <button class="botao forte" id="add-fila">+ Adicionar à fila</button>
-      <button class="botao" id="ver-um">Ver o arquivo desta música</button>
+      <button class="botao forte" id="add-fila" data-i18n="importar.addFila">+ Adicionar à fila</button>
+      <button class="botao" id="ver-um" data-i18n="importar.verUm">Ver o arquivo desta música</button>
     </div>
-    <p class="dica">O jeito rápido é ir empilhando as músicas na fila e baixar tudo
-       de uma vez no fim — assim você faz um upload só no GitHub.</p>
+    <p class="dica" data-i18n="importar.p4dica"></p>
 
     <div id="um-so" hidden>
-      <h3>a) O arquivo da cifra</h3>
-      <p class="dica">Crie no repositório um arquivo chamado <b id="nome-arquivo">musica.txt</b>
-         (<b>Add file → Create new file</b>) e cole este conteúdo dentro:</p>
+      <h3 data-i18n="importar.a">a) O arquivo da cifra</h3>
+      <p class="dica" data-i18n-html="importar.adica"></p>
+      <p class="dica"><b id="nome-arquivo">musica.txt</b></p>
       <textarea id="saida" class="area saida" readonly spellcheck="false"></textarea>
       <div class="linha-botoes">
-        <button class="botao forte" id="copiar">Copiar o conteúdo</button>
-        <button class="botao" id="baixar">Baixar o arquivo .txt</button>
+        <button class="botao forte" id="copiar" data-i18n="importar.copiar">Copiar o conteúdo</button>
+        <button class="botao" id="baixar" data-i18n="importar.baixarTxt">Baixar o arquivo .txt</button>
       </div>
 
-      <h3>b) O índice <span class="opcional">opcional</span></h3>
+      <h3><span data-i18n="importar.b">b) O índice</span> <span class="opcional" data-i18n="importar.opcional">opcional</span></h3>
       <div id="aviso-indice"></div>
       <textarea id="saida-json" class="area saida" readonly spellcheck="false"></textarea>
       <div class="linha-botoes">
-        <button class="botao forte" id="baixar-json">Baixar o indice.json</button>
-        <button class="botao" id="copiar-json">Copiar o índice inteiro</button>
+        <button class="botao forte" id="baixar-json" data-i18n="importar.baixarJson">Baixar o indice.json</button>
+        <button class="botao" id="copiar-json" data-i18n="importar.copiarJson">Copiar o índice inteiro</button>
       </div>
     </div>
   </div>
 
   <div class="passo" id="passo-conferir">
-    <h2><span class="numero">✓</span> Conferir a lista</h2>
-    <p class="dica">Procura cifras que estão no repositório mas ficaram de fora do
-       <b>indice.json</b> — por isso não aparecem no site — e devolve a lista corrigida.
-       Vale rodar sempre que uma música sumir da página inicial.</p>
+    <h2><span class="numero">✓</span> <span data-i18n="importar.conferir">Conferir a lista</span></h2>
+    <p class="dica" data-i18n-html="importar.conferirDica"></p>
     <div class="linha-botoes">
-      <button class="botao forte" id="conferir">Conferir agora</button>
+      <button class="botao forte" id="conferir" data-i18n="importar.conferirAgora">Conferir agora</button>
       <span class="relatorio" id="recado-conferir"></span>
     </div>
     <div id="resultado-conferir"></div>
   </div>
 
   <div class="passo" id="passo5" hidden>
-    <h2><span class="numero">5</span> Fila <span class="opcional" id="contador-fila"></span></h2>
-    <p class="dica">As cifras ficam guardadas aqui no seu navegador — pode fechar a página
-       e voltar depois que elas continuam aqui.</p>
+    <h2><span class="numero">5</span> <span data-i18n="importar.fila">Fila</span> <span class="opcional" id="contador-fila"></span></h2>
+    <p class="dica" data-i18n="importar.filaDica"></p>
     <ul class="fila" id="fila"></ul>
     <div class="linha-botoes">
-      <button class="botao forte" id="baixar-zip">⬇ Baixar tudo num .zip</button>
-      <button class="botao" id="esvaziar">Esvaziar a fila</button>
+      <button class="botao forte" id="baixar-zip" data-i18n="importar.baixarZip">⬇ Baixar tudo num .zip</button>
+      <button class="botao" id="esvaziar" data-i18n="importar.esvaziar">Esvaziar a fila</button>
     </div>
-    <p class="dica"><b>Como subir:</b> abra o .zip, selecione tudo (<b>Ctrl+A</b>),
-       e arraste para <b>Add file → Upload files</b> no GitHub. O
-       <b>indice.json</b> vem junto, já atualizado, e substitui o antigo.</p>
+    <p class="dica" data-i18n-html="importar.comoSubir"></p>
   </div>
 
 </main>
 
-<footer class="rodape">
-  O texto colado aqui não sai do seu navegador.
+<footer class="rodape" data-dgo-ignorar>
+  <span data-i18n="importar.rodape">O texto colado aqui não sai do seu navegador.</span>
 </footer>
 
+<script src="idioma.js"></script>
+<!-- Diretrizes gerais: idioma, anúncio, conta, avisos, nuvem e instalação.
+     Estes dois arquivos são o padrão dos seus apps. O diretrizes.js é
+     igual nos três; o que muda é só o diretrizes-config.js. -->
+<script src="diretrizes.js"></script>
+<script src="diretrizes-config.js"></script>
 <script src="zip.js"></script>
 <script src="leitor-pdf.js"></script>
 <script src="acordes.js"></script>

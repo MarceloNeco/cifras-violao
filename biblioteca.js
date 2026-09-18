@@ -4,6 +4,14 @@
 
 let TODAS = [];
 let categoriaAtual = 'Todas';
+
+/* as quatro primeiras categorias são fixas: a etiqueta muda de
+   idioma, mas o nome usado por dentro do código continua o mesmo */
+const ESPECIAIS = {
+  'Todas': 'lista.todas', 'Prontas': 'lista.prontas',
+  'Sem cifra': 'lista.semCifra', 'Favoritas': 'lista.favoritas'
+};
+function nomeDaCategoria(c){ return ESPECIAIS[c] ? t(ESPECIAIS[c]) : c; }
 let termo = '';
 
 const elLista = document.getElementById('lista');
@@ -25,17 +33,15 @@ carregarIndice()
     conferirArquivos();
   })
   .catch(erro=>{
-    elLista.innerHTML = `<div class="vazio"><strong>Não consegui carregar as músicas</strong>
-      ${escapar(erro.message)}<br><br>
-      Se você abriu o arquivo direto do computador (com dois cliques), isso é normal:
-      o navegador bloqueia a leitura dos arquivos. Publique no GitHub Pages que funciona.</div>`;
+    elLista.innerHTML = `<div class="vazio"><strong>${t('lista.erroTitulo')}</strong>
+      ${escapar(erro.message)}<br><br>${t('lista.erroAjuda')}</div>`;
   });
 
 function montarFiltros(){
-  const categorias = ['Todas', 'Prontas', 'Sem cifra', 'Favoritas',
+  const categorias = [...Object.keys(ESPECIAIS),
     ...[...new Set(TODAS.map(m => m.categoria).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'pt'))];
   elFiltros.innerHTML = categorias.map(c =>
-    `<button class="etiqueta" data-cat="${escapar(c)}" aria-pressed="${c===categoriaAtual}">${escapar(c)}</button>`
+    `<button class="etiqueta" data-cat="${escapar(c)}" aria-pressed="${c===categoriaAtual}">${escapar(nomeDaCategoria(c))}</button>`
   ).join('');
   elFiltros.querySelectorAll('.etiqueta').forEach(b=>{
     b.addEventListener('click', ()=>{
@@ -54,8 +60,7 @@ function filtrar(){
     if (categoriaAtual === 'Favoritas' && !favoritos.has(m.id)) return false;
     if (categoriaAtual === 'Prontas' && m.pendente) return false;
     if (categoriaAtual === 'Sem cifra' && !m.pendente) return false;
-    const especiais = ['Todas','Prontas','Sem cifra','Favoritas'];
-    if (!especiais.includes(categoriaAtual) && m.categoria !== categoriaAtual) return false;
+    if (!ESPECIAIS[categoriaAtual] && m.categoria !== categoriaAtual) return false;
     if (!alvo) return true;
     return alvo.split(/\s+/).every(pedaco => m._busca.includes(pedaco));
   }).sort((a,b)=> (a.titulo||'').localeCompare(b.titulo||'', 'pt'));
@@ -66,14 +71,12 @@ function desenhar(){
   const achadas = filtrar();
 
   elContagem.textContent = achadas.length === 0 ? '' :
-    achadas.length === 1 ? '1 música' : `${achadas.length} músicas`;
+    achadas.length === 1 ? t('lista.uma') : t('lista.varias', {n: achadas.length});
 
   if (!achadas.length){
     elLista.innerHTML = `<div class="vazio">
-      <strong>Nenhuma música encontrada</strong>
-      ${categoriaAtual === 'Favoritas'
-        ? 'Toque na estrelinha de uma música para guardá-la aqui.'
-        : 'Tente outra palavra ou mude a categoria.'}</div>`;
+      <strong>${t('lista.vazioTitulo')}</strong>
+      ${categoriaAtual === 'Favoritas' ? t('lista.vazioFav') : t('lista.vazioOutro')}</div>`;
     return;
   }
 
@@ -81,12 +84,12 @@ function desenhar(){
     <div class="cartao${m.pendente ? ' pendente' : ''}">
       <button class="estrela" data-id="${escapar(m.id)}"
               aria-pressed="${favoritos.has(m.id)}"
-              aria-label="Favoritar ${escapar(m.titulo)}">${favoritos.has(m.id) ? '★' : '☆'}</button>
+              aria-label="${t('lista.favoritar')} ${escapar(m.titulo)}">${favoritos.has(m.id) ? '★' : '☆'}</button>
       <a class="info" href="cifra.html?m=${encodeURIComponent(m.id)}">
         <div class="titulo">${escapar(m.titulo)}</div>
         <div class="artista">${escapar(m.artista || '')}${m.categoria ? ' · ' + escapar(m.categoria) : ''}</div>
       </a>
-      ${m.pendente ? '<span class="selo">sem cifra</span>'
+      ${m.pendente ? `<span class="selo">${t('lista.selo')}</span>`
                    : (m.tom ? `<span class="tom">${escapar(m.tom)}</span>` : '')}
     </div>`).join('');
 
@@ -165,3 +168,11 @@ async function conferirArquivos(){
   montarFiltros();
   desenhar();
 }
+
+
+/* trocou o idioma: as etiquetas e os recados são refeitos */
+document.addEventListener('idioma-mudou', ()=>{
+  if (!TODAS.length) return;
+  montarFiltros();
+  desenhar();
+});

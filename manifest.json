@@ -1,0 +1,50 @@
+{
+  "name": "Cifras de Violão",
+  "short_name": "Cifras",
+  "description": "Cifras de violão com rolagem automática, mudança de tom, desenhos dos acordes, afinador e leitura de fotos.",
+  "start_url": "index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#1a1614",
+  "theme_color": "#a8501e",
+  "lang": "pt-BR",
+  "categories": [
+    "music",
+    "education"
+  ],
+  "icons": [
+    {
+      "src": "icone-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icone-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icone-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Foto vira cifra",
+      "url": "ocr.html"
+    },
+    {
+      "name": "Importar cifra",
+      "url": "importar.html"
+    },
+    {
+      "name": "Dicionário de acordes",
+      "url": "acordes.html"
+    }
+  ]
+}

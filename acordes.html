@@ -6,48 +6,40 @@
 <title>Dicionário de acordes</title>
 <meta name="description" content="Consulte qualquer acorde de violão: posições no braço, dedos e som.">
 <meta name="theme-color" content="#a8501e">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icone-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Cifras">
 <link rel="stylesheet" href="estilo.css">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎸</text></svg>">
 </head>
-<body>
+<body data-pagina="acordes">
 
 <header class="topo">
-  <div class="topo-interno">
-    <a class="marca" href="index.html">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round">
-        <path d="M11.5 12.5 19 5M17 3l4 4M6.5 21a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7Z"/>
-      </svg>
-      <span>Cifras de Violão</span>
-    </a>
-    <div class="espaco"></div>
-    <a class="botao ativo" href="acordes.html">Acordes</a>
-    <a class="botao" href="importar.html">Importar</a>
-    <button class="botao icone" data-botao-fundo title="Imagem de fundo">▨</button>
-    <button class="botao icone" data-botao-tema title="Mudar o tema">☾</button>
-  </div>
+  <div class="topo-interno"></div>
 </header>
 
-<main class="conteudo">
+<main class="conteudo" data-dgo-ignorar>
   <div class="chamada">
-    <h1>Dicionário de acordes</h1>
-    <p>Digite qualquer acorde para ver como se faz no braço do violão.</p>
+    <h1 data-i18n="acordes.titulo">Dicionário de acordes</h1>
+    <p data-i18n="acordes.sub">Digite qualquer acorde para ver como se faz no braço do violão.</p>
   </div>
 
   <div class="caixa-busca">
     <svg class="lupa" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
       <circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/>
     </svg>
-    <input id="entrada" type="search" placeholder="Am7, C7M, F#m, G/B, Eº…"
+    <input id="entrada" type="search" data-i18n-ph="acordes.entrada"
            autocomplete="off" autocapitalize="off" spellcheck="false" aria-label="Acorde">
   </div>
 
   <div class="escolhas">
     <div class="linha-escolha">
-      <span class="rotulo">Nota</span>
+      <span class="rotulo" data-i18n="acordes.nota">Nota</span>
       <div class="pilha" id="notas"></div>
     </div>
     <div class="linha-escolha">
-      <span class="rotulo">Tipo</span>
+      <span class="rotulo" data-i18n="acordes.tipo">Tipo</span>
       <div class="pilha" id="tipos"></div>
     </div>
   </div>
@@ -55,17 +47,22 @@
   <section class="cartao-acorde" id="resultado" hidden></section>
 
   <section class="campo">
-    <h2>Acordes do tom de <select id="tom-campo" class="selecao"></select></h2>
-    <p class="dica">São os acordes que costumam aparecer juntos numa música nesse tom.
-       Toque em qualquer um para ver as posições.</p>
+    <h2><span data-i18n="acordes.campo">Acordes do tom de</span> <select id="tom-campo" class="selecao"></select></h2>
+    <p class="dica" data-i18n="acordes.campoDica">São os acordes que costumam aparecer juntos numa música nesse tom.</p>
     <div class="diagramas" id="campo-harmonico"></div>
   </section>
 </main>
 
-<footer class="rodape">
-  Toque em qualquer desenho para ouvir o acorde.
+<footer class="rodape" data-dgo-ignorar>
+  <span data-i18n="acordes.rodape">Toque em qualquer desenho para ouvir o acorde.</span>
 </footer>
 
+<script src="idioma.js"></script>
+<!-- Diretrizes gerais: idioma, anúncio, conta, avisos, nuvem e instalação.
+     Estes dois arquivos são o padrão dos seus apps. O diretrizes.js é
+     igual nos três; o que muda é só o diretrizes-config.js. -->
+<script src="diretrizes.js"></script>
+<script src="diretrizes-config.js"></script>
 <script src="acordes.js"></script>
 <script src="comum.js"></script>
 <script src="aviso.js"></script>

@@ -203,10 +203,11 @@ Tocar em qualquer desenho faz o acorde soar.
 | **− Tom +** | sobe ou desce a música de meio em meio tom |
 | **↺** | volta para o tom original |
 | **− Capo +** | diz em que casa está o capotraste; os acordes mudam para o formato que a mão faz |
-| **▶ Rolar** | a cifra desce sozinha; a barrinha do lado regula a velocidade |
+| **▶ Play / ⏸ Pause** | a cifra desce sozinha; a barrinha do lado regula a velocidade |
 | **A− A+** | tamanho da letra |
 | **📱 Modo celular** | tela cheia, letra grande e controles embaixo, para tocar |
 | **🎵** | afinador: toca a nota de cada corda |
+| **⤴** | compartilha a música (WhatsApp e o que mais o aparelho tiver) |
 | **☆** | guarda a música nos favoritos |
 | **☾** | modo escuro |
 | **▤ Só a cifra** | esconde o cabeçalho e os desenhos (só no computador) |
@@ -239,6 +240,13 @@ no topo** enquanto você rola a cifra. No celular, a barra do topo some sozinha
 quando você rola para baixo, para devolver espaço à cifra, e os desenhos viram
 uma faixa que corre para o lado.
 
+**No modo celular, com o Play ligado:** depois de uns 3 segundos a barra de
+controles e a faixa do título **se recolhem sozinhas** e fica só um botão
+redondo de Play/Pause no canto de baixo — a cifra ocupa a tela inteira. Um
+toque em qualquer lugar da cifra traz a barra de volta. E enquanto o seu dedo
+está na tela, a rolagem automática **para de empurrar**, para não brigar com o
+arrasto; assim que você solta, ela continua de onde estava.
+
 **Pelo teclado:** barra de espaço liga e desliga a rolagem, setas ↑ ↓ mudam a
 velocidade, `+` e `−` mudam o tom, `Esc` sai do modo celular.
 
@@ -257,7 +265,25 @@ index.html       página inicial: busca, categorias e favoritos
 cifra.html       página que mostra uma cifra
 acordes.html     dicionário de acordes
 importar.html    cola uma cifra e gera o arquivo pronto
+ocr.html         foto vira cifra (câmera + leitura de imagem)
+conta.html       visitante, assinante, anunciante, nuvem e instalação
 estilo.css       as cores e o visual (as cores ficam no topo do arquivo)
+config.js        o painel de controle: anúncios, idioma, códigos da nuvem
+idioma.js        todos os textos em português e em inglês
+conta.js         perfis, senha local, faixa de anúncio, compartilhar
+conta-pagina.js  a tela da página Conta
+notificacoes.js  avisos: permissão, lembretes e a base do push
+nuvem.js         Google Drive, OneDrive e cópia em .json
+ocr.js           a página da foto
+ocr-worker.js    quem conversa com o motor de leitura
+manifest.json    o que faz o site virar aplicativo
+sw.js            faz o site abrir sem internet (troque a versão ao publicar)
+icone-192.png    ícone do aplicativo
+icone-512.png    ícone do aplicativo (grande)
+tesseract-core-simd-lstm.wasm.js   motor de leitura de imagem
+tesseract-core-lstm.wasm.js        motor de leitura (aparelhos antigos)
+por.traineddata.gz                 português, para a leitura
+eng.traineddata.gz                 inglês, para a leitura
 acordes.js       entende, transpõe e desenha os acordes
 comum.js         tema, favoritos e leitura dos arquivos de música
 biblioteca.js    a busca e a lista da página inicial
@@ -322,9 +348,23 @@ O rodapé de todas as páginas mostra a versão e a data. Para mudar, edite as
 duas primeiras linhas do arquivo `comum.js`:
 
 ```js
-const VERSAO = '1.0';
-const VERSAO_DATA = '15/09/2026';
+const VERSAO = '2.0';
+const VERSAO_DATA = '2026-09-17';
 ```
+
+A data é escrita no formato `aaaa-mm-dd` e o site a mostra sozinho como
+`17/Set/2026` em português e `Sep/17/2026` em inglês.
+
+Ao publicar uma mudança, troque **também** o número na primeira linha útil do
+arquivo `sw.js`:
+
+```js
+const VERSAO_CACHE = 'cifras-v2.0';
+```
+
+É esse número que avisa os celulares que já têm o site instalado de que existe
+uma versão nova. Sem trocá-lo, quem já usou o site pode continuar vendo a
+versão antiga.
 
 Sugestão de contagem: ajustes e recursos novos sobem a segunda casa — 1.0, 1.1,
 1.2. Uma reformulação grande do site sobe a primeira — 2.0. Acrescentar cifras
@@ -376,3 +416,186 @@ As seis cifras que vêm no site são de **domínio público** (folclore brasilei
 e obras de autores falecidos há mais de 70 anos). Podem ficar no ar sem
 problema. As cifras que você acrescentar depois são de sua responsabilidade —
 letras de música têm direito autoral, então o uso recomendado é pessoal.
+
+
+---
+
+## Versão 2.1 — o site e o módulo das diretrizes
+
+A partir desta versão, tudo o que é **igual nos seus três apps** — idioma,
+anúncio, conta, avisos, nuvem, compartilhar e instalação — deixou de ser código
+deste site e passou a vir do **módulo das diretrizes** (`diretrizes.js`), o
+mesmo arquivo nos três. O que é só das cifras continua aqui.
+
+### Quem faz o quê
+
+| Recurso | Quem cuida | Onde se mexe |
+|---|---|---|
+| Botão PT / EN | módulo | `diretrizes-config.js` |
+| Texto do site nos dois idiomas | **este site** (`idioma.js`) | `idioma.js` |
+| Formato das datas | módulo | `diretrizes-config.js` |
+| Faixa de anúncio | módulo | `diretrizes-config.js` |
+| Conta (visitante, assinante, anunciante) | módulo | `diretrizes-config.js` |
+| Avisos / notificações | módulo | `diretrizes-config.js` |
+| Nuvem (Drive, OneDrive, backup) | módulo | `diretrizes-config.js` |
+| Compartilhar | módulo | — |
+| Instalar como app | módulo | `manifest.json` (a cara) |
+| Abrir sem internet | módulo (`sw.js`) | `sw.js` |
+| **Cifra, tom, capo, rolagem, guia** | este site | `leitor.js` |
+| **Dicionário de acordes** | este site | `acordes.js`, `dicionario.js` |
+| **Importar e ler PDF** | este site | `importador.js` |
+| **Foto vira cifra** | este site | `ocr.js`, `ocr-worker.js` |
+| **Aviso de uso** | este site | `aviso.js` |
+
+Há **duas** caixas de ajuste, e elas não se misturam:
+
+- `diretrizes-config.js` — os ajustes do módulo, no mesmo formato dos seus
+  outros apps.
+- `idioma.js` — as frases deste site em português e em inglês.
+
+### Por que a tradução continua sendo daqui
+
+O módulo traduz por lista de frases. A lista dele cobre as palavras comuns de
+qualquer app ("Configurações", "Voltar", "Início"), mas não as frases deste
+site — "Busque pelo nome da música", a página Importar inteira, o dicionário de
+acordes, o Aviso. Traduzidas pelo módulo, elas ficariam em português no modo EN.
+
+Por isso o `idioma.js` continua aqui, com o site inteiro nos dois idiomas
+(inclusive os nomes dos acordes: *Lá menor com sétima* vira *A minor seventh*).
+Ele não tem mais botão próprio: quem manda no idioma é o botão do módulo, e o
+`idioma.js` só obedece. Um botão, um idioma, o site todo traduzido.
+
+No HTML, o conteúdo das páginas está marcado com `data-dgo-ignorar` — é o que
+impede os dois tradutores de mexerem no mesmo texto. **Se você criar uma página
+nova**, ponha `data-dgo-ignorar` no `<main>` dela e as frases no `idioma.js`.
+
+### Por que o OCR deste app está com `ativo: false`
+
+O leitor de foto do módulo baixa o motor de um servidor público na primeira vez.
+Aqui você escolheu o contrário: o motor mora dentro do seu repositório, e o site
+lê foto sem depender de ninguém, até sem internet.
+
+Quem faz isso é a página **Foto** (`ocr.html`), que além de ler já conserta os
+acordes que saíram tortos e manda o texto direto para a fila do Importar.
+Deixar os dois ligados baixaria duas vezes a mesma coisa. Nos seus outros apps,
+deixe `ocr: { ativo: true }`.
+
+---
+
+## O que mudou na cifra, nesta versão
+
+### Play e Pause, e a barra que sai da frente
+
+O botão agora diz **▶ Play** e **⏸ Pause**.
+
+No modo celular, com o Play ligado, depois de uns 3 segundos a barra de
+controles e a faixa do título **se recolhem sozinhas** e fica só um botão
+redondo no canto de baixo — a cifra ocupa a tela inteira. Um toque em qualquer
+lugar da cifra traz a barra de volta.
+
+Enquanto o seu dedo está na tela, a rolagem automática **para de empurrar**,
+para não brigar com o arrasto; quando você solta, ela continua de onde estava.
+E durante o Play a barra do topo fica quieta: antes ela reaparecia por cima da
+cifra assim que você arrastava para cima, e era isso que ficava estranho.
+
+O banner e o botão PT/EN do módulo também somem no modo celular.
+
+### Foto vira cifra
+
+A página **Foto** abre a câmera do celular ou do notebook, ou aceita uma imagem
+da galeria. Você endireita, ajusta o contraste, toca em **Ler a imagem**, e o
+texto sai numa caixa que dá para corrigir antes de mandar para o Importar.
+
+Arquivos do motor, todos na raiz do repositório:
+
+```
+tesseract-core-simd-lstm.wasm.js   o motor (aparelhos modernos)
+tesseract-core-lstm.wasm.js        o motor (aparelhos mais antigos)
+por.traineddata.gz                 o português
+eng.traineddata.gz                 o inglês
+ocr-worker.js                      quem conversa com o motor
+```
+
+São uns 11 MB. Ficam guardados no aparelho depois da primeira leitura.
+
+**Para sair bom:** luz de frente, sem sombra da mão nem brilho de flash; a folha
+o mais reta possível preenchendo a tela; uma página por foto.
+
+### O Aviso agora conta a verdade sobre o anúncio
+
+O Aviso dizia que este acervo não tem publicidade nem monetização de espécie
+alguma — e era nisso que ele se apoiava no art. 46 da Lei 9.610/1998, o artigo
+da cópia particular para estudo. Com anúncio no ar, isso deixa de ser verdade, e
+um acervo de letras e harmonias de terceiros **com publicidade** é uma situação
+juridicamente bem mais frágil.
+
+O texto agora acompanha o `diretrizes-config.js` sozinho: com
+`anuncios: { ativo: false }` ele afirma que não há monetização nenhuma; com
+`ativo: true` ele reconhece a publicidade e registra a consequência, em vez de
+afirmar algo falso. A decisão é sua — mas é maior do que parece.
+
+O Aviso continua só em português de propósito: cita leis brasileiras, e uma
+tradução daria a impressão errada de valer em outro país. A janela abre com uma
+linha em inglês explicando isso.
+
+---
+
+## Ao publicar uma versão nova
+
+Troque o número em **dois** lugares, senão quem já abriu o site pode continuar
+vendo a versão antiga:
+
+```js
+comum.js  ->  const VERSAO = '2.1';
+sw.js     ->  var VERSAO = 'v1';     (suba para 'v2', 'v3'…)
+```
+
+---
+
+## Estrutura dos arquivos
+
+Todos soltos na raiz do repositório, sem pasta nenhuma.
+
+**Do módulo das diretrizes (iguais ou quase iguais nos três apps)**
+
+```
+diretrizes.js          o módulo — idêntico nos três apps
+diretrizes-config.js   os ajustes DESTE app
+sw.js                  abrir sem internet e instalar como app
+manifest.json          o nome, a cor e o ícone do app instalado
+icone-192.png          ícone
+icone-512.png          ícone
+anuncie-aqui.png       o espaço de anúncio, nas cores deste site
+```
+
+**Do site de cifras**
+
+```
+index.html       busca, categorias e favoritos
+cifra.html       a página que mostra uma cifra
+acordes.html     dicionário de acordes
+importar.html    cola uma cifra e gera o arquivo pronto
+ocr.html         foto vira cifra
+aviso.html       o aviso de uso em página inteira
+estilo.css       as cores e o visual
+comum.js         barra do topo, tema, fundo, favoritos, rodapé
+idioma.js        todas as frases do site em português e em inglês
+leitor.js        tom, capo, rolagem, guia, afinador, modo celular
+biblioteca.js    a página inicial
+acordes.js       o que o site sabe sobre acordes
+dicionario.js    a página do dicionário
+importador.js    arrumar a cifra colada e montar o arquivo
+aviso.js         o texto do Aviso
+ocr.js           a página da foto
+ocr-worker.js    a leitura da imagem
+tesseract-core-simd-lstm.wasm.js   motor de leitura
+tesseract-core-lstm.wasm.js        motor de leitura (aparelhos antigos)
+por.traineddata.gz                 português, para a leitura
+eng.traineddata.gz                 inglês, para a leitura
+TESTE-cifras-violao.html           página de conferência do módulo
+```
+
+**Já no repositório, não precisa subir de novo:** as cifras `.txt`,
+`indice.json`, `capa.jpg`, `fundo.jpg`, `fundo-celular.jpg`, `zip.js`,
+`leitor-pdf.js`, `pdf-lib.mjs`, `pdf-worker.mjs`, `MODELO.txt`,
+`MODELO-VARIAS.txt`.

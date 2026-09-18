@@ -1,0 +1,111 @@
+CIFRAS DE VIOLÃO — versão 2.1 (pacote consolidado)
+===================================================
+
+Este zip junta DUAS coisas que antes estavam separadas:
+
+  - o pacote das diretrizes gerais (o módulo diretrizes.js, igual
+    nos seus três apps);
+  - a atualização do site de cifras (correção do modo celular,
+    Play/Pause, página Foto, Aviso revisado).
+
+Os dois faziam as mesmas coisas e, subidos juntos, o site ficava
+com DOIS anúncios e DOIS botões PT/EN, um por cima do outro. Aqui
+isso está resolvido: o módulo manda no que é global, o site cuida
+do que é só dele. Suba SÓ este zip.
+
+
+DIFERENÇA IMPORTANTE EM RELAÇÃO AO PASSO-A-PASSO DAS DIRETRIZES
+---------------------------------------------------------------
+
+Aquele guia manda colar duas linhas de <script> em cada página.
+
+  >>> AQUI VOCÊ NÃO PRECISA COLAR NADA. <<<
+
+As páginas deste zip já vêm com as duas linhas dentro. É só subir
+os arquivos e pronto. Não abra o lápis em página nenhuma.
+
+Outras diferenças, todas de propósito:
+
+  - o OCR do módulo está DESLIGADO neste app (ocr: ativo: false),
+    porque aqui o leitor de foto mora no seu próprio repositório
+    em vez de baixar de um servidor público. Nos outros dois apps,
+    deixe ligado.
+  - a cor do módulo é o marrom do site (#a8501e), e o ícone é o
+    violão, não o círculo verde.
+  - o botão PT/EN fica embaixo à esquerda, para não brigar com a
+    barra do topo nem com o botão de Play do modo celular.
+  - o site tem 6 páginas agora, não 4 (entraram ocr.html e
+    aviso.html).
+
+
+PASSO A PASSO
+-------------
+
+1. Descompacte este .zip numa pasta
+   (botão direito → "Extrair tudo").
+
+2. Abra https://github.com/MarceloNeco/cifras-violao
+
+3. Clique em "Add file" (em cima, à direita da lista de arquivos)
+   e escolha "Upload files".
+
+4. Abra a pasta que você descompactou, aperte Ctrl+A para
+   selecionar TODOS os arquivos, e arraste tudo para dentro da
+   área grande que diz "Drag files here".
+
+   Arraste os ARQUIVOS, não a pasta. Arrastando a pasta, o GitHub
+   cria uma subpasta e o site quebra.
+
+5. Quatro arquivos são grandes (uns 3 MB cada) e demoram alguns
+   minutos. Espere todas as barrinhas chegarem ao fim.
+
+6. Embaixo, em "Commit changes", escreva qualquer coisa
+   (por exemplo: versão 2.1) e clique no botão verde.
+
+7. Espere de 1 a 3 minutos e abra
+   https://marceloneco.github.io/cifras-violao
+
+   No celular, se parecer igual a antes, puxe a tela para baixo
+   para recarregar, ou feche e abra a aba.
+
+8. Para conferir o módulo por dentro, abra
+   https://marceloneco.github.io/cifras-violao/TESTE-cifras-violao.html
+
+
+SE ALGO SAIR ERRADO
+-------------------
+
+O GitHub guarda todas as versões. Na aba "Commits", abra a versão
+anterior e use "Revert". Nada se perde.
+
+
+ONDE MEXER DEPOIS
+-----------------
+
+Anúncio, idioma, conta, avisos e nuvem:  diretrizes-config.js
+As frases do site em português e inglês: idioma.js
+
+Para desligar o anúncio, em diretrizes-config.js troque
+
+    anuncios: { ativo: true,
+
+por
+
+    anuncios: { ativo: false,
+
+Leia antes a parte "O Aviso agora conta a verdade sobre o
+anúncio", no README: essa escolha mexe na proteção jurídica do
+acervo.
+
+
+TODA VEZ QUE PUBLICAR UMA MUDANÇA
+---------------------------------
+
+  comum.js  →  const VERSAO = '2.1';
+  sw.js     →  var VERSAO = 'v1';    (suba para 'v2', 'v3'…)
+
+Sem isso, quem já abriu o site pode continuar vendo a versão
+antiga por um tempo.
+
+
+NÃO SOBE NO GITHUB: só este LEIA-ME. Todo o resto vai.

@@ -80,8 +80,8 @@ function mostrar(texto, veioDeDigitacao){
 
   if (!posicoes.length){
     caixa.hidden = false;
-    caixa.innerHTML = `<p class="vazio"><strong>Não reconheci “${escapar(texto)}”</strong>
-      Escreva a nota em letra (C, D, E, F, G, A, B) e o tipo depois: <b>Am7</b>, <b>C7M</b>, <b>F#m</b>, <b>G/B</b>.</p>`;
+    caixa.innerHTML = `<p class="vazio"><strong>${t('acordes.naoReconheci', {acorde: escapar(texto)})}</strong>
+      ${t('acordes.comoEscrever')}</p>`;
     return;
   }
 
@@ -96,19 +96,17 @@ function mostrar(texto, veioDeDigitacao){
         <h2>${escapar(texto)}</h2>
         <p class="porextenso">${escapar(nomePorExtenso(texto))}</p>
       </div>
-      <button class="botao forte" id="ouvir">▶ Ouvir</button>
+      <button class="botao forte" id="ouvir">${t('acordes.ouvir')}</button>
     </div>
-    ${notas.length ? `<p class="notas-acorde">Notas: ${notas.map(n=>`<b>${escapar(n)}</b>`).join(' · ')}</p>` : ''}
+    ${notas.length ? `<p class="notas-acorde">${t('acordes.notas')}: ${notas.map(n=>`<b>${escapar(n)}</b>`).join(' · ')}</p>` : ''}
     <div class="posicoes">
       ${posicoes.slice(0,3).map((p,i)=>`
         <figure data-pos="${i}">
           <div class="lugar-desenho">${diagramaSVG(texto, 118, p)}</div>
-          <figcaption>${i===0 ? 'Posição mais fácil' : (i+1) + 'ª posição'}${p.base>1 ? ' · a partir da ' + p.base + 'ª casa' : ''}</figcaption>
+          <figcaption>${i===0 ? t('acordes.maisFacil') : t('acordes.posicao', {n: i+1})}${p.base>1 ? ' · ' + t('acordes.aPartir', {n: p.base}) : ''}</figcaption>
         </figure>`).join('')}
     </div>
-    <p class="dica">Os números dentro das bolinhas são os dedos:
-       <b>1</b> indicador, <b>2</b> médio, <b>3</b> anular, <b>4</b> mínimo.
-       A barra laranja é a pestana.</p>`;
+    <p class="dica">${t('acordes.dedos')}</p>`;
 
   caixa.querySelectorAll('figure').forEach((fig, i)=>{
     fig.onclick = ()=> tocarPosicao(posicoes[i]);
@@ -129,3 +127,11 @@ function montarCampoHarmonico(){
        ${diagramaSVG(a.nome)}<span class="etiqueta-grau">${a.grau}</span>
      </a>`).join('');
 }
+
+
+/* trocou o idioma: o cartão do acorde e o campo harmônico são refeitos */
+document.addEventListener('idioma-mudou', ()=>{
+  const entrada = document.querySelector('#entrada');
+  if (entrada && entrada.value.trim()) mostrar(entrada.value.trim(), true);
+  if (typeof montarCampoHarmonico === 'function') montarCampoHarmonico();
+});

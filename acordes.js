@@ -391,16 +391,31 @@ function notasDoAcorde(texto){
   if (base === undefined || !passos) return [];
   const bemol = a.nota.includes('b');
   const notas = passos.map(p => (bemol ? BEMOIS : SUSTENIDOS)[(base + p) % 12]);
-  if (a.baixo && !notas.includes(a.baixo)) notas.unshift(a.baixo + ' (baixo)');
+  const rotuloBaixo = (typeof IDIOMA !== 'undefined' && IDIOMA === 'en') ? ' (bass)' : ' (baixo)';
+  if (a.baixo && !notas.includes(a.baixo)) notas.unshift(a.baixo + rotuloBaixo);
   return notas;
 }
 
-/* "Am7" vira "Lá menor com sétima" */
+/* em inglês as notas são as próprias letras, e não Dó, Ré, Mi */
+const NOME_TIPO_EN = {
+  'maj':'major', 'm':'minor', '7':'seventh', 'm7':'minor seventh',
+  'maj7':'major seventh', 'sus4':'suspended fourth', 'sus2':'suspended second',
+  '6':'sixth', 'm6':'minor sixth', '9':'ninth',
+  'dim7':'diminished', 'm7b5':'half-diminished', 'aug':'augmented'
+};
+
+/* "Am7" vira "Lá menor com sétima" — ou "A minor seventh" */
 function nomePorExtenso(texto){
   const a = lerAcorde(texto);
   if (!a) return texto;
-  const acidente = a.nota[1] === '#' ? ' sustenido' : a.nota[1] === 'b' ? ' bemol' : '';
-  const tipo = NOME_TIPO_PT[normalizarSufixo(a.sufixo)] || '';
-  const baixo = a.baixo ? ' com baixo em ' + (NOME_NOTA_PT[a.baixo[0]] || a.baixo) : '';
-  return ((NOME_NOTA_PT[a.nota[0]] || a.nota) + acidente + ' ' + tipo + baixo).trim();
+  const ingles = (typeof IDIOMA !== 'undefined') && IDIOMA === 'en';
+  const nomeNota = n => ingles ? n : (NOME_NOTA_PT[n] || n);
+  const acidente = a.nota[1] === '#' ? (ingles ? ' sharp' : ' sustenido')
+                 : a.nota[1] === 'b' ? (ingles ? ' flat'  : ' bemol') : '';
+  const tabela = ingles ? NOME_TIPO_EN : NOME_TIPO_PT;
+  const tipo = tabela[normalizarSufixo(a.sufixo)] || '';
+  const baixo = a.baixo
+    ? (ingles ? ' with bass on ' : ' com baixo em ') + nomeNota(a.baixo[0])
+    : '';
+  return (nomeNota(a.nota[0]) + acidente + ' ' + tipo + baixo).trim();
 }

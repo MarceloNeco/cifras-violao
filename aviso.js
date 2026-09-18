@@ -11,7 +11,7 @@
 
 const FORMULARIO_REMOCAO = '';
 
-const VERSAO_AVISO = '15 de setembro de 2026';
+const VERSAO_AVISO = '2026-09-17';
 
 function trechoContato(){
   if (!FORMULARIO_REMOCAO){
@@ -37,17 +37,40 @@ function trechoContato(){
   </form>`;
 }
 
+/* O texto sobre monetização muda conforme o anúncio esteja ligado
+   ou desligado no config.js — para o aviso nunca dizer algo que
+   não é verdade. */
+function trechoMonetizacao(){
+  /* o anúncio agora é ligado/desligado no diretrizes-config.js */
+  let ligado = false;
+  try{ ligado = !!(window.DGO && DGO.cfg && DGO.cfg.anuncios && DGO.cfg.anuncios.ativo); }catch(e){}
+  if (!ligado){
+    return `<p>Não há publicidade, patrocínio, assinatura, venda de qualquer espécie,
+       doação ou outra forma de monetização, direta ou indireta. Nada aqui é
+       comercializado e nenhuma receita é obtida a partir do conteúdo reunido.</p>`;
+  }
+  return `<p>Este acervo exibe um espaço publicitário no topo das páginas e oferece um
+     perfil de assinante que remove esse espaço. O conteúdo reunido — letras e
+     harmonias — não é vendido, licenciado nem oferecido como produto, e o acesso a
+     ele é o mesmo para quem vê e para quem não vê o anúncio.</p>
+  <p>Fica registrado, por honestidade, que a existência de publicidade afasta este
+     acervo do uso estritamente privado de que trata o art. 46 da Lei nº 9.610/1998.
+     Qualquer titular que prefira não ver sua obra num site com publicidade pode
+     pedir a remoção pelo formulário da seção 3, que é atendida de imediato.</p>`;
+}
+
 function textoDoAviso(){ return `
   <h2 id="titulo-aviso">Aviso</h2>
-  <p class="atualizado">Última atualização: ${VERSAO_AVISO}</p>
+  <p class="atualizado">Última atualização:
+     ${typeof formatarData === 'function' ? formatarData(VERSAO_AVISO) : VERSAO_AVISO}</p>
+  <p class="atualizado" lang="en">This notice is written in Portuguese because it refers to
+     Brazilian law (Lei 9.610/1998 and Lei 13.709/2018).</p>
 
   <h3>1. Natureza e finalidade</h3>
   <p>Este site é um acervo particular de cifras de violão, mantido para estudo e
      prática musical individual. Não se trata de serviço, produto ou publicação
      dirigida ao público.</p>
-  <p>Não há publicidade, patrocínio, assinatura, venda de qualquer espécie, doação
-     ou outra forma de monetização, direta ou indireta. Nada aqui é comercializado
-     e nenhuma receita é obtida a partir do conteúdo reunido.</p>
+  ${trechoMonetizacao()}
 
   <h3>2. Direitos autorais</h3>
   <p>As letras e as harmonias aqui reunidas pertencem aos respectivos autores,
@@ -70,10 +93,19 @@ function textoDoAviso(){ return `
   ${trechoContato()}
 
   <h3>4. Dados pessoais</h3>
-  <p>Este site é estático. Não possui servidor de aplicação, banco de dados,
-     cadastro, login ou área restrita. A navegação não é registrada: não são
-     utilizados cookies de rastreamento, pixels, ferramentas de analytics, mapas
-     de calor ou qualquer instrumento de medição de audiência.</p>
+  <p>Este site é estático. Não possui servidor de aplicação nem banco de dados.
+     Existe uma tela de perfil (visitante, assinante e anunciante), mas ela funciona
+     inteiramente dentro do navegador: o nome e a senha ficam gravados apenas no
+     aparelho de quem usa, não são transmitidos a lugar algum e não constituem
+     cadastro. A navegação não é registrada: não são utilizados cookies de
+     rastreamento, pixels, ferramentas de analytics, mapas de calor ou qualquer
+     instrumento de medição de audiência.</p>
+  <p>No perfil de visitante existe a opção de não guardar nada no aparelho: com ela
+     ligada, favoritos, tons escolhidos e a fila de importação são apagados ao fechar
+     o navegador.</p>
+  <p>Fotografias abertas na página "Foto vira cifra" são lidas dentro do próprio
+     navegador, por um motor de reconhecimento de texto que roda no aparelho. Nenhuma
+     imagem é enviada para servidor algum.</p>
   <p>As preferências de uso — tema, imagem de fundo, músicas favoritas, tom escolhido,
      tamanho da letra e a fila da página de importação — ficam gravadas exclusivamente
      no armazenamento local do navegador utilizado, permanecem no próprio aparelho e
