@@ -97,23 +97,47 @@ function semCifraAinda(){
 
 /* ---------------- desenhar ---------------- */
 function desenharCifra(){
+  if (vozLendo) pararVoz();   // as linhas vão mudar: a leitura recomeça pelo botão
   const total = deslocamento - capo;             // o que a mão realmente toca
   const bemol = preferirBemol(TOM_ORIGINAL, total);
 
-  const html = LINHAS.map(l=>{
-    if (l.tipo === 'vazia')  return '<span class="l-vazia"></span>';
-    if (l.tipo === 'secao')  return `<span class="l-secao">[${escapar(l.texto)}]</span>`;
-    if (l.tipo === 'acordes'){
-      const linha = transporLinhaDeAcordes(l.texto, total, bemol);
-      const marcada = escapar(linha).replace(/\S+/g, p =>
-        ehAcorde(p) ? `<b data-acorde="${p}">${p}</b>` : p);
-      const rot = l.rotulo ? `<span class="l-secao" style="display:inline;margin:0">[${escapar(l.rotulo)}] </span>` : '';
-      return rot + `<span class="l-acorde">${marcada}</span>`;
-    }
-    return `<span class="l-letra">${escapar(l.texto)}</span>`;
-  }).join('\n');
+  /* Quantas letras cabem na largura da tela. Linha maior que isso é
+     quebrada em pedaços, e cada pedaço leva junto os acordes que estão
+     em cima dele — assim o acorde continua em cima da sílaba certa
+     mesmo com a letra grande (antes a linha saía da tela). */
+  const colunas = colunasQueCabem();
+  const acordeHTML = texto => `<span class="l-acorde">${escapar(texto).replace(/\S+/g, p =>
+        ehAcorde(p) ? `<b data-acorde="${p}">${p}</b>` : p)}</span>`;
+  const letraHTML = texto => `<span class="l-letra">${escapar(texto)}</span>`;
 
-  $('#cifra').innerHTML = html;
+  const partes = [];
+  for (let i = 0; i < LINHAS.length; i++){
+    const l = LINHAS[i];
+    if (l.tipo === 'vazia'){ partes.push('<span class="l-vazia"></span>'); continue; }
+    if (l.tipo === 'secao'){ partes.push(`<span class="l-secao">[${escapar(l.texto)}]</span>`); continue; }
+
+    let acordes = '', letra = null, rotulo = '';
+    if (l.tipo === 'acordes'){
+      acordes = transporLinhaDeAcordes(l.texto, total, bemol);
+      rotulo = l.rotulo ? '[' + l.rotulo + '] ' : '';
+      const prox = LINHAS[i+1];
+      if (prox && prox.tipo === 'letra'){ letra = prox.texto; i++; }   // o par acorde + letra
+    }else{
+      letra = l.texto;
+    }
+
+    quebrarPar(acordes, letra || '', colunas, rotulo.length).forEach((pedaco, n)=>{
+      const rot = (n === 0 && rotulo)
+        ? `<span class="l-secao" style="display:inline;margin:0">${escapar(rotulo)}</span>` : '';
+      const linhas = [];
+      /* na continuação, linha vazia não entra (ficaria um buraco na tela) */
+      if (l.tipo === 'acordes' && (n === 0 || pedaco.acordes)) linhas.push(rot + acordeHTML(pedaco.acordes));
+      if (letra !== null && (n === 0 || pedaco.letra)) linhas.push(letraHTML(pedaco.letra));
+      partes.push(linhas.join('\n'));
+    });
+  }
+
+  $('#cifra').innerHTML = partes.join('\n');
   $('#cifra').querySelectorAll('.l-acorde b').forEach(b=>{
     b.addEventListener('click', ()=> tocarAcorde(b.dataset.acorde));
   });
@@ -131,6 +155,53 @@ function desenharCifra(){
   desenharDiagramas(total, bemol);
   guardarPreferencias();
   if (typeof medirLinhas === 'function') setTimeout(()=>{ medirLinhas(); atualizarGuia(); }, 0);
+}
+
+/* quantas letras (colunas) cabem na largura da área da cifra */
+function colunasQueCabem(){
+  const area = $('#cifra');
+  if (!area || !area.clientWidth) return Infinity;
+  return Math.max(12, Math.floor((area.clientWidth - 4) / medirLarguraChar()));
+}
+
+/* Quebra uma linha de acordes + a linha de letra embaixo dela em pedaços
+   que caibam em "colunas". O corte:
+   - nunca parte um acorde no meio;
+   - de preferência cai entre duas palavras da letra;
+   - só em último caso corta uma palavra (palavra maior que a tela). */
+function quebrarPar(acordes, letra, colunas, recuoPrimeira){
+  const tamanhoTotal = Math.max(acordes.length, letra.length);
+  if (tamanhoTotal + recuoPrimeira <= colunas) return [{acordes, letra}];
+
+  /* onde começa e termina cada acorde */
+  const faixas = [];
+  acordes.replace(/\S+/g, (p, ini)=>{ faixas.push([ini, ini + p.length]); return p; });
+  const dentroDeAcorde = c => faixas.some(([a, b]) => a < c && c < b);
+  const vazio = (txt, c) => c >= txt.length || txt[c] === ' ';
+  const entrePalavras = c => vazio(letra, c - 1) || vazio(letra, c);
+
+  const pedacos = [];
+  let inicio = 0, primeira = true;
+  while (inicio < tamanhoTotal){
+    const cabe = colunas - (primeira ? recuoPrimeira : 0);
+    let fim = inicio + cabe;
+    if (fim < tamanhoTotal){
+      let corte = -1;
+      for (let c = fim; c > inicio; c--)                      // 1º: entre palavras
+        if (!dentroDeAcorde(c) && entrePalavras(c)){ corte = c; break; }
+      if (corte < 0)
+        for (let c = fim; c > inicio; c--)                    // 2º: só não partir acorde
+          if (!dentroDeAcorde(c)){ corte = c; break; }
+      fim = corte > 0 ? corte : fim;                          // 3º: corta onde der
+    }
+    pedacos.push({acordes: acordes.slice(inicio, fim).replace(/\s+$/, ''),
+                  letra:   letra.slice(inicio, fim).replace(/\s+$/, '')});
+    inicio = fim;
+    /* a próxima fileira não começa com espaço em branco */
+    while (inicio < tamanhoTotal && vazio(acordes, inicio) && vazio(letra, inicio)) inicio++;
+    primeira = false;
+  }
+  return pedacos;
 }
 
 function desenharDiagramas(total, bemol){
@@ -331,10 +402,17 @@ function ligarBotoes(){
 
   $('#btn-palco').onclick  = ()=> modoPalco(true);
   $('#btn-caber').onclick  = ajustarAoEcra;
-  let temporizador = null;
+  let temporizador = null, larguraAntes = window.innerWidth;
   window.addEventListener('resize', ()=>{
+    /* no celular a barra de endereço some e volta ao rolar e muda só a altura:
+       isso não é motivo para redesenhar */
+    if (window.innerWidth === larguraAntes) return;
+    larguraAntes = window.innerWidth;
     clearTimeout(temporizador);
-    temporizador = setTimeout(()=>{ if (document.body.classList.contains('modo-palco')) ajustarAoEcra(); }, 250);
+    temporizador = setTimeout(()=>{
+      if (document.body.classList.contains('modo-palco')) ajustarAoEcra();
+      else if (LINHAS.length) desenharCifra();      // tela girou: quebra as linhas de novo
+    }, 250);
   });
   $('#sair-palco').onclick = ()=> modoPalco(false);
 
@@ -383,8 +461,16 @@ function ligarBotoes(){
   ligarGestos();
   pintarBotoesPlay();
   iniciarGuia();
-  $('#btn-afinador').onclick = ()=> abrirAfinador(true);
+  iniciarVoz();
+  $('#btn-afinador').onclick = ()=> abrirAfinador(!$('#afinador').hasAttribute('aberta'));
   $('#fechar-afinador').onclick = ()=> abrirAfinador(false);
+  /* o afinador também fecha com um toque fora dele — antes ele ficava
+     tapando a metade de baixo da letra até achar o botão Fechar */
+  document.addEventListener('pointerdown', e=>{
+    if (!$('#afinador').hasAttribute('aberta')) return;
+    if (e.target.closest('#afinador, #btn-afinador')) return;
+    abrirAfinador(false);
+  });
 
   document.addEventListener('keydown', e=>{
     if (/^(INPUT|TEXTAREA)$/.test(e.target.tagName)) return;
@@ -406,28 +492,26 @@ function mudarVelocidade(passo){
   $('#velocidade-valor').textContent = velocidade;
   guardarPreferencias();
 }
-/* deixa a letra do tamanho certo para a linha mais comprida caber na tela */
+/* deixa a letra do tamanho certo para a linha mais comprida caber na tela.
+   Conta pela linha original (sem quebra): se ela couber, nada precisa quebrar. */
 function ajustarAoEcra(){
   const el = $('#cifra');
-  if (!el || !el.clientWidth) return;
-  for (let i=0; i<3; i++){
-    const sobrando = el.scrollWidth - el.clientWidth;
-    if (sobrando <= 1 && i > 0) break;
-    const proporcao = el.clientWidth / Math.max(1, el.scrollWidth);
-    const novo = Math.max(11, Math.min(30, Math.floor(tamanho * proporcao)));
-    if (novo === tamanho) break;
-    tamanho = novo;
-    document.documentElement.style.setProperty('--tamanho-cifra', tamanho + 'px');
-    el.getBoundingClientRect();   // obriga o navegador a recalcular
-  }
-  guardarPreferencias();
+  if (!el || !el.clientWidth || !LINHAS.length) return;
+  const total = deslocamento - capo;
+  const bemol = preferirBemol(TOM_ORIGINAL, total);
+  const maior = Math.max(1, ...LINHAS.map(l => l.tipo === 'acordes'
+      ? transporLinhaDeAcordes(l.texto, total, bemol).length + (l.rotulo ? l.rotulo.length + 3 : 0)
+      : (l.texto || '').length));
+  const porPixel = medirLarguraChar() / tamanho;            // largura de uma letra por px de fonte
+  tamanho = Math.max(11, Math.min(30, Math.floor((el.clientWidth - 4) / (maior * porPixel))));
+  document.documentElement.style.setProperty('--tamanho-cifra', tamanho + 'px');
+  desenharCifra();
 }
 
 function mudarFonte(passo){
   tamanho = Math.max(11, Math.min(34, tamanho + passo));
   document.documentElement.style.setProperty('--tamanho-cifra', tamanho + 'px');
-  guardarPreferencias();
-  if (typeof medirLinhas === 'function') setTimeout(()=>{ medirLinhas(); atualizarGuia(); }, 0);
+  desenharCifra();   // redesenha para a linha que não cabe descer inteira, com o acorde junto
 }
 function modoPalco(ligar){
   document.body.classList.toggle('modo-palco', ligar);
@@ -442,6 +526,7 @@ function modoPalco(ligar){
   }else{
     pararRolagem();
     document.body.classList.remove('barra-oculta');
+    desenharCifra();   // a largura útil muda ao sair do modo celular
     if (document.fullscreenElement && document.exitFullscreen) document.exitFullscreen().catch(()=>{});
   }
 }
@@ -764,4 +849,79 @@ function iniciarGuia(){
     clearTimeout(espera);
     espera = setTimeout(()=>{ medirLinhas(); desenharRegua(); atualizarGuia(); }, 200);
   });
+}
+
+/* ============================================================
+   Ler a letra em voz alta (alternativa a ler na tela)
+
+   Usa a voz do próprio aparelho (Web Speech API), do jeito combinado
+   nas diretrizes: sem escolher voz pelo nome — só o idioma — para o
+   celular usar o mecanismo que está nas Configurações dele (Google,
+   Samsung, SherpaTTS...). Lê só a letra e o nome das partes; os
+   acordes ficam de fora. A linha que está sendo lida fica marcada.
+   ============================================================ */
+let vozLendo = false, vozFila = [], vozRelogio = null;
+
+function idiomaDaMusica(){
+  /* música internacional é lida com voz em inglês */
+  return /internacional|international/i.test((MUSICA && MUSICA.categoria) || '') ? 'en-US' : 'pt-BR';
+}
+
+function pararVoz(){
+  vozLendo = false; vozFila = [];
+  clearInterval(vozRelogio);
+  try{ speechSynthesis.cancel(); }catch(e){}
+  document.querySelectorAll('.l-lendo').forEach(e => e.classList.remove('l-lendo'));
+  pintarBotaoVoz();
+}
+
+function pintarBotaoVoz(){
+  const b = $('#btn-voz');
+  if (!b) return;
+  b.classList.toggle('ativo', vozLendo);
+  b.setAttribute('aria-pressed', vozLendo);
+  b.textContent = vozLendo ? '⏹' : '🗣';
+  b.title = t(vozLendo ? 'cifra.vozParar' : 'cifra.voz');
+  b.setAttribute('aria-label', b.title);
+}
+
+function falarProxima(){
+  document.querySelectorAll('.l-lendo').forEach(e => e.classList.remove('l-lendo'));
+  if (!vozLendo) return;
+  const el = vozFila.shift();
+  if (!el){ pararVoz(); return; }
+  el.classList.add('l-lendo');
+  if (!rolando) el.scrollIntoView({block:'center', behavior:'smooth'});
+  const fala = new SpeechSynthesisUtterance(el.textContent.replace(/[\[\]]/g, '').trim());
+  fala.lang = idiomaDaMusica();
+  fala.rate = 0.95;
+  fala.onend = ()=> falarProxima();
+  fala.onerror = ()=> falarProxima();
+  speechSynthesis.speak(fala);
+}
+
+function lerEmVozAlta(){
+  if (vozLendo){ pararVoz(); return; }
+  if (!('speechSynthesis' in window)){ alert(t('cifra.semVoz')); return; }
+  /* uma linha de cada vez: frase curta não trava o Chrome do Android */
+  vozFila = [...document.querySelectorAll('#cifra .l-letra, #cifra .l-secao')]
+            .filter(el => el.textContent.trim());
+  if (!vozFila.length) return;
+  vozLendo = true;
+  pintarBotaoVoz();
+  try{ speechSynthesis.cancel(); }catch(e){}
+  /* o Chrome derruba a fala colada no cancel(): espera um instante */
+  setTimeout(falarProxima, 60);
+  /* o Chrome do Android para sozinho em ~15 s sem isto */
+  vozRelogio = setInterval(()=>{ try{ speechSynthesis.resume(); }catch(e){} }, 9000);
+}
+
+function iniciarVoz(){
+  const b = $('#btn-voz');
+  if (!b) return;
+  b.onclick = lerEmVozAlta;
+  pintarBotaoVoz();
+  document.addEventListener('idioma-mudou', pintarBotaoVoz);
+  /* saiu da página ou redesenhou a cifra (tom, letra maior): para a leitura */
+  window.addEventListener('pagehide', pararVoz);
 }

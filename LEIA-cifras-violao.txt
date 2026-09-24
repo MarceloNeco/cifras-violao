@@ -1,89 +1,58 @@
-CIFRAS E ACORDES — por que a correcao nao aparecia no celular
-=============================================================
+CIFRAS DE VIOLAO — versao 2.2 (24/Set/2026)
+============================================
+Este pacote SUBSTITUI todos os anteriores. Pode apagar os zips antigos.
 
-O DIAGNOSTICO
--------------
-O estilo.css corrigido JA ESTA no ar. Conferi direto no endereco
-marceloneco.github.io/cifras-violao/estilo.css e as linhas da correcao
-estao la.
+O QUE FOI CONSERTADO
+--------------------
+1. Celular: o menu do topo ficava sempre aberto
+   Causa: o envio de 18/Set (10:06) trocou o estilo.css por uma versao
+   mais velha, sem as regras do menu. Por isso Acordes / Importar / Foto /
+   Configuracoes / Instalar apareciam sempre abertos, tapando a letra.
+   Agora: o menu so abre no botao ☰ e fecha sozinho ao tocar fora,
+   ao escolher qualquer opcao e ao rolar a pagina.
 
-O aparelho e que nao estava usando ele.
+2. Celular: "Configuracoes" virou o icone ⚙ (ao lado de ▨ e ☾).
 
-O site tem um "service worker" (arquivo sw.js) — um ajudante que guarda
-copias dos arquivos no proprio aparelho para o site abrir sem internet.
-Ele veio junto com o pacote de diretrizes instalado por outro chat.
+3. Celular: o afinador (🎵) fecha com um toque fora dele, e o proprio
+   botao 🎵 abre e fecha.
 
-O problema: esse ajudante estava configurado para ENTREGAR SEMPRE A
-COPIA GUARDADA PRIMEIRO, e so depois buscar a versao nova em segundo
-plano. Resultado: toda correcao so aparecia na segunda ou terceira vez
-que o site fosse aberto — e, no caso do celular, nem isso, porque o
-numero de versao dele (VERSAO = 'v1') nunca mudou, entao a gaveta de
-copias antigas nunca foi esvaziada.
+4. Celular: o botao PT/EN sai da frente da letra quando voce rola para
+   baixo e volta quando rola para cima (junto com a barra do topo).
 
-Nao era erro do CSS, nem do seu aparelho, nem do GitHub.
+5. Letra grande saindo da tela
+   Agora, ao aumentar a letra (A+), a linha que nao cabe desce para a
+   linha de baixo levando junto os acordes daquele pedaco — o acorde
+   continua em cima da silaba certa. O botao ⤢ ainda deixa a letra no
+   maior tamanho em que nada precisa quebrar.
 
+NOVO
+----
+- Botao 🗣 na barra da cifra: le a letra em voz alta, linha por linha,
+  marcando a linha que esta sendo lida. Musica internacional e lida com
+  voz em ingles. Toque de novo (⏹) para parar.
+- CREDITOS.md: origem e licenca de cada arquivo de fora.
+  ATENCAO: faltam a origem de fundo.jpg, fundo-celular.jpg e capa.jpg.
 
-O QUE MUDA NESTE sw.js
-----------------------
-1. VERSAO passa de 'v1' para 'v2'.
-   Isso esvazia a gaveta de copias antigas uma vez, agora.
+COMO SUBIR (passo a passo)
+--------------------------
+1. Abra github.com/MarceloNeco/cifras-violao
+2. Clique em "Add file" > "Upload files"
+3. Abra o zip no computador, selecione TODOS os arquivos de dentro dele
+   e arraste para a pagina do GitHub (sao 9 arquivos, sem pastas).
+4. Embaixo, clique no botao verde "Commit changes".
+5. Espere uns 2 minutos e abra marceloneco.github.io/cifras-violao
+   No rodape deve aparecer "versao 2.2".
+6. No celular, se ainda aparecer a versao antiga: feche a aba do site
+   e abra de novo (o sw.js mudou para 'v3' e limpa as copias velhas).
 
-2. Arquivos .css, .js e .json passam a ser buscados NA REDE PRIMEIRO.
-   Sao justamente os que mudam a cada correcao. Sem internet, a copia
-   guardada continua atendendo normalmente — o site segue funcionando
-   offline.
-   Imagens, fontes e as cifras continuam vindo da copia guardada, que
-   e o que deixa o site rapido.
-
-3. O nome da gaveta passa de "dgo-v1" para "cifras-violao-v2".
-   Todos os seus apps moram no mesmo endereco (marceloneco.github.io) e
-   estavam usando o MESMO nome de gaveta. Como cada um apaga "as gavetas
-   que nao sao a minha" ao atualizar, um app estava apagando os arquivos
-   guardados do outro. Agora cada app mexe so na propria gaveta.
-
-
-PASSO 1 — subir o arquivo
--------------------------
-1. Descompacte este .zip (botao direito > Extrair tudo).
-2. Abra https://github.com/MarceloNeco/cifras-violao
-3. "Add file" > "Upload files".
-4. Arraste o sw.js. (So o sw.js. O LEIA nao vai para o repositorio.)
-5. "Commit changes".
-
-
-PASSO 2 — conferir no celular
------------------------------
-Aguarde cerca de um minuto (o GitHub leva um tempo para publicar).
-
-1. Feche TODAS as abas do site no celular. Isso importa: o ajudante
-   antigo so sai de cena quando nenhuma aba dele esta aberta.
-2. Abra o site de novo.
-3. Entre numa musica e va para o Modo Celular.
-
-A barra de ferramentas tem que ficar colada no rodape, sem esticar.
-
-Se ainda esticar, force a limpeza uma vez:
-   Chrome no Android > toque nos 3 pontinhos > Configuracoes >
-   Configuracoes do site > Todos os sites > marceloneco.github.io >
-   "Limpar e redefinir"
-Depois abra o site outra vez.
-
-
-DE AGORA EM DIANTE
-------------------
-Toda vez que um arquivo do site mudar, o numero em VERSAO (linha 5 do
-sw.js) precisa subir: 'v2' para 'v3', depois 'v4', e assim por diante.
-Essa regra ja estava escrita nas suas diretrizes gerais; eu e que nao
-sabia que o sw.js tinha sido instalado neste repositorio.
-
-
-UM AVISO SEPARADO, PARA DEPOIS
-------------------------------
-O site esta carregando, ao mesmo tempo, idioma.js E diretrizes.js —
-dois pacotes diferentes que fazem a mesma coisa (troca de idioma), cada
-um com a propria chave. Suas diretrizes gerais alertam que os dois nao
-deveriam conviver no mesmo repositorio: juntos produzem dois botoes de
-idioma que nao se falam.
-
-Nao mexi nisso agora para nao misturar dois problemas. Vale resolver
-depois, decidindo qual dos dois fica.
+ARQUIVOS DESTE PACOTE
+---------------------
+estilo.css            regras do menu de volta + as correcoes do celular
+comum.js              menu que fecha sozinho, icone ⚙, versao 2.2
+leitor.js             quebra de linha com acorde junto, afinador, voz
+cifra.html            botao 🗣
+idioma.js             frases novas em PT e EN
+sw.js                 VERSAO 'v3'
+diretrizes-config.js  versaoApp 2.2
+CREDITOS.md           creditos e licencas
+LEIA-cifras-violao.txt  este arquivo

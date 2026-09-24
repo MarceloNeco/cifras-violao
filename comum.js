@@ -4,8 +4,8 @@
 
 /* Versão do site. Ao publicar uma mudança, altere estas duas linhas:
    o número aparece no rodapé de todas as páginas. */
-const VERSAO = '2.1';
-const VERSAO_DATA = '2026-09-18';
+const VERSAO = '2.2';
+const VERSAO_DATA = '2026-09-24';
 
 /* assinatura com a versão e o link do aviso, no rodapé de cada página */
 function montarRodape(){
@@ -55,10 +55,13 @@ function montarTopo(){
       ${elo('acordes',  'acordes.html',  'topo.acordes')}
       ${elo('importar', 'importar.html', 'topo.importar')}
       ${elo('ocr',      'ocr.html',      'topo.foto')}
-      <button class="botao" data-abre-config data-i18n="topo.config"></button>
       <button class="botao" data-abre-instalar data-i18n="topo.instalar"></button>
-      <button class="botao icone" data-botao-fundo data-i18n-title="topo.fundo">▨</button>
-      <button class="botao icone" data-botao-tema data-i18n-title="topo.tema">☾</button>
+      <div class="menu-icones">
+        <button class="botao icone" data-abre-config
+                data-i18n-title="topo.config" data-i18n-aria="topo.config">⚙</button>
+        <button class="botao icone" data-botao-fundo data-i18n-title="topo.fundo">▨</button>
+        <button class="botao icone" data-botao-tema data-i18n-title="topo.tema">☾</button>
+      </div>
     </nav>`;
   barra.dataset.pronta = 'sim';
 
@@ -82,12 +85,22 @@ function montarTopo(){
     menu.classList.toggle('aberto', abrir);
     botaoMenu.setAttribute('aria-expanded', abrir);
   });
+  /* O menu fecha sozinho: ao tocar fora dele, depois de escolher qualquer
+     coisa dentro dele (antes os botões ▨ e ☾ deixavam o menu aberto por
+     cima da letra) e ao rolar a página. */
+  const fecharMenu = ()=>{
+    if (!menu.classList.contains('aberto')) return;
+    menu.classList.remove('aberto');
+    botaoMenu.setAttribute('aria-expanded', 'false');
+  };
   document.addEventListener('click', e=>{
-    if (!menu.contains(e.target) && e.target !== botaoMenu){
-      menu.classList.remove('aberto');
-      botaoMenu.setAttribute('aria-expanded', 'false');
-    }
+    if (!menu.contains(e.target) && !botaoMenu.contains(e.target)) fecharMenu();
   });
+  menu.addEventListener('click', e=>{
+    if (e.target.closest('button, a')) setTimeout(fecharMenu, 150);
+  });
+  window.addEventListener('scroll', fecharMenu, {passive:true});
+  document.addEventListener('keydown', e=>{ if (e.key === 'Escape') fecharMenu(); });
 }
 
 /* ---------- tema claro / escuro ---------- */
