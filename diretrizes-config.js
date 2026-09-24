@@ -1,5 +1,5 @@
 /* =====================================================================
-   Cifras de Violão  —  configuracao
+   CifrasONE (antigo Cifras de Violão)  —  configuracao
    ---------------------------------------------------------------------
    ESTE e o unico arquivo diferente entre os seus apps.
    O diretrizes.js e identico nos tres; aqui ficam o nome, a cor, as
@@ -13,8 +13,8 @@ DGO.iniciar({
                                 guarda os dados. Seus sites moram todos em
                                 marceloneco.github.io, e e isto que impede os
                                 dados de um vazarem para o outro. */
-  nome: { pt: 'Cifras de Violão', en: 'Guitar Chords' },
-  versaoApp: '2.2',
+  nome: { pt: 'CifrasONE', en: 'CifrasONE' },
+  versaoApp: '2.3',
   cor: '#a8501e',            /* o marrom-laranja do site de cifras */
   corFundoBarra: '#1a1614',
 
@@ -97,7 +97,7 @@ DGO.iniciar({
   email: {
     formulario: '',      /* ex.: 'https://formspree.io/f/xxxxxxx' */
     deAvisos: '',        /* o e-mail que voce usa para responder */
-    assuntoPadrao: 'Cifras de Violão'
+    assuntoPadrao: 'CifrasONE'
   },
 
   /* ---------- nuvem ---------- */

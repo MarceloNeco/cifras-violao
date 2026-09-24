@@ -1,6 +1,6 @@
 {
-  "name": "Cifras de Violão",
-  "short_name": "Cifras",
+  "name": "CifrasONE",
+  "short_name": "CifrasONE",
   "description": "Cifras de violão com rolagem automática, mudança de tom, desenhos dos acordes, afinador e leitura de fotos.",
   "start_url": "index.html",
   "scope": "./",

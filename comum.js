@@ -4,7 +4,7 @@
 
 /* Versão do site. Ao publicar uma mudança, altere estas duas linhas:
    o número aparece no rodapé de todas as páginas. */
-const VERSAO = '2.2';
+const VERSAO = '2.3';
 const VERSAO_DATA = '2026-09-24';
 
 /* assinatura com a versão e o link do aviso, no rodapé de cada página */
@@ -37,9 +37,17 @@ function montarTopo(){
   const elo = (nome, endereco, chave) =>
     `<a class="botao${pagina === nome ? ' ativo' : ''}" href="${endereco}" data-i18n="${chave}"></a>`;
 
+  /* o nome do app: "Cifras" na cor do texto e "ONE" na cor de destaque,
+     como nos outros apps da família (RiseONE, OmniLifeONE...).
+     É nome próprio: não se traduz, por isso não leva data-i18n. */
+  const nomeDoApp = `<span class="marca-nome">Cifras<span class="marca-one">ONE</span></span>`;
+
+  /* ☰ fica à esquerda, como é o padrão nos apps de celular */
   barra.innerHTML = `
+    <button class="botao icone abre-menu" data-botao-menu
+            aria-expanded="false" aria-controls="menu-topo" aria-label="Menu">☰</button>
     <a class="marca" href="index.html">
-      ${VIOLAO_SVG}<span data-i18n="${naCifra ? 'topo.voltar' : 'topo.marca'}"></span>
+      ${VIOLAO_SVG}${naCifra ? '<span data-i18n="topo.voltar"></span>' : nomeDoApp}
     </a>
     <div class="espaco"></div>
     ${naCifra ? `
@@ -49,8 +57,6 @@ function montarTopo(){
               data-i18n-title="cifra.compartilhar">⤴</button>
       <button class="botao icone" id="btn-afinador" data-i18n-title="cifra.afinador">🎵</button>` : ''}
     <button class="botao icone" data-abre-conta data-i18n-title="topo.conta">☺</button>
-    <button class="botao icone abre-menu" data-botao-menu
-            aria-expanded="false" aria-label="Menu">☰</button>
     <nav class="menu-topo" id="menu-topo">
       ${elo('acordes',  'acordes.html',  'topo.acordes')}
       ${elo('importar', 'importar.html', 'topo.importar')}
@@ -99,7 +105,13 @@ function montarTopo(){
   menu.addEventListener('click', e=>{
     if (e.target.closest('button, a')) setTimeout(fecharMenu, 150);
   });
-  window.addEventListener('scroll', fecharMenu, {passive:true});
+  /* só fecha numa rolagem de verdade: no celular a barra de endereço
+     mexe alguns pixels sozinha e isso fechava o menu logo após abrir */
+  let rolagemAoAbrir = 0;
+  botaoMenu.addEventListener('click', ()=>{ rolagemAoAbrir = window.scrollY; });
+  window.addEventListener('scroll', ()=>{
+    if (Math.abs(window.scrollY - rolagemAoAbrir) > 40) fecharMenu();
+  }, {passive:true});
   document.addEventListener('keydown', e=>{ if (e.key === 'Escape') fecharMenu(); });
 }
 

@@ -1,4 +1,4 @@
-# Créditos — Cifras de Violão / Credits — Guitar Chords
+# Créditos — CifrasONE / Credits — CifrasONE
 
 Cada arquivo que veio de fora deste projeto, com a origem e a licença.
 Every file that came from outside this project, with its source and license.

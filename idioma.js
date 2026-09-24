@@ -24,7 +24,7 @@ pt: {
   'idioma.titulo': 'Mudar para inglês',
 
   /* cabeçalho, em todas as páginas */
-  'topo.marca': 'Cifras de Violão',
+  'topo.marca': 'CifrasONE',
   'topo.acordes': 'Acordes',
   'topo.importar': 'Importar',
   'topo.foto': 'Foto',
@@ -278,7 +278,7 @@ pt: {
   'avisos.versaoTexto': 'Avisa quando o site ganhar uma versão nova.',
   'avisos.hora': 'Hora do lembrete',
   'avisos.testar': 'Ver como fica',
-  'avisos.testeTitulo': 'Cifras de Violão',
+  'avisos.testeTitulo': 'CifrasONE',
   'avisos.testeCorpo': 'É assim que um aviso vai aparecer no seu aparelho.',
   'avisos.estudoTitulo': 'Hora do violão',
   'avisos.estudoCorpo': 'Que tal uns minutos com as suas cifras?',
@@ -303,7 +303,7 @@ en: {
   'idioma.botao': 'EN',
   'idioma.titulo': 'Switch to Portuguese',
 
-  'topo.marca': 'Guitar Chords',
+  'topo.marca': 'CifrasONE',
   'topo.acordes': 'Chords',
   'topo.importar': 'Import',
   'topo.foto': 'Photo',
@@ -548,7 +548,7 @@ en: {
   'avisos.versaoTexto': 'Tells you when the site gets a new version.',
   'avisos.hora': 'Reminder time',
   'avisos.testar': 'See how it looks',
-  'avisos.testeTitulo': 'Guitar Chords',
+  'avisos.testeTitulo': 'CifrasONE',
   'avisos.testeCorpo': 'This is how a notification will look on your device.',
   'avisos.estudoTitulo': 'Guitar time',
   'avisos.estudoCorpo': 'How about a few minutes with your chords?',

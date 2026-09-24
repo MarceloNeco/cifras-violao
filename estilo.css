@@ -762,7 +762,7 @@ html[data-tema="escuro"] .recado.erro{ color:#f2837a; }
 @media (max-width:760px){
   .abre-menu{ display:inline-flex; }
   .menu-topo{
-    display:none; position:absolute; right:0; top:calc(100% + 8px);
+    display:none; position:absolute; left:12px; top:calc(100% + 8px);
     flex-direction:column; align-items:stretch; gap:6px; min-width:210px;
     background:var(--fundo-card); border:1px solid var(--borda);
     border-radius:14px; box-shadow:var(--sombra); padding:9px; z-index:70;
@@ -855,3 +855,7 @@ body.modo-palco .dgo-idioma{ display:none !important; }
   background:color-mix(in srgb, var(--destaque) 22%, transparent);
   border-radius:4px;
 }
+
+/* ---------- nome do app: Cifras + ONE colorido ---------- */
+.marca-nome{ font-weight:700; letter-spacing:-.01em; }
+.marca-one{ color:var(--destaque); font-weight:800; }

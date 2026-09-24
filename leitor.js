@@ -28,7 +28,7 @@ async function carregarTudo(){
     MUSICA = indice.find(m => m.id === ID);
     if (!MUSICA) throw new Error('Essa música não está no índice.');
 
-    document.title = MUSICA.titulo + ' — Cifras de Violão';
+    document.title = MUSICA.titulo + ' — CifrasONE';
     $('#titulo').textContent = MUSICA.titulo;
     $('#nome-palco').textContent = MUSICA.titulo;
     montarLinks();
@@ -45,7 +45,7 @@ async function carregarTudo(){
     capo = parseInt(MUSICA.capo, 10) || 0;
     LINHAS = analisarCifra(corpo);
 
-    document.title = MUSICA.titulo + ' — Cifras de Violão';
+    document.title = MUSICA.titulo + ' — CifrasONE';
     $('#titulo').textContent = MUSICA.titulo;
     $('#nome-palco').textContent = MUSICA.titulo;
     $('#meta').textContent = [MUSICA.artista, MUSICA.categoria, MUSICA.ritmo]
