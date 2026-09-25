@@ -2,7 +2,7 @@
    como app no celular e no computador.
    Ao publicar uma versao nova do seu site, troque o numero de VERSAO
    abaixo (ex.: 'v2' -> 'v3') para o aparelho pegar os arquivos novos. */
-var VERSAO = 'v5';
+var VERSAO = 'v6';
 
 /* O nome da gaveta leva o nome do app. Todos os sites moram no mesmo
    endereco (marceloneco.github.io), entao um nome generico faria um app

@@ -2,6 +2,20 @@
   "comentario": "Histórico de versões do CifrasONE. A mais nova fica EM CIMA. Ao publicar, acrescente um bloco novo no topo da lista e troque também o VERSAO do comum.js e do sw.js.",
   "versoes": [
     {
+      "versao": "2.5",
+      "data": "2026-09-25",
+      "pt": [
+        "Faixa de anúncio do topo virou um carrossel andando com os outros apps do portfólio (clique abre em outra aba).",
+        "Pop-up de anúncio antes e depois de entrar na conta, com 3 segundos antes de liberar o ×.",
+        "A faixa do topo voltou a aparecer na página da cifra (só some com o afinador aberto ou no modo celular)."
+      ],
+      "en": [
+        "The top ad bar is now a moving carousel with the other portfolio apps (click opens a new tab).",
+        "Ad pop-up before and after signing in, with 3 seconds before the × unlocks.",
+        "The top bar shows on the chord page again (it only hides with the tuner open or in phone mode)."
+      ]
+    },
+    {
       "versao": "2.4",
       "data": "2026-09-25",
       "pt": [

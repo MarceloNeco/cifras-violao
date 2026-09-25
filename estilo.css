@@ -875,3 +875,83 @@ body.modo-palco .dgo-idioma{ display:none !important; }
   content:""; display:inline-block; width:7px; height:7px; margin-left:4px;
   border-radius:50%; background:var(--destaque); vertical-align:middle;
 }
+
+/* ============================================================
+   Anúncios (anuncios.js): carrossel na faixa do topo e pop-up
+   ============================================================ */
+.dgo-banner.cf-faixa{ padding:0 8px 0 0 !important; align-items:stretch !important; }
+.dgo-banner.cf-faixa .dgo-x{ align-self:center; }
+.cf-carrossel{ flex:1; min-width:0; display:flex; align-items:stretch; min-height:50px; }
+.cf-tag{
+  writing-mode:vertical-rl; transform:rotate(180deg);
+  font-size:.5rem; font-weight:700; letter-spacing:.1em; text-transform:uppercase;
+  color:#b9a89c; padding:2px 4px; border-left:1px solid rgba(255,255,255,.12);
+  display:flex; align-items:center; justify-content:center; flex:none; user-select:none;
+}
+.cf-janela{
+  flex:1; min-width:0; overflow:hidden; display:flex; align-items:center;
+  -webkit-mask-image:linear-gradient(90deg,transparent,#000 4%,#000 96%,transparent);
+          mask-image:linear-gradient(90deg,transparent,#000 4%,#000 96%,transparent);
+}
+.cf-trilho{
+  display:inline-flex; align-items:center; gap:8px; padding:0 8px; white-space:nowrap;
+  animation:cf-anda 40s linear infinite; will-change:transform;
+}
+.cf-carrossel:hover .cf-trilho, .cf-carrossel.parado .cf-trilho{ animation-play-state:paused; }
+@keyframes cf-anda{ from{ transform:translateX(0); } to{ transform:translateX(-50%); } }
+@media (prefers-reduced-motion: reduce){
+  .cf-janela{ overflow-x:auto; }
+  .cf-trilho{ animation:none; }
+}
+.dgo-banner .cf-item{
+  flex:none !important; display:inline-flex !important; align-items:center; gap:9px;
+  line-height:1.15 !important; overflow:visible !important;
+  color:#f4ece6; text-decoration:none;
+  background:rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.14);
+  border-radius:12px !important; padding:5px 12px 5px 6px;
+}
+.dgo-banner .cf-item:hover{ border-color:#e08a4f; }
+.cf-img{ width:34px; height:34px; border-radius:9px; object-fit:cover; flex:none; background:rgba(255,255,255,.08); }
+.dgo-banner img.cf-img{ max-height:34px; }
+.cf-emoji{ display:inline-flex; align-items:center; justify-content:center; font-size:1.15rem; }
+.cf-txt{ display:flex; flex-direction:column; font-family:var(--fonte); }
+.cf-txt b{ font-size:.8rem; }
+.cf-txt b em{ font-style:normal; font-size:.6rem; color:#e08a4f; margin-left:4px; text-transform:uppercase; }
+.cf-txt small{ font-size:.72rem; color:#c9bbb1; }
+@media (max-width:560px){ .cf-txt small{ display:none; } }
+
+/* pop-up: no computador deitado, no celular em pé */
+.cf-pop{
+  position:fixed; inset:0; z-index:2147483300;
+  background:rgba(8,10,14,.66); backdrop-filter:blur(3px);
+  display:flex; align-items:center; justify-content:center; padding:16px;
+}
+.cf-pop-caixa{
+  width:100%; max-width:640px; background:var(--fundo-card); color:var(--texto);
+  border:1px solid var(--borda); border-radius:20px; overflow:hidden;
+  box-shadow:0 24px 70px -20px rgba(0,0,0,.55);
+}
+.cf-pop-topo{ display:flex; align-items:center; gap:10px; padding:10px 12px; border-bottom:1px solid var(--borda); }
+.cf-pop-selo{
+  font-size:.66rem; font-weight:700; letter-spacing:.12em; text-transform:uppercase;
+  border:1px solid var(--borda); border-radius:999px; padding:3px 9px; color:var(--texto-fraco);
+}
+.cf-pop-aviso{ flex:1; text-align:right; font-size:.8rem; color:var(--texto-fraco); }
+.cf-pop-x{
+  width:34px; height:34px; border-radius:50%; border:1px solid var(--borda);
+  background:var(--fundo-suave); color:var(--texto); font:inherit; font-weight:700; cursor:pointer;
+}
+.cf-pop-x:disabled{ cursor:not-allowed; opacity:.75; }
+.cf-pop-corpo{ display:flex; gap:18px; padding:18px; align-items:center; }
+.cf-pop-arte{ flex:0 0 36%; display:flex; justify-content:center; }
+.cf-pop-img{ width:100%; max-width:170px; border-radius:16px; }
+.cf-pop-img.cf-emoji{ font-size:4rem; max-width:none; }
+.cf-pop-texto{ flex:1; min-width:0; }
+.cf-pop-nome{ font-size:.75rem; letter-spacing:.08em; text-transform:uppercase; color:var(--texto-fraco); }
+.cf-pop-texto h2{ margin:.2em 0 .3em; font-size:1.3rem; letter-spacing:-.01em; }
+.cf-pop-texto p{ margin:0 0 14px; color:var(--texto-fraco); }
+@media (max-width:560px){
+  .cf-pop-corpo{ flex-direction:column; text-align:center; }
+  .cf-pop-arte{ flex-basis:auto; }
+  .cf-pop-img{ max-width:110px; }
+}

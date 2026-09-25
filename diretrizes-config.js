@@ -14,7 +14,7 @@ DGO.iniciar({
                                 marceloneco.github.io, e e isto que impede os
                                 dados de um vazarem para o outro. */
   nome: { pt: 'CifrasONE', en: 'CifrasONE' },
-  versaoApp: '2.4',
+  versaoApp: '2.5',
   cor: '#a8501e',            /* o marrom-laranja do site de cifras */
   corFundoBarra: '#1a1614',
 
@@ -44,7 +44,7 @@ DGO.iniciar({
 
     /* enquanto uma destas telas estiver aberta o banner some sozinho,
        e volta quando ela fecha */
-    esconderCom: ['#faixa-palco', '#afinador']
+    esconderCom: ['#faixa-palco', '#afinador[aberta]']
   },
 
   /* ---------- trechos que o tradutor nao pode tocar ----------

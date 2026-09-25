@@ -1,0 +1,26 @@
+{
+  "_comentario": "Anúncios do CifrasONE: a faixa do topo (carrossel) e os pop-ups. Mesma lista dos outros apps do portfólio. O CifrasONE nunca anuncia a si mesmo (qualquer item com 'cifras-violao' no endereço é ignorado). 'ic' é o emoji usado quando a imagem não carregar; 'img' é opcional; 'breve': true mostra o selo 'em breve'.",
+  "banner": [
+    { "id": "moneytrio", "nome": "MoneyTrio", "url": "https://marceloneco.github.io/investify-me/", "ic": "💰",
+      "img": "https://marceloneco.github.io/investify-me/icone-192.png",
+      "pt": "Sabe para onde foi o seu dinheiro este mês?", "en": "Do you know where your money went this month?",
+      "pt2": "Orçamento, investimentos e imposto de renda num lugar só.", "en2": "Budget, investments and taxes in one place." },
+    { "id": "riseone", "nome": "RiseONE", "url": "https://marceloneco.github.io/rise-one/", "ic": "💪",
+      "img": "https://marceloneco.github.io/rise-one/icone-192.png",
+      "pt": "Treino e dieta sem complicação.", "en": "Workout and diet made simple.",
+      "pt2": "Exercícios guiados, cronômetro e acompanhamento.", "en2": "Guided exercises, timer and progress tracking." },
+    { "id": "historias", "nome": "Contador de Histórias", "url": "https://marceloneco.github.io/contador-de-historias/", "ic": "🌙",
+      "img": "https://marceloneco.github.io/contador-de-historias/icone-192.png",
+      "pt": "Hora de dormir sem briga.", "en": "Bedtime without a fight.",
+      "pt2": "Histórias narradas em voz alta para as crianças.", "en2": "Stories read aloud for the kids." },
+    { "id": "eleicoes", "nome": "Eleições 2026", "url": "https://marceloneco.github.io/planos-candidatos-2026/", "ic": "🗳️",
+      "pt": "Você sabe o que cada candidato prometeu?", "en": "Do you know what each candidate promised?",
+      "pt2": "Compare os planos de governo lado a lado.", "en2": "Compare the government plans side by side." },
+    { "id": "omnilife", "nome": "OmniLifeONE", "url": "https://marceloneco.github.io/omnilife-one/", "ic": "🏠",
+      "img": "https://marceloneco.github.io/omnilife-one/icon-192.png",
+      "pt": "A casa e a família organizadas num app só.", "en": "Home and family organised in one app.",
+      "pt2": "Compras, agenda, documentos e saúde.", "en2": "Shopping, calendar, documents and health." }
+  ],
+  "popup": "mesmos",
+  "config": { "velocidade": 55, "popupAntesDoLogin": true, "popupDepoisDoLogin": true }
+}

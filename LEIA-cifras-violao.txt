@@ -1,64 +1,51 @@
-CifrasONE — versao 2.4 (25/Set/2026) — PACOTE DE CONSERTO
-==========================================================
+CifrasONE — versao 2.5 (25/Set/2026)
+====================================
 Este pacote SUBSTITUI todos os anteriores.
-
-ATENCAO: O QUE ACONTECEU
-------------------------
-No envio de 25/Set, 00:19, os arquivos do OmniLifeONE foram subidos
-no repositorio do CifrasONE (cifras-violao). O index.html e o sw.js do
-OmniLifeONE ficaram por cima dos do CifrasONE — por isso o endereco
-marceloneco.github.io/cifras-violao passou a abrir o OmniLifeONE.
-Este pacote traz de volta o index.html e o sw.js do CifrasONE.
-
-Os arquivos do OmniLifeONE provavelmente deveriam ter ido para o
-repositorio omnilife-one. Confira la se estao certos.
 
 O QUE MUDOU
 -----------
-Historico de versoes ("Novidades"): lista de cada versao do site, com
-a data e o que mudou, em portugues e ingles. Abre de dois jeitos:
-  - pelo link "Novidades" no rodape de qualquer pagina;
-  - nas Configuracoes (⚙), no botao "Novidades de cada versao",
-    logo abaixo da linha "Versao 2.4 | Diretrizes 1.0.0".
-Enquanto a pessoa nao abre a versao nova, o link do rodape mostra
-uma bolinha laranja.
+1. Faixa de anuncio do topo: saiu a imagem parada "<ANUNCIE AQUI>" e
+   entrou o carrossel igual aos outros apps:
+     [ANUNCIO em pe] · [apps do portfolio andando para a esquerda] · [×]
+   Cada item tem imagem ao lado do texto e abre o app em outra aba.
+   O CifrasONE nunca anuncia a si mesmo. Passar o mouse (ou tocar)
+   para o carrossel por um instante. O × continua fechando ate o fim
+   da sessao.
 
-A lista fica no arquivo novo versoes.json.
+2. Pop-ups de anuncio:
+   - um ANTES do login (na primeira pagina que abrir), com app sorteado;
+   - outro DEPOIS do login, de preferencia outro app;
+   - o × so libera depois da contagem 3, 2, 1;
+   - nunca aparece por cima do modo celular, do afinador ou do login;
+   - assinante e anunciante nao veem nem faixa nem pop-up.
 
-AO PUBLICAR UMA VERSAO NOVA (daqui para frente)
------------------------------------------------
-Sao 3 lugares (a IA que fizer a versao cuida disso, mas fica o registro):
-1. versoes.json   — um bloco novo NO TOPO da lista (PT e EN)
-2. comum.js       — const VERSAO e const VERSAO_DATA
-3. sw.js          — var VERSAO (v5 -> v6 ...)
+3. A faixa do topo nao aparecia na pagina da cifra (o site achava que
+   o afinador estava sempre aberto). Agora ela so some com o afinador
+   aberto de verdade ou no modo celular.
+
+A lista de apps fica no arquivo novo anuncios.json — e a mesma do
+RiseONE, com o RiseONE no lugar do CifrasONE.
 
 COMO SUBIR (passo a passo)
 --------------------------
 1. Abra github.com/MarceloNeco/cifras-violao
 2. Clique em "Add file" > "Upload files"
 3. Abra o zip no computador, selecione TODOS os arquivos de dentro dele
-   e arraste para a pagina do GitHub (sao 9 arquivos, sem pastas).
+   e arraste para a pagina do GitHub (sao 15 arquivos, sem pastas).
 4. Embaixo, clique no botao verde "Commit changes".
 5. Espere uns 2 minutos e abra marceloneco.github.io/cifras-violao
-   No rodape deve aparecer "versao 2.4 · Novidades".
-6. Se o celular ainda mostrar a versao antiga, feche a aba e abra de novo.
+   No rodape deve aparecer "versao 2.5".
+6. Para ver o pop-up de novo depois de ja ter visto: feche a aba e
+   abra o site numa aba nova (ele aparece uma vez por sessao).
 
-DEPOIS DE SUBIR: APAGAR OS ARQUIVOS DO OmniLifeONE (um por um)
-------------------------------------------------------------
-Eles nao atrapalham o site, mas nao pertencem a este repositorio.
-Para cada arquivo da lista:
-  a. Em github.com/MarceloNeco/cifras-violao, clique no nome do arquivo.
-  b. No canto de cima a direita, clique nos tres pontinhos (...)
-     e escolha "Delete file".
-  c. Clique no botao verde "Commit changes" (duas vezes, se pedir).
-
-  BENCHMARK-ONBOARDING-OmniLifeONE.html
-  LEIA-ME-OmniLifeONE.html
-  anuncios-MODELO-OmniLifeONE.json
-  apple-touch-icon.png
-  icon-192.png            (cuidado: o do CifrasONE e o icone-192.png, com "e")
-  icon-512.png            (o do CifrasONE e o icone-512.png, com "e")
-  icon-maskable-512.png
-  manifest.webmanifest    (o do CifrasONE e o manifest.json — esse fica)
-  para-o-chat-do-MoneyTrio-integracao-OmniLifeONE.txt
-  regras-firestore-OmniLifeONE.txt
+AINDA PENDENTE (da versao anterior)
+-----------------------------------
+Apagar do repositorio os 10 arquivos do OmniLifeONE que subiram por
+engano (BENCHMARK-ONBOARDING-OmniLifeONE.html, LEIA-ME-OmniLifeONE.html,
+anuncios-MODELO-OmniLifeONE.json, apple-touch-icon.png, icon-192.png,
+icon-512.png, icon-maskable-512.png, manifest.webmanifest,
+para-o-chat-do-MoneyTrio-integracao-OmniLifeONE.txt,
+regras-firestore-OmniLifeONE.txt).
+Para cada um: clique no nome > tres pontinhos (...) > "Delete file" >
+"Commit changes". NAO apague icone-192.png, icone-512.png (com "e")
+nem manifest.json — esses sao do CifrasONE.
