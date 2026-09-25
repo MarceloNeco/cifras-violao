@@ -4,8 +4,8 @@
 
 /* Versão do site. Ao publicar uma mudança, altere estas duas linhas:
    o número aparece no rodapé de todas as páginas. */
-const VERSAO = '2.3';
-const VERSAO_DATA = '2026-09-24';
+const VERSAO = '2.4';
+const VERSAO_DATA = '2026-09-25';
 
 /* assinatura com a versão e o link do aviso, no rodapé de cada página */
 function montarRodape(){
@@ -14,8 +14,110 @@ function montarRodape(){
     r.insertAdjacentHTML('beforeend',
       `<div class="assinatura"><span data-i18n="rodape.versao">versão</span> ${VERSAO}` +
       ` · <span data-i18n-data="${VERSAO_DATA}">${VERSAO_DATA}</span>` +
+      ` · <a href="#novidades" data-abre-novidades><span data-i18n="novidades.botao">Novidades</span></a>` +
       ` · <a href="#aviso" data-abre-aviso data-i18n="rodape.aviso">Aviso</a></div>`);
   });
+  iniciarNovidades();
+}
+
+/* ============================================================
+   Histórico de versões ("Novidades")
+   A lista mora no versoes.json (a mais nova em cima), em PT e EN.
+   Abre pelo link "Novidades" do rodapé e por um botão nas
+   Configurações, logo abaixo da linha da versão.
+   Enquanto a pessoa não abre a versão mais nova, o link ganha
+   um selo "novo".
+   ============================================================ */
+const NOVIDADES_CHAVE = 'cifras:novidades-vista';
+let janelaNovidades = null;
+
+function jaViuNovidades(){
+  try{ return localStorage.getItem(NOVIDADES_CHAVE) === VERSAO; }catch(e){ return true; }
+}
+function pintarSeloNovidades(){
+  const novo = !jaViuNovidades();
+  document.querySelectorAll('[data-abre-novidades]').forEach(a=>{
+    a.classList.toggle('tem-novidade', novo);
+  });
+}
+
+async function abrirNovidades(){
+  const idioma = (typeof IDIOMA !== 'undefined' && IDIOMA === 'en') ? 'en' : 'pt';
+  const txt = (chave, reserva) => (typeof t === 'function' ? t(chave) : reserva);
+  const data = d => (typeof formatarData === 'function' ? formatarData(d) : d);
+
+  if (!janelaNovidades){
+    janelaNovidades = document.createElement('dialog');
+    janelaNovidades.className = 'janela';
+    janelaNovidades.setAttribute('aria-labelledby', 'titulo-novidades');
+    document.body.appendChild(janelaNovidades);
+    janelaNovidades.addEventListener('click', e=>{
+      if (e.target === janelaNovidades || e.target.closest('.fechar-janela, [data-fecha-janela]'))
+        janelaNovidades.close();
+    });
+  }
+
+  let lista = [];
+  try{
+    const r = await fetch('versoes.json', {cache:'no-cache'});
+    lista = (await r.json()).versoes || [];
+  }catch(e){ lista = null; }
+
+  const corpo = lista === null
+    ? `<p>${escapar(txt('novidades.erro', 'Não consegui abrir a lista de versões.'))}</p>`
+    : lista.map((v, i) => `
+        <section class="versao-item">
+          <h3>${txt('rodape.versao', 'versão')} ${escapar(v.versao)}
+            ${i === 0 ? `<span class="selo-novo">${escapar(txt('novidades.novo', 'novo'))}</span>` : ''}
+            <small>${escapar(data(v.data))}</small></h3>
+          <ul>${(v[idioma] || v.pt || []).map(item => `<li>${escapar(item)}</li>`).join('')}</ul>
+        </section>`).join('');
+
+  janelaNovidades.innerHTML = `
+    <button class="fechar-janela" aria-label="${escapar(txt('afinador.fechar', 'Fechar'))}">✕</button>
+    <div class="janela-texto texto-legal">
+      <h2 id="titulo-novidades">${escapar(txt('novidades.titulo', 'Novidades de cada versão'))}</h2>
+      ${corpo}
+    </div>
+    <div class="janela-rodape">
+      <button class="botao forte" data-fecha-janela>${escapar(txt('afinador.fechar', 'Fechar'))}</button>
+    </div>`;
+
+  if (janelaNovidades.showModal) janelaNovidades.showModal(); else janelaNovidades.setAttribute('open', '');
+  try{ localStorage.setItem(NOVIDADES_CHAVE, VERSAO); }catch(e){}
+  pintarSeloNovidades();
+}
+
+/* as Configurações são desenhadas pelo módulo das diretrizes (igual em
+   todos os apps); aqui só penduramos o botão "Novidades" embaixo da
+   linha da versão, sem mexer no diretrizes.js */
+function botaoNovidadesNasConfiguracoes(){
+  document.querySelectorAll('.dgo-mini').forEach(linha=>{
+    if (!/Diretrizes/.test(linha.textContent)) return;
+    if (linha.nextElementSibling && linha.nextElementSibling.matches('[data-abre-novidades]')) return;
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.className = 'dgo-b dgo-b2';
+    b.setAttribute('data-abre-novidades', '');
+    b.textContent = typeof t === 'function' ? t('novidades.titulo') : 'Novidades de cada versão';
+    linha.insertAdjacentElement('afterend', b);
+    pintarSeloNovidades();
+  });
+}
+
+let novidadesProntas = false;
+function iniciarNovidades(){
+  if (novidadesProntas) return;
+  novidadesProntas = true;
+  document.addEventListener('click', e=>{
+    const alvo = e.target.closest('[data-abre-novidades]');
+    if (!alvo) return;
+    e.preventDefault();
+    abrirNovidades();
+  });
+  new MutationObserver(botaoNovidadesNasConfiguracoes)
+    .observe(document.body, {childList:true, subtree:true});
+  pintarSeloNovidades();
 }
 
 /* ============================================================

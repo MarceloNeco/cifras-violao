@@ -34,6 +34,10 @@ pt: {
   'topo.tema': 'Mudar o tema',
   'topo.instalar': 'Instalar o app',
   'topo.config': 'Configurações',
+  'novidades.botao': 'Novidades',
+  'novidades.titulo': 'Novidades de cada versão',
+  'novidades.novo': 'novo',
+  'novidades.erro': 'Não consegui abrir a lista de versões.',
 
   /* anúncio */
   'anuncio.fechar': 'Fechar o anúncio',
@@ -313,6 +317,10 @@ en: {
   'topo.tema': 'Switch theme',
   'topo.instalar': 'Install the app',
   'topo.config': 'Settings',
+  'novidades.botao': "What's new",
+  'novidades.titulo': "What's new in each version",
+  'novidades.novo': 'new',
+  'novidades.erro': "Couldn't open the version list.",
 
   'anuncio.fechar': 'Close the ad',
   'anuncio.selo': 'Advertisement',

@@ -1,0 +1,109 @@
+{
+  "comentario": "Histórico de versões do CifrasONE. A mais nova fica EM CIMA. Ao publicar, acrescente um bloco novo no topo da lista e troque também o VERSAO do comum.js e do sw.js.",
+  "versoes": [
+    {
+      "versao": "2.4",
+      "data": "2026-09-25",
+      "pt": [
+        "Novo: histórico de versões (esta tela), aberto pelo rodapé e pelas Configurações."
+      ],
+      "en": [
+        "New: version history (this screen), opened from the footer and from Settings."
+      ]
+    },
+    {
+      "versao": "2.3",
+      "data": "2026-09-24",
+      "pt": [
+        "Nome novo: CifrasONE.",
+        "Botão de menu ☰ à esquerda, como nos apps de celular.",
+        "O menu não fecha mais sozinho logo depois de abrir no celular."
+      ],
+      "en": [
+        "New name: CifrasONE.",
+        "Menu button ☰ on the left, as in phone apps.",
+        "On phones, the menu no longer closes right after opening."
+      ]
+    },
+    {
+      "versao": "2.2",
+      "data": "2026-09-24",
+      "pt": [
+        "Letra grande não sai mais da tela: a linha desce levando os acordes junto.",
+        "Menu do topo volta a abrir e fechar só no ☰; Configurações virou o ícone ⚙.",
+        "Afinador fecha com um toque fora dele.",
+        "Botão PT/EN sai da frente da letra ao rolar.",
+        "Novo botão 🗣 que lê a letra em voz alta.",
+        "Créditos e licenças dos arquivos de fora (CREDITOS.md)."
+      ],
+      "en": [
+        "Large lyrics no longer run off the screen: the line wraps and takes its chords along.",
+        "Top menu opens and closes only with ☰ again; Settings is now the ⚙ icon.",
+        "The tuner closes when you tap outside it.",
+        "The PT/EN button moves out of the way while scrolling.",
+        "New 🗣 button that reads the lyrics aloud.",
+        "Credits and licenses for outside files (CREDITOS.md)."
+      ]
+    },
+    {
+      "versao": "2.1",
+      "data": "2026-09-18",
+      "pt": [
+        "Site em português e inglês, com botão PT/EN sempre à vista.",
+        "Página Foto: tira foto de uma cifra e o próprio aparelho lê o texto.",
+        "Conta, avisos, instalar como app e compartilhar passam a vir do módulo comum a todos os apps.",
+        "Espaço de anúncio no topo, que pode ser fechado."
+      ],
+      "en": [
+        "Site in Portuguese and English, with the PT/EN button always visible.",
+        "Photo page: take a picture of a chord sheet and the device reads the text.",
+        "Account, notices, install as app and sharing now come from the module shared by all apps.",
+        "Ad space at the top, which can be closed."
+      ]
+    },
+    {
+      "versao": "1.4",
+      "data": "2026-09-15",
+      "pt": [
+        "Botões Play e Pause no lugar de \"Rolar\".",
+        "Modo celular: com o Play ligado, a barra se recolhe e sobra só um botão redondo."
+      ],
+      "en": [
+        "Play and Pause buttons instead of \"Scroll\".",
+        "Phone mode: while playing, the bar folds away and only a round button stays."
+      ]
+    },
+    {
+      "versao": "1.2",
+      "data": "2026-09-15",
+      "pt": [
+        "O Guia também pinta o trecho da letra que fica embaixo do acorde do momento."
+      ],
+      "en": [
+        "The Guide also highlights the part of the lyrics under the current chord."
+      ]
+    },
+    {
+      "versao": "1.1",
+      "data": "2026-09-15",
+      "pt": [
+        "Novo Guia: uma bolinha acompanha os acordes conforme a cifra rola, com som opcional."
+      ],
+      "en": [
+        "New Guide: a dot follows the chords as the sheet scrolls, with optional sound."
+      ]
+    },
+    {
+      "versao": "1.0",
+      "data": "2026-09-15",
+      "pt": [
+        "Primeira versão numerada: cifras com tom, capotraste, rolagem, dicionário de acordes e importação.",
+        "Janela de Aviso de uso, com formulário de pedido de remoção, e versão no rodapé."
+      ],
+      "en": [
+        "First numbered version: chord sheets with key, capo, scrolling, chord dictionary and import.",
+        "Usage Notice window, with a removal request form, and the version in the footer."
+      ]
+    }
+  ]
+}

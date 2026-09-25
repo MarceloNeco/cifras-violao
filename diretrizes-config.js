@@ -14,7 +14,7 @@ DGO.iniciar({
                                 marceloneco.github.io, e e isto que impede os
                                 dados de um vazarem para o outro. */
   nome: { pt: 'CifrasONE', en: 'CifrasONE' },
-  versaoApp: '2.3',
+  versaoApp: '2.4',
   cor: '#a8501e',            /* o marrom-laranja do site de cifras */
   corFundoBarra: '#1a1614',
 

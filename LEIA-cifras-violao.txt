@@ -1,41 +1,64 @@
-CifrasONE — versao 2.3 (24/Set/2026)
-====================================
-Este pacote SUBSTITUI todos os anteriores (inclusive o da 2.2).
+CifrasONE — versao 2.4 (25/Set/2026) — PACOTE DE CONSERTO
+==========================================================
+Este pacote SUBSTITUI todos os anteriores.
+
+ATENCAO: O QUE ACONTECEU
+------------------------
+No envio de 25/Set, 00:19, os arquivos do OmniLifeONE foram subidos
+no repositorio do CifrasONE (cifras-violao). O index.html e o sw.js do
+OmniLifeONE ficaram por cima dos do CifrasONE — por isso o endereco
+marceloneco.github.io/cifras-violao passou a abrir o OmniLifeONE.
+Este pacote traz de volta o index.html e o sw.js do CifrasONE.
+
+Os arquivos do OmniLifeONE provavelmente deveriam ter ido para o
+repositorio omnilife-one. Confira la se estao certos.
 
 O QUE MUDOU
 -----------
-1. Nome novo: CifrasONE, com o "ONE" na cor de destaque do site
-   (laranja), igual aos outros apps da familia (RiseONE, OmniLifeONE).
-   Mudou no topo, no titulo da aba, no app instalado e no modulo das
-   diretrizes. O endereco do site continua o mesmo:
-   marceloneco.github.io/cifras-violao
+Historico de versoes ("Novidades"): lista de cada versao do site, com
+a data e o que mudou, em portugues e ingles. Abre de dois jeitos:
+  - pelo link "Novidades" no rodape de qualquer pagina;
+  - nas Configuracoes (⚙), no botao "Novidades de cada versao",
+    logo abaixo da linha "Versao 2.4 | Diretrizes 1.0.0".
+Enquanto a pessoa nao abre a versao nova, o link do rodape mostra
+uma bolinha laranja.
 
-2. Botao de menu ☰ agora fica A ESQUERDA, antes do nome, como e o
-   padrao dos apps de celular. O menu abre para baixo, alinhado a esquerda.
-   No computador (tela larga) o ☰ nao aparece: as opcoes ja ficam
-   todas a vista no topo.
+A lista fica no arquivo novo versoes.json.
 
-3. O menu nao fecha mais sozinho por causa dos poucos pixels que a
-   barra de endereco do celular mexe ao rolar — so fecha ao tocar fora,
-   ao escolher uma opcao ou ao rolar a pagina de verdade.
-
-SOBRE O "BOTAO DE MENU NAO FAZ NADA"
-------------------------------------
-As telas que voce mandou ainda eram da versao antiga: tinham o botao
-"Configuracoes" escrito por extenso e o ☰ aparecendo no computador.
-Conferi o site publicado com a 2.2 no seu Chrome e o menu abriu
-normalmente. Se depois de subir a 2.3 o celular ainda mostrar o
-visual antigo, feche a aba do site e abra de novo (o sw.js mudou para
-'v4' e limpa as copias guardadas).
+AO PUBLICAR UMA VERSAO NOVA (daqui para frente)
+-----------------------------------------------
+Sao 3 lugares (a IA que fizer a versao cuida disso, mas fica o registro):
+1. versoes.json   — um bloco novo NO TOPO da lista (PT e EN)
+2. comum.js       — const VERSAO e const VERSAO_DATA
+3. sw.js          — var VERSAO (v5 -> v6 ...)
 
 COMO SUBIR (passo a passo)
 --------------------------
 1. Abra github.com/MarceloNeco/cifras-violao
 2. Clique em "Add file" > "Upload files"
 3. Abra o zip no computador, selecione TODOS os arquivos de dentro dele
-   e arraste para a pagina do GitHub (sao 16 arquivos, sem pastas).
+   e arraste para a pagina do GitHub (sao 9 arquivos, sem pastas).
 4. Embaixo, clique no botao verde "Commit changes".
 5. Espere uns 2 minutos e abra marceloneco.github.io/cifras-violao
-   No rodape deve aparecer "versao 2.3" e no topo "CifrasONE".
-6. Se o app ja estava instalado no celular, o nome do icone so muda
-   depois de desinstalar e instalar de novo (limite do celular).
+   No rodape deve aparecer "versao 2.4 · Novidades".
+6. Se o celular ainda mostrar a versao antiga, feche a aba e abra de novo.
+
+DEPOIS DE SUBIR: APAGAR OS ARQUIVOS DO OmniLifeONE (um por um)
+------------------------------------------------------------
+Eles nao atrapalham o site, mas nao pertencem a este repositorio.
+Para cada arquivo da lista:
+  a. Em github.com/MarceloNeco/cifras-violao, clique no nome do arquivo.
+  b. No canto de cima a direita, clique nos tres pontinhos (...)
+     e escolha "Delete file".
+  c. Clique no botao verde "Commit changes" (duas vezes, se pedir).
+
+  BENCHMARK-ONBOARDING-OmniLifeONE.html
+  LEIA-ME-OmniLifeONE.html
+  anuncios-MODELO-OmniLifeONE.json
+  apple-touch-icon.png
+  icon-192.png            (cuidado: o do CifrasONE e o icone-192.png, com "e")
+  icon-512.png            (o do CifrasONE e o icone-512.png, com "e")
+  icon-maskable-512.png
+  manifest.webmanifest    (o do CifrasONE e o manifest.json — esse fica)
+  para-o-chat-do-MoneyTrio-integracao-OmniLifeONE.txt
+  regras-firestore-OmniLifeONE.txt
