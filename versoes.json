@@ -2,6 +2,16 @@
   "comentario": "Histórico de versões do CifrasONE. A mais nova fica EM CIMA. Ao publicar, acrescente um bloco novo no topo da lista e troque também o VERSAO do comum.js e do sw.js.",
   "versoes": [
     {
+      "versao": "2.6",
+      "data": "2026-09-25",
+      "pt": [
+        "Carrossel de anúncios: ícones voltaram ao tamanho certo e os textos não se sobrepõem mais."
+      ],
+      "en": [
+        "Ad carousel: icons are back to the right size and the texts no longer overlap."
+      ]
+    },
+    {
       "versao": "2.5",
       "data": "2026-09-25",
       "pt": [

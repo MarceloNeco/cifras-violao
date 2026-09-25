@@ -1,51 +1,23 @@
-CifrasONE — versao 2.5 (25/Set/2026)
+CifrasONE — versao 2.6 (25/Set/2026)
 ====================================
 Este pacote SUBSTITUI todos os anteriores.
 
 O QUE MUDOU
 -----------
-1. Faixa de anuncio do topo: saiu a imagem parada "<ANUNCIE AQUI>" e
-   entrou o carrossel igual aos outros apps:
-     [ANUNCIO em pe] · [apps do portfolio andando para a esquerda] · [×]
-   Cada item tem imagem ao lado do texto e abre o app em outra aba.
-   O CifrasONE nunca anuncia a si mesmo. Passar o mouse (ou tocar)
-   para o carrossel por um instante. O × continua fechando ate o fim
-   da sessao.
-
-2. Pop-ups de anuncio:
-   - um ANTES do login (na primeira pagina que abrir), com app sorteado;
-   - outro DEPOIS do login, de preferencia outro app;
-   - o × so libera depois da contagem 3, 2, 1;
-   - nunca aparece por cima do modo celular, do afinador ou do login;
-   - assinante e anunciante nao veem nem faixa nem pop-up.
-
-3. A faixa do topo nao aparecia na pagina da cifra (o site achava que
-   o afinador estava sempre aberto). Agora ela so some com o afinador
-   aberto de verdade ou no modo celular.
-
-A lista de apps fica no arquivo novo anuncios.json — e a mesma do
-RiseONE, com o RiseONE no lugar do CifrasONE.
+Carrossel de anuncios do topo:
+- os icones dos apps estavam enormes e esticados: o modulo das
+  diretrizes manda toda imagem da faixa ocupar a largura inteira, e
+  isso passava por cima do tamanho do icone. Agora cada icone e um
+  quadradinho de 34 x 34, ao lado do texto;
+- os textos de um anuncio nao encostam mais nos do vizinho.
 
 COMO SUBIR (passo a passo)
 --------------------------
 1. Abra github.com/MarceloNeco/cifras-violao
 2. Clique em "Add file" > "Upload files"
 3. Abra o zip no computador, selecione TODOS os arquivos de dentro dele
-   e arraste para a pagina do GitHub (sao 15 arquivos, sem pastas).
+   e arraste para a pagina do GitHub (sao 6 arquivos, sem pastas).
 4. Embaixo, clique no botao verde "Commit changes".
 5. Espere uns 2 minutos e abra marceloneco.github.io/cifras-violao
-   No rodape deve aparecer "versao 2.5".
-6. Para ver o pop-up de novo depois de ja ter visto: feche a aba e
-   abra o site numa aba nova (ele aparece uma vez por sessao).
-
-AINDA PENDENTE (da versao anterior)
------------------------------------
-Apagar do repositorio os 10 arquivos do OmniLifeONE que subiram por
-engano (BENCHMARK-ONBOARDING-OmniLifeONE.html, LEIA-ME-OmniLifeONE.html,
-anuncios-MODELO-OmniLifeONE.json, apple-touch-icon.png, icon-192.png,
-icon-512.png, icon-maskable-512.png, manifest.webmanifest,
-para-o-chat-do-MoneyTrio-integracao-OmniLifeONE.txt,
-regras-firestore-OmniLifeONE.txt).
-Para cada um: clique no nome > tres pontinhos (...) > "Delete file" >
-"Commit changes". NAO apague icone-192.png, icone-512.png (com "e")
-nem manifest.json — esses sao do CifrasONE.
+   No rodape deve aparecer "versao 2.6".
+6. Se ainda aparecer o visual antigo, feche a aba e abra de novo.
