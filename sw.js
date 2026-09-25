@@ -1,155 +1,32 @@
-/* Service worker — faz o site abrir mesmo sem internet e permite instalar
-   como app no celular e no computador.
-   Ao publicar uma versao nova do seu site, troque o numero de VERSAO
-   abaixo (ex.: 'v2' -> 'v3') para o aparelho pegar os arquivos novos. */
-var VERSAO = 'v4';
-
-/* O nome da gaveta leva o nome do app. Todos os sites moram no mesmo
-   endereco (marceloneco.github.io), entao um nome generico faria um app
-   apagar os arquivos guardados do outro. */
-var PREFIXO = 'cifras-violao-';
-var CACHE = PREFIXO + VERSAO;
-
-self.addEventListener('install', function (e) {
+/* OmniLifeONE — service worker (avisos e funcionamento offline) */
+const CACHE = "omnilife-one-v12"; /* VERSAO: suba este número a cada versão nova */
+self.addEventListener("install", (e) => {
   self.skipWaiting();
-  e.waitUntil(caches.open(CACHE).then(function (c) {
-    return c.addAll(['./', './index.html', './diretrizes.js']).catch(function () {});
+  e.waitUntil(caches.open(CACHE).then((c) => c.addAll(["./", "./index.html", "./manifest.webmanifest", "./icon-192.png", "./icon-512.png", "./apple-touch-icon.png"]).catch(() => {})));
+});
+self.addEventListener("activate", (e) => {
+  e.waitUntil(caches.keys().then((ks) => Promise.all(ks.filter((k) => k !== CACHE).map((k) => caches.delete(k)))).then(() => self.clients.claim()));
+});
+self.addEventListener("fetch", (e) => {
+  const r = e.request;
+  if (r.method !== "GET") return;
+  const u = new URL(r.url);
+  if (u.origin !== location.origin) return;
+  e.respondWith(
+    fetch(r).then((res) => { if (res.ok) { const cp = res.clone(); caches.open(CACHE).then((c) => c.put(r, cp)).catch(() => {}); } return res; })
+      .catch(() => caches.match(r).then((m) => m || caches.match("./index.html")))
+  );
+});
+self.addEventListener("notificationclick", (e) => {
+  e.notification.close();
+  const url = (e.notification.data && e.notification.data.url) || "./";
+  e.waitUntil(self.clients.matchAll({ type: "window", includeUncontrolled: true }).then((cs) => {
+    for (const c of cs) { if (c.url.startsWith(self.registration.scope)) return c.focus(); }
+    return self.clients.openWindow(url);
   }));
 });
-
-self.addEventListener('activate', function (e) {
-  e.waitUntil(caches.keys().then(function (nomes) {
-    return Promise.all(nomes.map(function (n) {
-      /* so mexe nas gavetas deste app; as dos outros ficam onde estao */
-      if (n.indexOf(PREFIXO) !== 0) return null;
-      return n === CACHE ? null : caches.delete(n);
-    }));
-  }).then(function () { return self.clients.claim(); }));
-});
-
-self.addEventListener('fetch', function (e) {
-  var req = e.request;
-  if (req.method !== 'GET') return;
-  var url = new URL(req.url);
-  if (url.origin !== self.location.origin) return; // nao mexe em API externa
-
-  /* paginas: tenta a rede primeiro (conteudo sempre atual), cache como reserva */
-  if (req.mode === 'navigate') {
-    e.respondWith(
-      fetch(req).then(function (r) {
-        var copia = r.clone();
-        caches.open(CACHE).then(function (c) { c.put(req, copia); });
-        return r;
-      }).catch(function () {
-        return caches.match(req).then(function (r) { return r || caches.match('./index.html'); });
-      })
-    );
-    return;
-  }
-
-  /* aparencia e comportamento (.css, .js, .json): rede primeiro, igual as
-     paginas. Sao os arquivos que mudam a cada correcao — servir a copia
-     guardada primeiro deixava o aparelho sempre uma versao atrasada.
-     Sem internet, a copia guardada continua atendendo. */
-  var caminho = url.pathname;
-  var vivo = /\.(css|js|mjs|json)$/i.test(caminho);
-  if (vivo) {
-    e.respondWith(
-      fetch(req).then(function (r) {
-        if (r && r.status === 200) {
-          var copia = r.clone();
-          caches.open(CACHE).then(function (c) { c.put(req, copia); });
-        }
-        return r;
-      }).catch(function () {
-        return caches.match(req);
-      })
-    );
-    return;
-  }
-
-  /* demais arquivos (imagens, fontes, cifras): cache primeiro, atualizando
-     em segundo plano — sao pesados e quase nunca mudam */
-  e.respondWith(
-    caches.match(req).then(function (cacheado) {
-      var rede = fetch(req).then(function (r) {
-        if (r && r.status === 200) {
-          var copia = r.clone();
-          caches.open(CACHE).then(function (c) { c.put(req, copia); });
-        }
-        return r;
-      }).catch(function () { return cacheado; });
-      return cacheado || rede;
-    })
-  );
-});
-
-/* ====================================================================
-   NOTIFICACOES
-   Esta parte recebe os avisos enviados pelo servidor (push), mostra o
-   aviso na tela e leva a pessoa para o lugar certo quando ela toca nele.
-   Funciona mesmo com o site fechado, desde que o aparelho tenha
-   permissao e o servidor esteja configurado com a chave VAPID.
-   ==================================================================== */
-
-self.addEventListener('push', function (e) {
-  var dados = {};
-  try { dados = e.data ? e.data.json() : {}; }
-  catch (err) { dados = { titulo: 'Aviso', texto: e.data ? e.data.text() : '' }; }
-
-  var titulo = dados.titulo || dados.title || 'Aviso';
-  var opcoes = {
-    body: dados.texto || dados.body || '',
-    icon: dados.icone || dados.icon || 'icone-192.png',
-    badge: dados.distintivo || dados.badge || 'icone-192.png',
-    tag: dados.tag || dados.tipo || 'dgo',
-    renotify: !!dados.repetirAviso,
-    requireInteraction: !!dados.fixar,
-    data: { url: dados.url || './', tipo: dados.tipo || null },
-    actions: dados.acoes || dados.actions || undefined
-  };
-
-  e.waitUntil(
-    self.registration.showNotification(titulo, opcoes).then(function () {
-      return self.clients.matchAll({ type: 'window', includeUncontrolled: true });
-    }).then(function (lista) {
-      lista.forEach(function (c) { c.postMessage({ dgo: 'push', dados: dados }); });
-    })
-  );
-});
-
-self.addEventListener('notificationclick', function (e) {
-  e.notification.close();
-  var destino = (e.notification.data && e.notification.data.url) || './';
-  e.waitUntil(
-    self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then(function (lista) {
-      for (var i = 0; i < lista.length; i++) {
-        var c = lista[i];
-        if (c.url.indexOf(self.location.origin) === 0 && 'focus' in c) {
-          c.postMessage({ dgo: 'notificacao-clicada', url: destino, acao: e.action || null });
-          return c.focus();
-        }
-      }
-      if (self.clients.openWindow) return self.clients.openWindow(destino);
-    })
-  );
-});
-
-self.addEventListener('notificationclose', function (e) {
-  /* ponto de encaixe para contar avisos ignorados, quando houver servidor */
-});
-
-/* Se um dia a inscricao do aparelho for renovada pelo navegador, o
-   servidor precisa saber. Preencha o endereco abaixo quando existir. */
-var ENDERECO_INSCRICAO = '';
-self.addEventListener('pushsubscriptionchange', function (e) {
-  if (!ENDERECO_INSCRICAO) return;
-  e.waitUntil(
-    self.registration.pushManager.subscribe(e.oldSubscription.options).then(function (nova) {
-      return fetch(ENDERECO_INSCRICAO, {
-        method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ renovacao: true, inscricao: nova })
-      });
-    }).catch(function () {})
-  );
+self.addEventListener("push", (e) => {
+  let d = {};
+  try { d = e.data.json(); } catch (_) { d = { title: "OmniLifeONE", body: e.data ? e.data.text() : "" }; }
+  e.waitUntil(self.registration.showNotification(d.title || "OmniLifeONE", { body: d.body || "", icon: "icon-192.png", badge: "icon-192.png", data: { url: d.url || "./" } }));
 });
