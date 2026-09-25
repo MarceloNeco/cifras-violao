@@ -1,23 +1,31 @@
-CifrasONE — versao 2.6 (25/Set/2026)
-====================================
+CifrasONE — versao 2.6.1 (25/Set/2026)
+======================================
 Este pacote SUBSTITUI todos os anteriores.
 
-O QUE MUDOU
------------
-Carrossel de anuncios do topo:
-- os icones dos apps estavam enormes e esticados: o modulo das
-  diretrizes manda toda imagem da faixa ocupar a largura inteira, e
-  isso passava por cima do tamanho do icone. Agora cada icone e um
-  quadradinho de 34 x 34, ao lado do texto;
-- os textos de um anuncio nao encostam mais nos do vizinho.
+POR QUE A 2.6 "NAO FUNCIONOU"
+-----------------------------
+A 2.6 subiu certinha (o index.html nao precisava ir junto). O que
+aconteceu: o GitHub avisa o navegador que pode reaproveitar a copia
+guardada de cada arquivo por ate 10 minutos. Nesse intervalo o site
+continuou usando o estilo.css antigo, da 2.5. Poucos minutos depois o
+arquivo novo ja estava sendo entregue.
+
+O QUE MUDOU NA 2.6.1
+--------------------
+O sw.js (o ajudante que guarda copias do site no aparelho) agora
+SEMPRE pergunta ao GitHub se o arquivo mudou, antes de usar a copia.
+Assim as proximas correcoes aparecem na hora, sem esperar 10 minutos.
+Sem internet, a copia guardada continua funcionando normalmente.
 
 COMO SUBIR (passo a passo)
 --------------------------
 1. Abra github.com/MarceloNeco/cifras-violao
 2. Clique em "Add file" > "Upload files"
 3. Abra o zip no computador, selecione TODOS os arquivos de dentro dele
-   e arraste para a pagina do GitHub (sao 6 arquivos, sem pastas).
+   e arraste para a pagina do GitHub (sao 5 arquivos, sem pastas).
 4. Embaixo, clique no botao verde "Commit changes".
-5. Espere uns 2 minutos e abra marceloneco.github.io/cifras-violao
-   No rodape deve aparecer "versao 2.6".
-6. Se ainda aparecer o visual antigo, feche a aba e abra de novo.
+5. Espere uns 5 minutos (o GitHub leva alguns minutos para publicar)
+   e abra marceloneco.github.io/cifras-violao
+   No rodape deve aparecer "versao 2.6.1".
+6. Se ainda aparecer a versao antiga, feche a aba e abra de novo.
+   Daqui para frente isso nao deve mais ser necessario.

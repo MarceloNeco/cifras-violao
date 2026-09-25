@@ -2,7 +2,7 @@
    como app no celular e no computador.
    Ao publicar uma versao nova do seu site, troque o numero de VERSAO
    abaixo (ex.: 'v2' -> 'v3') para o aparelho pegar os arquivos novos. */
-var VERSAO = 'v7';
+var VERSAO = 'v8';
 
 /* O nome da gaveta leva o nome do app. Todos os sites moram no mesmo
    endereco (marceloneco.github.io), entao um nome generico faria um app
@@ -55,7 +55,10 @@ self.addEventListener('fetch', function (e) {
   var vivo = /\.(css|js|mjs|json)$/i.test(caminho);
   if (vivo) {
     e.respondWith(
-      fetch(req).then(function (r) {
+      /* cache:'no-cache' = sempre pergunta ao GitHub se o arquivo mudou.
+         Sem isso o navegador reaproveitava a copia dele por ate 10 minutos
+         e a versao nova so aparecia depois (foi o que aconteceu na 2.6). */
+      fetch(req, { cache: 'no-cache' }).then(function (r) {
         if (r && r.status === 200) {
           var copia = r.clone();
           caches.open(CACHE).then(function (c) { c.put(req, copia); });

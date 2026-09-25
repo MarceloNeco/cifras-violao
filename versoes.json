@@ -2,6 +2,16 @@
   "comentario": "Histórico de versões do CifrasONE. A mais nova fica EM CIMA. Ao publicar, acrescente um bloco novo no topo da lista e troque também o VERSAO do comum.js e do sw.js.",
   "versoes": [
     {
+      "versao": "2.6.1",
+      "data": "2026-09-25",
+      "pt": [
+        "Correção nova chega na hora: o site sempre confere se há versão nova dos arquivos, em vez de usar a cópia guardada pelo navegador por até 10 minutos."
+      ],
+      "en": [
+        "Fixes arrive right away: the site always checks for new versions of its files instead of using the browser's saved copy for up to 10 minutes."
+      ]
+    },
+    {
       "versao": "2.6",
       "data": "2026-09-25",
       "pt": [
