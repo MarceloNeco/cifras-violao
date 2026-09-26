@@ -21,7 +21,7 @@
 (function (raiz) {
   'use strict';
 
-  var VERSAO = '1.0.0';
+  var VERSAO = '1.1.2';
   if (raiz.DGO && raiz.DGO.__carregado) { return; }
 
   /* ------------------------------------------------------------------
@@ -43,17 +43,58 @@
     responsivo: true,
 
     seletorIdiomaVisivel: true,
-    posicaoSeletorIdioma: 'topo-direita',
+    posicaoSeletorIdioma: 'faixa',   // 'faixa' = dentro da faixa do topo;
+                                     // ou topo-direita, topo-esquerda,
+                                     // baixo-direita, baixo-esquerda
 
     anuncios: {
       ativo: true,
-      imagem: '',                     // deixe vazio para usar o placeholder
-      link: 'https://marceloneco.github.io/',
-      texto: '<ANUNCIE AQUI>',
-      altura: 64,
-      /* enquanto uma destas telas estiver aberta, o banner some sozinho
+      rotulo: { pt: 'ANÚNCIO', en: 'AD' },
+      velocidade: 9,                  // segundos por cartao no carrossel
+      lista: [],                      // vazio = os proprios apps do hub
+      arquivo: 'anuncios.json',       // opcional: lista vinda de um arquivo
+      /* enquanto uma destas telas estiver aberta, a faixa some sozinha
          e volta quando ela fecha (leitor de tela cheia, modal, etc.) */
-      esconderCom: []
+      esconderCom: [],
+      popup: {
+        ativo: true,
+        antesDoLogin: true,           // um app sorteado antes de entrar
+        depoisDoLogin: true,          // outro app depois de entrar
+        esperaSegundos: 3,            // conta 3, 2, 1 e so entao libera o X
+        atrasoAbertura: 8,            // segundos ate aparecer
+        atrasoAntesDoLogin: 5,
+        umaVezPorSessao: true,        // uma vez antes e uma vez depois
+        intervaloHoras: 0,            // 0 = sem limite alem da sessao
+        botao: { pt: 'Conhecer', en: 'Open' }
+      }
+    },
+
+    /* consulta a IA: a chave e da pessoa, colada uma vez, valendo nos 3 apps */
+    ia: {
+      ativo: true,
+      botaoNaFaixa: true,           // o botao mora na faixa do topo, sem cobrir nada
+      provedorPadrao: 'openrouter', // o que tem plano gratis e mais modelos num cadastro so
+      modelos: {},                  // { openrouter:'...', groq:'...', gemini:'...' }
+      enderecos: {},                // { personalizado:'https://.../v1' }
+      proxy: {},                    // futuro: { openrouter:'https://seu-servidor/ia' } - a chave fica la
+      contexto: '',                 // o que este app faz, para a IA saber onde esta
+      sugestoes: [],                // [{pt,en}] perguntas de exemplo
+      servico: 'ia'                 // id do servico, para o controle de nivel
+    },
+
+    /* o que pode ser feito em dados moveis: 'sempre' | 'wifi' | 'nunca' */
+    rede: {
+      pesado: 'wifi',               // imagens grandes, sons, motor de OCR, audio de voz
+      ia: 'sempre'                  // perguntas a IA (sao pequenas)
+    },
+
+    /* niveis de acesso: Visitante -> Membro -> Premium */
+    niveis: {
+      ativo: true,
+      padraoServico: 'visitante',   // nivel exigido quando o servico nao diz nada
+      arquivo: 'servicos.json',     // fonte da verdade, editada pelo painel de admin
+      servicos: [],                 // [{ id, nome:{pt,en}, descricao:{pt,en}, nivel }]
+      aoQuererPremium: null
     },
 
     /* trechos que o tradutor e o formatador de datas nao podem tocar.
@@ -73,7 +114,8 @@
          1) se houver servidor (DGO.auth.backend.pedirRedefinicao) -> link por e-mail
          2) senao, se houver formularioRecuperacao -> o pedido chega para voce
          3) senao -> codigo de recuperacao gerado quando a conta e criada     */
-      formularioRecuperacao: ''      // ex.: 'https://formspree.io/f/xxxxxxx'
+      formularioRecuperacao: '',     // ex.: 'https://formspree.io/f/xxxxxxx'
+      emailsAdmin: []                // contas com estes e-mails entram como administrador
     },
 
     email: {
@@ -93,7 +135,11 @@
       idiomas: 'por+eng',
       cdn: 'https://cdn.jsdelivr.net/npm/tesseract.js@5.1.1/dist/tesseract.min.js',
       caminhoLocal: '',               // se um dia hospedar o tesseract.js no repositorio
-      caminhos: { worker: '', core: '', lang: '' }   // idem para worker, wasm e idiomas
+      caminhos: { worker: '', core: '', lang: '' },  // idem para worker, wasm e idiomas
+      /* motor hospedado no proprio repositorio (recomendado):
+         ocr-worker.js + tesseract-core-*.wasm.js + <idioma>.traineddata.gz */
+      local: 'auto',                  // 'auto' | true | false
+      worker: 'ocr-worker.js'
     },
 
     pwa: { ativo: true, manifesto: 'manifest.json', serviceWorker: 'sw.js' },
@@ -108,6 +154,20 @@
       horarioSilencioso: { ativo: true, inicio: '22:00', fim: '07:00' },
       /* cada app declara os seus tipos de aviso; o usuario liga e desliga um a um */
       tipos: []                      // [{ id, nome:{pt,en}, descricao:{pt,en}, padrao:true }]
+    },
+
+    /* AssistONE: o assistente (personagem no canto). Ligado por padrao;
+       cada app declara a ajuda de cada tela, o tour, as dicas e a busca. */
+    assistente: {
+      ativo: true,
+      imagem: 'ajuda-botao.png',
+      tela: null,                     // function () -> id da tela atual (padrao: <body data-pagina>)
+      telas: {},                      // { inicio: { titulo, frase, atalhos:[{rotulo, acao, principal}] } }
+      tour: [],                       // [{ seletor, titulo, texto }]
+      dicas: {},                      // { inicio: {pt, en} }
+      busca: [],                      // [{ termo, sinonimos, destino, icone, descricao }]
+      wizard: '',                     // id de um DGO.wizard.definir(...) para o "Comecar"
+      esconderCom: []                 // seletores: visiveis, o personagem some (alem de janelas e tela cheia)
     },
 
     empurrarConteudo: true,
@@ -148,6 +208,15 @@
   }
   function $(sel, ctx) { return (ctx || d).querySelector(sel); }
   function texto(v) { return (v === null || v === undefined) ? '' : String(v); }
+
+  /* '#a1b2c3' -> 'rgba(161,178,195,0.2)'  (sem depender de color-mix) */
+  function corSuave(hex, alfa) {
+    var h = String(hex || '').replace('#', '');
+    if (h.length === 3) h = h[0] + h[0] + h[1] + h[1] + h[2] + h[2];
+    if (h.length !== 6) return 'rgba(148,163,184,' + (alfa || 0.2) + ')';
+    return 'rgba(' + parseInt(h.slice(0, 2), 16) + ',' + parseInt(h.slice(2, 4), 16) + ','
+                   + parseInt(h.slice(4, 6), 16) + ',' + (alfa === undefined ? 0.2 : alfa) + ')';
+  }
 
   /* Armazenamento com nome separado por app (os sites dividem o mesmo
      endereco marceloneco.github.io, entao os dados nao podem se misturar) */
@@ -196,23 +265,252 @@
     var css = [
       ':root{--dgo-topo:0px;--dgo-cor:' + cfg.cor + ';--dgo-barra:' + cfg.corFundoBarra + ';}',
       '.dgo-oculto{display:none !important;}',
-      '.dgo-banner{position:fixed;top:0;left:0;right:0;z-index:2147483000;display:flex;align-items:center;gap:8px;',
-      'background:#11182a;border-bottom:1px solid rgba(255,255,255,.12);padding:4px 8px;',
-      'padding-top:calc(4px + env(safe-area-inset-top,0px));box-sizing:border-box;font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;}',
-      '.dgo-banner a{flex:1;display:block;line-height:0;text-decoration:none;overflow:hidden;border-radius:8px;}',
-      '.dgo-banner img{width:100%;height:auto;display:block;max-height:' + cfg.anuncios.altura + 'px;object-fit:cover;}',
-      '.dgo-banner .dgo-x{flex:0 0 auto;width:30px;height:30px;border-radius:50%;border:0;cursor:pointer;',
-      'background:rgba(255,255,255,.14);color:#fff;font-size:17px;line-height:30px;padding:0;}',
-      '.dgo-banner .dgo-x:hover{background:rgba(255,255,255,.28);}',
-      '.dgo-idioma{position:fixed;z-index:2147483100;display:flex;align-items:center;gap:0;',
-      'background:rgba(15,23,42,.92);color:#fff;border-radius:999px;padding:3px;box-shadow:0 4px 14px rgba(0,0,0,.35);',
-      'font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;font-size:12px;font-weight:700;user-select:none;}',
-      '.dgo-idioma button{border:0;background:transparent;color:#cbd5e1;padding:6px 11px;border-radius:999px;cursor:pointer;font:inherit;min-width:40px;min-height:32px;}',
+      /* ---------- aviso rapido (toast) ---------- */
+      '.dgo-toast{position:fixed;left:50%;bottom:calc(84px + env(safe-area-inset-bottom,0px));transform:translate(-50%,12px);',
+      'z-index:2147483400;max-width:min(92vw,520px);background:#111a2e;color:#e8eef8;border:1px solid rgba(255,255,255,.16);',
+      'border-radius:14px;padding:10px 14px;font:600 13.5px/1.4 system-ui,-apple-system,Segoe UI,Roboto,sans-serif;',
+      'box-shadow:0 10px 30px rgba(0,0,0,.35);opacity:0;pointer-events:none;transition:opacity .2s,transform .2s;}',
+      '.dgo-toast.dgo-on{opacity:1;transform:translate(-50%,0);}',
+      '.dgo-selo-fraco{background:rgba(255,255,255,.08) !important;color:#aab4c3 !important;font-weight:600 !important;}',
+      '.dgo-chaves-resumo{font-size:12.5px;line-height:1.45;padding:8px 10px;border-radius:10px;margin:8px 0;',
+      'background:rgba(255,255,255,.05);color:#cbd5e1;}',
+      '.dgo-chaves-resumo.dgo-ok{background:rgba(34,197,94,.12);color:#bbf7d0;}',
+      /* ---------- AssistONE ---------- */
+      '#dgo-aone{position:fixed;right:12px;bottom:calc(16px + var(--dgo-aone-sobe,0px) + env(safe-area-inset-bottom,0px));',
+      'z-index:2147483200;display:flex;flex-direction:column;align-items:flex-end;gap:8px;',
+      'font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;}',
+      '@media (min-width:821px){#dgo-aone{right:22px;bottom:calc(22px + var(--dgo-aone-sobe-pc,0px));}}',
+      '#dgo-aone.dgo-falando{z-index:2147483250;}',
+      '.dgo-aone-bt{width:58px;height:58px;border-radius:50%;border:1px solid rgba(201,162,74,.55);padding:0;cursor:pointer;',
+      'background:radial-gradient(circle at 50% 38%,#232838,#11141c 72%);display:flex;align-items:center;justify-content:center;',
+      'box-shadow:0 6px 18px rgba(0,0,0,.28),0 0 0 3px rgba(201,162,74,.16);animation:dgo-aone-flutua 4.5s ease-in-out infinite;',
+      'transition:width .25s cubic-bezier(.2,.8,.2,1),height .25s cubic-bezier(.2,.8,.2,1);}',
+      '.dgo-aone-bt img{width:82%;height:82%;object-fit:contain;pointer-events:none;filter:drop-shadow(0 1px 2px rgba(0,0,0,.5));}',
+      '.dgo-aone-glifo{font:800 26px/1 system-ui,sans-serif;color:#e6c168;}',
+      '.dgo-aone-bt:focus-visible{outline:3px solid var(--dgo-cor);outline-offset:3px;}',
+      '#dgo-aone.dgo-falando .dgo-aone-bt{width:116px;height:116px;animation:none;}',
+      '@keyframes dgo-aone-flutua{0%,100%{transform:translateY(0)}50%{transform:translateY(-4px)}}',
+      '@keyframes dgo-aone-pop{from{opacity:0;transform:translateY(8px) scale(.96)}to{opacity:1;transform:none}}',
+      '@media (prefers-reduced-motion:reduce){.dgo-aone-bt{animation:none;transition:none}.dgo-aone-bolha{animation:none}}',
+      '.dgo-aone-bolha{width:min(340px,calc(100vw - 24px));max-height:min(70vh,560px);overflow:auto;position:relative;',
+      'background:#111a2e;color:#e8eef8;border:1px solid rgba(255,255,255,.14);border-radius:18px 18px 6px 18px;',
+      'box-shadow:0 14px 40px rgba(0,0,0,.35);padding:14px 14px 12px;font-size:14px;line-height:1.45;animation:dgo-aone-pop .2s ease;}',
+      '.dgo-aone-bolha h4,.dgo-aone-tour h4{margin:0 0 4px;font-size:15px;display:flex;align-items:center;gap:8px;padding-right:28px;}',
+      '.dgo-aone-bolha h4 img,.dgo-aone-tour h4 img{width:26px;height:26px;object-fit:contain;}',
+      '.dgo-aone-bolha p,.dgo-aone-tour p{margin:4px 0 8px;}',
+      '.dgo-aone-x{position:absolute;top:6px;right:8px;background:none;border:0;color:#94a3b8;font-size:17px;cursor:pointer;',
+      'padding:4px 8px;border-radius:8px;min-width:32px;min-height:32px;}',
+      '.dgo-aone-aqui{border:1px solid rgba(255,255,255,.14);background:rgba(255,255,255,.05);border-radius:14px;padding:10px 12px;margin:6px 0 8px;}',
+      '.dgo-aone-aqui .dgo-aone-t{font-weight:800;font-size:13.5px;margin-bottom:2px;}',
+      '.dgo-aone-aqui p{margin:0 0 8px;font-size:13px;color:#c7d0dd;}',
+      '.dgo-aone-atalhos{display:flex;flex-wrap:wrap;gap:6px;}',
+      '.dgo-aone-atalhos button{font:inherit;font-size:12.5px;font-weight:700;border:1px solid var(--dgo-cor);background:transparent;',
+      'color:#e8eef8;border-radius:999px;padding:7px 12px;cursor:pointer;min-height:36px;}',
+      '.dgo-aone-atalhos button.dgo-on{background:var(--dgo-cor);color:#04121f;}',
+      '.dgo-aone-ops{display:flex;flex-direction:column;gap:6px;margin-top:6px;}',
+      '.dgo-aone-ops button{display:flex;align-items:center;gap:10px;text-align:left;font:inherit;font-size:14px;font-weight:600;',
+      'border:1px solid rgba(255,255,255,.14);background:rgba(255,255,255,.04);color:#e8eef8;border-radius:12px;padding:10px 12px;',
+      'cursor:pointer;min-height:44px;width:100%;}',
+      '.dgo-aone-ops button:hover{border-color:var(--dgo-cor);}',
+      '.dgo-aone-ops button.dgo-on{background:var(--dgo-cor);color:#04121f;border-color:var(--dgo-cor);}',
+      '.dgo-aone-ops small{display:block;font-weight:400;font-size:12px;opacity:.75;}',
+      '.dgo-aone-linha{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px;align-items:center;}',
+      '.dgo-aone-link{font:inherit;font-size:12px;background:none;border:0;color:#94a3b8;text-decoration:underline;cursor:pointer;padding:4px 0;}',
+      '.dgo-aone-bolha input[type=search]{width:100%;box-sizing:border-box;font:inherit;font-size:15px;padding:10px 12px;border-radius:12px;',
+      'border:1px solid rgba(255,255,255,.18);background:#0b1220;color:#e8eef8;}',
+      '.dgo-aone-res{margin-top:8px;}',
+      '.dgo-aone-sug{display:flex;flex-wrap:wrap;gap:6px;}',
+      '.dgo-aone-sug button{font:inherit;font-size:12.5px;border-radius:999px;border:1px solid rgba(255,255,255,.2);background:transparent;',
+      'color:#e8eef8;padding:6px 10px;cursor:pointer;}',
+      '.dgo-aone-achado{outline:3px solid var(--dgo-cor) !important;outline-offset:3px;border-radius:8px;}',
+      '.dgo-aone-foco{position:fixed;z-index:2147483260;border-radius:12px;pointer-events:none;',
+      'box-shadow:0 0 0 9999px rgba(2,6,23,.6),0 0 0 3px var(--dgo-cor);}',
+      '.dgo-aone-tour{position:fixed;z-index:2147483270;width:min(320px,calc(100vw - 24px));background:#111a2e;color:#e8eef8;',
+      'border:1px solid rgba(255,255,255,.14);border-radius:16px;box-shadow:0 14px 40px rgba(0,0,0,.35);padding:12px 14px;font-size:14px;',
+      'font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;}',
+      '.dgo-aone-tour .dgo-aone-linha{justify-content:space-between;margin-top:0;}',
+      '.dgo-aone-tour .dgo-b{width:auto;padding:8px 14px;min-height:36px;font-size:13px;}',
+      '.dgo-aone-toggle{display:flex;align-items:center;gap:10px;width:100%;padding:10px 12px;border-radius:14px;cursor:pointer;',
+      'border:1px solid rgba(255,255,255,.14);background:rgba(255,255,255,.04);color:#e8eef8;font:800 13px/1.2 system-ui,sans-serif;letter-spacing:.04em;}',
+      '.dgo-aone-toggle img{width:34px;height:34px;object-fit:contain;}',
+      '.dgo-aone-toggle .dgo-aone-sw{margin-left:auto;width:44px;height:26px;border-radius:999px;background:rgba(255,255,255,.18);position:relative;flex:0 0 auto;}',
+      '.dgo-aone-toggle .dgo-aone-sw::after{content:"";position:absolute;top:3px;left:3px;width:20px;height:20px;border-radius:50%;background:#fff;transition:left .15s;}',
+      '.dgo-aone-toggle.dgo-on .dgo-aone-sw{background:#c9a24a;}.dgo-aone-toggle.dgo-on .dgo-aone-sw::after{left:21px;}',
+      /* ---------- faixa do topo ---------- */
+      '.dgo-faixa{position:fixed;top:0;left:0;right:0;z-index:2147483000;display:flex;align-items:stretch;gap:7px;',
+      'background:#0e1524;border-bottom:1px solid rgba(255,255,255,.12);padding:6px 7px;',
+      'padding-top:calc(6px + env(safe-area-inset-top,0px));box-sizing:border-box;overflow:hidden;',
+      'font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;}',
+      '.dgo-faixa.dgo-fina{padding:4px 7px;padding-top:calc(4px + env(safe-area-inset-top,0px));}',
+      '.dgo-rot{flex:0 0 auto;align-self:stretch;display:flex;align-items:center;justify-content:center;',
+      'writing-mode:vertical-rl;transform:rotate(180deg);font-size:8.5px;font-weight:800;letter-spacing:.22em;',
+      'color:#64748b;border-right:1px solid rgba(255,255,255,.12);padding:0 3px 0 1px;}',
+      '.dgo-carrossel{flex:1 1 auto;min-width:0;overflow:hidden;position:relative;',
+      '-webkit-mask-image:linear-gradient(90deg,transparent,#000 14px,#000 calc(100% - 14px),transparent);',
+      'mask-image:linear-gradient(90deg,transparent,#000 14px,#000 calc(100% - 14px),transparent);}',
+      '.dgo-trilho{display:flex;width:max-content;animation:dgo-desliza 60s linear infinite;}',
+      '.dgo-carrossel:hover .dgo-trilho,.dgo-carrossel:focus-within .dgo-trilho{animation-play-state:paused;}',
+      '@keyframes dgo-desliza{from{transform:translateX(0)}to{transform:translateX(-50%)}}',
+      '.dgo-card{flex:0 0 auto;display:flex;align-items:center;gap:8px;width:224px;padding:5px 9px 5px 6px;',
+      'margin-right:7px;border-radius:9px;text-decoration:none;background:rgba(255,255,255,.045);',
+      'border:1px solid rgba(255,255,255,.09);transition:background .15s,border-color .15s;}',
+      '.dgo-card:hover{background:rgba(255,255,255,.1);border-color:rgba(255,255,255,.2);}',
+      '.dgo-ic{flex:0 0 auto;width:30px;height:30px;border-radius:8px;border:1px solid;display:flex;',
+      'align-items:center;justify-content:center;font-size:16px;line-height:1;object-fit:cover;}',
+      '.dgo-tx{min-width:0;display:flex;flex-direction:column;gap:1px;}',
+      '.dgo-nm{display:flex;align-items:center;gap:5px;font-size:11.5px;font-weight:700;color:#e8eef8;',
+      'white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}',
+      '.dgo-pt{flex:0 0 auto;width:6px;height:6px;border-radius:50%;}',
+      '.dgo-seta{flex:0 0 auto;color:#7dd3fc;font-weight:400;}',
+      '.dgo-selo{flex:0 0 auto;font-style:normal;font-size:7.5px;font-weight:800;letter-spacing:.08em;',
+      'padding:1px 4px;border-radius:4px;background:rgba(251,191,36,.18);color:#fcd34d;}',
+      '.dgo-fr{font-size:10px;line-height:1.25;color:#8b9ab0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}',
+      '.dgo-faixa .dgo-x{flex:0 0 auto;align-self:center;width:26px;height:26px;border-radius:50%;border:0;cursor:pointer;',
+      'background:rgba(255,255,255,.12);color:#fff;font-size:15px;line-height:26px;padding:0;}',
+      '.dgo-faixa .dgo-x:hover{background:rgba(255,255,255,.26);}',
+      /* ---------- seletor de idioma ---------- */
+      '.dgo-idioma{display:flex;align-items:center;gap:0;background:rgba(255,255,255,.07);color:#fff;',
+      'border-radius:999px;padding:2px;font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;',
+      'font-size:11px;font-weight:800;user-select:none;}',
+      '.dgo-idioma.dgo-na-faixa{flex:0 0 auto;align-self:center;}',
+      '.dgo-idioma.dgo-flutua{position:fixed;z-index:2147483100;background:rgba(15,23,42,.92);padding:3px;',
+      'box-shadow:0 4px 14px rgba(0,0,0,.35);font-size:12px;}',
+      '.dgo-idioma button{border:0;background:transparent;color:#cbd5e1;padding:5px 9px;border-radius:999px;',
+      'cursor:pointer;font:inherit;min-width:34px;min-height:28px;}',
+      '.dgo-idioma.dgo-flutua button{padding:6px 11px;min-width:40px;min-height:32px;}',
       '.dgo-idioma button.dgo-on{background:var(--dgo-cor);color:#04121f;}',
       '.dgo-idioma.dgo-topo-direita{right:10px;top:calc(var(--dgo-topo) + 10px);}',
       '.dgo-idioma.dgo-topo-esquerda{left:10px;top:calc(var(--dgo-topo) + 10px);}',
       '.dgo-idioma.dgo-baixo-direita{right:10px;bottom:calc(12px + env(safe-area-inset-bottom,0px));}',
       '.dgo-idioma.dgo-baixo-esquerda{left:10px;bottom:calc(12px + env(safe-area-inset-bottom,0px));}',
+      /* ---------- widget de IA ---------- */
+      '.dgo-ia-fio{max-height:46vh;overflow:auto;margin:12px 0;display:flex;flex-direction:column;gap:8px;',
+      '-webkit-overflow-scrolling:touch;}',
+      '.dgo-ia-msg{max-width:88%;padding:10px 13px;border-radius:14px;font-size:14px;line-height:1.5;',
+      'white-space:pre-wrap;word-break:break-word;}',
+      '.dgo-ia-msg.dgo-eu{align-self:flex-end;background:var(--dgo-cor);color:#08131d;font-weight:500;}',
+      '.dgo-ia-msg.dgo-ia{align-self:flex-start;background:rgba(255,255,255,.07);color:#e2e8f0;}',
+      '.dgo-ia-msg.dgo-pensando{opacity:.6;font-style:italic;}',
+      '.dgo-ia-chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px;}',
+      '.dgo-ia-chips button{border:1px solid rgba(255,255,255,.18);background:transparent;color:#cbd5e1;',
+      'border-radius:999px;padding:7px 12px;font-size:12.5px;cursor:pointer;font-family:inherit;}',
+      '.dgo-ia-chips button:hover{background:rgba(255,255,255,.08);}',
+      '.dgo-ia-entrada{width:100%;box-sizing:border-box;padding:11px 12px;border-radius:12px;',
+      'border:1px solid rgba(255,255,255,.16);background:#0b1220;color:#e2e8f0;font-size:15px;',
+      'font-family:inherit;resize:vertical;}',
+      '.dgo-faixa .dgo-ia-bt{flex:0 0 auto;align-self:center;width:30px;height:30px;border-radius:50%;',
+      'border:1px solid rgba(255,255,255,.18);background:rgba(255,255,255,.07);color:#e2e8f0;',
+      'font-size:14px;line-height:1;cursor:pointer;padding:0;}',
+      '.dgo-faixa .dgo-ia-bt:hover{background:rgba(255,255,255,.16);}',
+      /* ---------- cofre de chaves ---------- */
+      '.dgo-prov-cab{display:flex;align-items:center;justify-content:space-between;width:100%;text-align:left;',
+      'padding:11px 12px;margin-top:6px;border-radius:11px;border:1px solid rgba(255,255,255,.12);',
+      'background:rgba(255,255,255,.04);color:#e2e8f0;font:inherit;font-size:14px;font-weight:700;cursor:pointer;}',
+      '.dgo-prov-cab.dgo-on{border-color:var(--dgo-cor);background:rgba(255,255,255,.07);}',
+      '.dgo-prov-nome{display:flex;align-items:center;gap:6px;flex-wrap:wrap;}',
+      '.dgo-prov-corpo{padding:10px 12px 4px;border:1px solid rgba(255,255,255,.08);border-top:0;',
+      'border-radius:0 0 11px 11px;margin-top:-4px;background:rgba(0,0,0,.15);}',
+      '.dgo-selo-ok{background:rgba(34,197,94,.18) !important;color:#86efac !important;}',
+      '.dgo-selo-pago{background:rgba(148,163,184,.18) !important;color:#cbd5e1 !important;}',
+      '.dgo-chips{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0 6px;}',
+      '.dgo-chip{font:inherit;font-size:12.5px;font-weight:700;padding:7px 11px;border-radius:999px;border:1px solid rgba(255,255,255,.18);',
+      'background:transparent;color:#e2e8f0;cursor:pointer;min-height:34px;}',
+      '.dgo-chip.dgo-on{background:var(--dgo-cor);color:#04121f;border-color:var(--dgo-cor);}',
+      '.dgo-cap{font-size:13px;line-height:1;}',
+      '.dgo-serve{margin:4px 0 8px;font-size:13.5px;color:#e2e8f0;}',
+      '.dgo-guia{margin:10px 0;border:1px solid rgba(255,255,255,.12);border-radius:10px;padding:6px 10px;}',
+      '.dgo-guia summary{cursor:pointer;font-weight:700;font-size:13.5px;padding:4px 0;}',
+      '.dgo-guia-lista{padding-left:22px;margin:6px 0 0;}',
+      '.dgo-guia-lista li{margin:0 0 12px;}',
+      '.dgo-guia-lista li p{margin:0 0 6px;font-size:13.5px;line-height:1.45;}',
+      '.dgo-guia-ilu{margin:0;max-width:300px;}',
+      '.dgo-guia-ilu img,.dgo-guia-ilu svg{display:block;width:100%;height:auto;border-radius:10px;}',
+      '.dgo-campo{position:relative;}',
+      '.dgo-olho{position:absolute;right:6px;bottom:6px;width:34px;height:34px;border:0;border-radius:8px;background:transparent;color:#94a3b8;cursor:pointer;font-size:16px;}',
+      '.dgo-usar{flex-wrap:wrap;}.dgo-usar .dgo-b{width:auto;flex:1 1 auto;}',
+      '.dgo-passo{border:2px solid var(--dgo-cor);border-radius:12px;padding:10px 12px;margin:10px 0;background:rgba(255,255,255,.04);}',
+      '.dgo-passo-cab{display:flex;align-items:center;gap:10px;margin-bottom:6px;font-size:13px;}',
+      '.dgo-passo-barra{flex:1;height:6px;border-radius:3px;background:rgba(255,255,255,.12);overflow:hidden;}',
+      '.dgo-passo-barra span{display:block;height:100%;background:var(--dgo-cor);}',
+      '.dgo-passo-txt{font-size:15px;line-height:1.45;margin:4px 0 8px;color:#fff;}',
+      '.dgo-passo .dgo-guia-ilu{max-width:360px;}',
+      '.dgo-b.dgo-b2.dgo-on{border-color:var(--dgo-cor);color:var(--dgo-cor);}',
+      '@media (prefers-color-scheme:light){.dgo-guia-ilu svg{filter:none;}}',
+      '.dgo-caixa select{width:100%;box-sizing:border-box;padding:10px 12px;border-radius:10px;',
+      'border:1px solid rgba(255,255,255,.16);background:#0b1220;color:#e2e8f0;font-size:15px;font-family:inherit;}',
+      /* ---------- wizard ---------- */
+      '.dgo-wz-topo{font-size:10px;font-weight:800;letter-spacing:.18em;color:#64748b;',
+      'text-transform:uppercase;margin-bottom:9px;}',
+      '.dgo-wz-barra{display:flex;gap:4px;margin-bottom:6px;}',
+      '.dgo-wz-barra i{flex:1;height:4px;border-radius:99px;background:rgba(255,255,255,.14);}',
+      '.dgo-wz-barra i.dgo-on{background:var(--dgo-cor);}',
+      /* ---------- bloqueio por nivel ---------- */
+      '.dgo-cadeado{font-size:34px;line-height:1;text-align:center;margin:2px 0 10px;}',
+      '.dgo-bloqueado{position:relative;opacity:.62;}',
+      '.dgo-bloqueado::after{content:"\\1F512";position:absolute;top:2px;right:4px;font-size:12px;',
+      'line-height:1;pointer-events:none;}',
+      '.dgo-admin-barra{position:fixed;left:50%;transform:translateX(-50%);z-index:2147483150;',
+      'bottom:calc(10px + env(safe-area-inset-bottom,0px));display:flex;align-items:center;gap:8px;',
+      'background:rgba(251,191,36,.95);color:#1c1300;border-radius:999px;padding:5px 6px 5px 14px;',
+      'font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;font-size:11.5px;font-weight:800;',
+      'letter-spacing:.04em;box-shadow:0 8px 24px rgba(0,0,0,.4);max-width:94vw;}',
+      '.dgo-admin-barra button{border:0;background:rgba(28,19,0,.14);color:#1c1300;border-radius:999px;',
+      'padding:6px 11px;font:inherit;font-size:11px;cursor:pointer;white-space:nowrap;}',
+      '.dgo-admin-barra button:hover{background:rgba(28,19,0,.26);}',
+      /* ---------- pop-up de anuncio ---------- */
+      '.dgo-pop-fundo{position:fixed;inset:0;z-index:2147483300;background:rgba(2,6,23,.82);',
+      'backdrop-filter:blur(4px);display:flex;align-items:center;justify-content:center;padding:18px;',
+      'box-sizing:border-box;font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;}',
+      '.dgo-pop-env{position:relative;width:100%;max-width:340px;}',
+      '.dgo-pop{position:relative;width:100%;background:#141c2b;border:1px solid rgba(255,255,255,.14);',
+      'border-radius:24px;box-sizing:border-box;text-align:center;overflow:hidden;display:flex;',
+      'flex-direction:column;box-shadow:0 26px 70px rgba(0,0,0,.6);animation:dgo-sobe .26s ease-out;}',
+      '@keyframes dgo-sobe{from{opacity:0;transform:translateY(14px) scale(.97)}to{opacity:1;transform:none}}',
+      '@media (prefers-reduced-motion:reduce){.dgo-pop{animation:none}}',
+      '.dgo-pop-arte{position:relative;display:flex;align-items:center;justify-content:center;',
+      'padding:30px 20px 4px;background:linear-gradient(160deg,var(--c-suave),transparent 70%);}',
+      '.dgo-pop-halo{position:absolute;width:210px;height:210px;border-radius:50%;',
+      'background:radial-gradient(circle,var(--c-suave),transparent 66%);filter:blur(4px);opacity:.9;}',
+      '.dgo-pop-ic{position:relative;width:82px;height:82px;border-radius:22px;border:1px solid;',
+      'display:flex;align-items:center;justify-content:center;font-size:41px;line-height:1;object-fit:cover;}',
+      '.dgo-pop-corpo{padding:16px 24px 20px;display:flex;flex-direction:column;}',
+      '.dgo-pop-nome{display:flex;align-items:center;justify-content:center;gap:8px;flex-wrap:wrap;',
+      'font-size:22px;font-weight:800;color:#fff;line-height:1.2;margin-bottom:8px;}',
+      '.dgo-pop-frase{font-size:14.5px;line-height:1.5;color:#a9b6c8;margin-bottom:20px;}',
+      '.dgo-pop-bt{display:flex;align-items:center;justify-content:center;gap:9px;text-decoration:none;',
+      'background:var(--c,var(--dgo-cor));color:#0a1017;font-size:15px;font-weight:800;padding:14px 20px;',
+      'border-radius:999px;letter-spacing:.02em;transition:filter .15s,transform .15s;}',
+      '.dgo-pop-bt:hover{filter:brightness(1.1);transform:translateY(-1px);}',
+      '.dgo-pop-seta{font-weight:400;}',
+      '.dgo-pop-rot{font-size:8.5px;font-weight:800;letter-spacing:.22em;color:#5b6879;}',
+      '.dgo-pop-rot-topo{display:none;}',
+      '.dgo-pop-rot-baixo{margin-top:14px;}',
+      /* ---- em tela larga o pop-up deita: arte de um lado, texto do outro ---- */
+      '@media (min-width:660px){',
+      '.dgo-pop-env{max-width:640px;}',
+      '.dgo-pop{flex-direction:row;text-align:left;border-radius:26px;}',
+      '.dgo-pop-arte{flex:0 0 244px;align-self:stretch;padding:34px 18px;',
+      'background:linear-gradient(150deg,var(--c-suave),var(--c-fraca) 55%,transparent);',
+      'border-right:1px solid rgba(255,255,255,.08);}',
+      '.dgo-pop-halo{width:250px;height:250px;}',
+      '.dgo-pop-ic{width:116px;height:116px;border-radius:30px;font-size:58px;}',
+      '.dgo-pop-corpo{flex:1 1 auto;padding:34px 34px 30px;justify-content:center;}',
+      '.dgo-pop-nome{justify-content:flex-start;font-size:29px;margin-bottom:11px;}',
+      '.dgo-pop-frase{font-size:16px;margin-bottom:26px;max-width:32ch;}',
+      '.dgo-pop-bt{align-self:flex-start;padding:15px 30px;font-size:15.5px;}',
+      '.dgo-pop-rot-topo{display:block;margin-bottom:13px;}',
+      '.dgo-pop-rot-baixo{display:none;}',
+      '.dgo-pop-x{top:-19px;right:-19px;width:48px;height:48px;}',
+      '}',
+      '.dgo-pop-x{position:absolute;top:-17px;right:-17px;width:46px;height:46px;',
+      'border-radius:50%;border:1px solid rgba(255,255,255,.18);background:#27344a;color:#94a3b8;',
+      'font-size:17px;font-weight:800;cursor:default;z-index:2;box-shadow:0 6px 18px rgba(0,0,0,.45);}',
+      '.dgo-pop-x.dgo-pronto{cursor:pointer;font-size:23px;color:#fff;}',
+      '.dgo-pop-x.dgo-pronto:hover{background:#334155;}',
+      '@media (max-width:420px){.dgo-pop-x{top:-14px;right:-8px;width:40px;height:40px;}',
+      '.dgo-pop-ic{width:66px;height:66px;font-size:33px;}}',
+      '@media (max-width:440px){.dgo-card{width:198px;}',
+      '.dgo-idioma.dgo-na-faixa button{min-width:30px;padding:5px 7px;font-size:10.5px;}}',
       '.dgo-modal{position:fixed;inset:0;z-index:2147483200;background:rgba(2,6,23,.72);backdrop-filter:blur(3px);',
       'display:flex;align-items:center;justify-content:center;padding:14px;box-sizing:border-box;',
       'font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;overscroll-behavior:contain;}',
@@ -299,8 +597,8 @@
     entrarVisitante: ['Entrar sem senha', 'Continue without a password'],
     avisoVisitante: ['Como visitante nenhum dado pessoal é guardado e são exibidos anúncios.',
                      'As a guest no personal data is kept and ads are displayed.'],
-    avisoAssinante: ['Com conta de assinante os dados ficam guardados e não há anúncios.',
-                     'With a subscriber account your data is kept and there are no ads.'],
+    avisoMembro: ['Com conta os dados ficam guardados. Sem anúncios só no Premium.',
+                  'With an account your data is kept. Ad-free only with Premium.'],
     avisoAnunciante: ['Área para acompanhar campanhas e desempenho dos anúncios.',
                       'Area to follow campaigns and ad performance.'],
     entrarGoogle: ['Entrar com Google', 'Sign in with Google'],
@@ -339,6 +637,8 @@
     cancelar: ['Cancelar', 'Cancel'],
     salvar: ['Salvar', 'Save'],
     anuncio: ['Publicidade', 'Advertisement'],
+    anuncioRotulo: ['ANÚNCIO', 'AD'],
+    conhecer: ['Conhecer', 'Open'],
     fecharAnuncio: ['Fechar anúncio', 'Close ad'],
     anuncieAqui: ['<ANUNCIE AQUI>', '<ADVERTISE HERE>'],
     versao: ['Versão', 'Version'],
@@ -415,7 +715,163 @@
     semRecuperacaoConfigurada: ['Este app ainda não tem recuperação por e-mail. Use o código de recuperação que apareceu quando a conta foi criada.',
                                 'This app has no e-mail recovery yet. Use the recovery code shown when the account was created.'],
     contaCriada: ['Conta criada.', 'Account created.'],
-    identificadorVazio: ['Escreva o apelido ou o e-mail da conta.', 'Write the alias or the e-mail of the account.']
+    identificadorVazio: ['Escreva o apelido ou o e-mail da conta.', 'Write the alias or the e-mail of the account.'],
+
+    membro: ['Membro', 'Member'],
+    premium: ['Premium', 'Premium'],
+    admin: ['Administrador', 'Administrator'],
+    painelAdmin: ['Painel do administrador', 'Administrator panel'],
+    adminNaoEhSeguranca: ['Este painel serve para testar o fluxo. Num site sem servidor ele organiza a oferta, mas não protege nada.',
+                          'This panel is for testing the flow. On a site without a server it organizes the offer, but protects nothing.'],
+    verComo: ['Ver o app como', 'View the app as'],
+    modoTeste: ['MODO DE TESTE', 'TEST MODE'],
+    sairDoTeste: ['Sair do teste', 'Leave test mode'],
+    servicos: ['Serviços e níveis', 'Services and levels'],
+    semServicos: ['Este app ainda não declarou serviços.', 'This app has not declared any services yet.'],
+    baixarServicos: ['Baixar o arquivo de níveis', 'Download the levels file'],
+    servicosComoSubir: ['Suba este arquivo na raiz do repositório para valer para todo mundo.',
+                        'Upload this file to the repository root so it applies to everyone.'],
+    contas: ['Contas neste aparelho', 'Accounts on this device'],
+    sohMembro: ['Este recurso é para quem tem conta. Criar conta é rápido e gratuito.',
+                'This feature is for account holders. Creating an account is quick and free.'],
+    sohPremium: ['Este recurso faz parte do Premium.', 'This feature is part of Premium.'],
+    virarPremium: ['Quero o Premium', 'I want Premium'],
+    premiumSemCobranca: ['Ainda não há cobrança automática. O pedido chega para o responsável, que libera a conta.',
+                         'There is no automatic billing yet. The request reaches the site owner, who unlocks the account.'],
+    entendi: ['Entendi', 'Got it'],
+
+    wzAvancar: ['Avançar', 'Next'],
+    wzVoltar: ['Voltar', 'Back'],
+    wzConcluir: ['Concluir', 'Finish'],
+    wzPular: ['Pular por enquanto', 'Skip for now'],
+    wzObrigatorio: ['Falta preencher:', 'Still missing:'],
+
+    perguntarIA: ['Perguntar à IA', 'Ask the AI'],
+    perguntar: ['Perguntar', 'Ask'],
+    pensando: ['Pensando...', 'Thinking...'],
+    escrevaPergunta: ['Escreva a sua pergunta', 'Write your question'],
+    sugestoes: ['Sugestões', 'Suggestions'],
+    limparConversa: ['Limpar a conversa', 'Clear the conversation'],
+    semResposta: ['A IA não devolveu resposta.', 'The AI returned no answer.'],
+    erroIA: ['Não deu certo:', 'It did not work:'],
+    semChave: ['Falta colar a chave da IA.', 'The AI key has not been pasted yet.'],
+    semInternet: ['Sem internet agora. O resto do app continua funcionando.',
+                  'No internet right now. The rest of the app keeps working.'],
+    cofreChaves: ['Chaves de IA', 'AI keys'],
+    tudo: ['Tudo', 'All'],
+    passo: ['Passo', 'Step'],
+    de: ['de', 'of'],
+    abrirAoLado: ['Abrir o site ao lado', 'Open the site beside'],
+    anterior: ['Anterior', 'Previous'],
+    jaFiz: ['Já fiz, próximo', 'Done, next'],
+    sairGuia: ['Sair do guia', 'Leave the guide'],
+    comecarGuia: ['Começar o guia acompanhado (um passo por vez)', 'Start the guided walkthrough (one step at a time)'],
+    colarAbaixo: ['Agora cole a chave no campo abaixo e toque em “Salvar e testar”.', 'Now paste the key in the field below and tap “Save and test”.'],
+    emUsoAgora: ['Em uso agora', 'In use now'],
+    limitesTit: ['Limites', 'Limits'],
+    contaTit: ['Conta', 'Account'],
+    abrirSite: ['Abrir o site', 'Open the site'],
+    guiaPasso: ['Guia passo a passo', 'Step-by-step guide'],
+    guiaPrintDica: ['Dica para quem administra: um print seu no lugar do desenho é só pôr um arquivo {arq} na raiz do app.',
+                    'Tip for admins: to show your own screenshot instead of the drawing, put a file {arq} in the app root.'],
+    suaChave: ['Sua chave', 'Your key'],
+    umaVez: ['aparece só uma vez!', 'shows only once!'],
+    salvarTestar: ['Salvar e testar', 'Save and test'],
+    mostrarChave: ['Mostrar ou esconder a chave', 'Show or hide the key'],
+    testando: ['Testando a chave com o provedor…', 'Testing the key with the provider…'],
+    chaveOk: ['✓ Chave aceita. Pronto para usar.', '✓ Key accepted. Ready to use.'],
+    chaveSalva: ['Chave salva.', 'Key saved.'],
+    chaveRecusada: ['O provedor recusou a chave. Confira se copiou inteira, ou crie outra no site.', 'The provider rejected the key. Check you copied it whole, or create another on the site.'],
+    chaveSalvaSelo: ['chave salva', 'key saved'],
+    semChaveSelo: ['sem chave', 'no key'],
+    comChaveSalva: ['Com chave salva', 'Key saved'],
+    nenhumaChaveAinda: ['Nenhuma chave salva ainda — escolha uma IA grátis abaixo.', 'No key saved yet — pick a free AI below.'],
+    iaSemCota: ['está sem cota agora', 'is out of quota right now'],
+    iaRecusouChave: ['recusou a chave', 'rejected the key'],
+    iaNaoRespondeu: ['não respondeu', 'did not respond'],
+    iaUsando: ['usando', 'using'],
+    iaOcupada: ['A IA está ocupada, tentando de novo…', 'The AI is busy, trying again…'],
+
+    aoneRotulo: ['AssistONE: ajuda, tour e busca', 'AssistONE: help, tour and search'],
+    aoneOla: ['Olá! Eu sou o AssistONE 👋', 'Hi! I am AssistONE 👋'],
+    aoneComoAjudo: ['Em que posso ajudar?', 'How can I help?'],
+    aoneApresenta: ['Estou aqui para ajudar você a usar o {app}. Veja o que dá para fazer nesta tela, ou escolha outra ajuda.',
+                    'I am here to help you use {app}. See what you can do on this screen, or pick another kind of help.'],
+    aoneVejaTela: ['Veja o que dá para fazer nesta tela, ou escolha outra ajuda.', 'See what you can do on this screen, or pick another kind of help.'],
+    aoneVoceEsta: ['Você está em', 'You are on'],
+    aoneComecar: ['Começar: deixar o app do seu jeito', 'Start: set the app up your way'],
+    aoneRever: ['Rever o passo a passo', 'Review the walkthrough'],
+    aonePoucosMinutos: ['Passo a passo, em poucos minutos', 'Step by step, in a few minutes'],
+    aoneTour: ['Tour rápido pela tela', 'Quick tour of the screen'],
+    aoneTourSub: ['Mostro onde fica cada coisa', 'I show you where things are'],
+    aoneProcurar: ['Procurar algo', 'Find something'],
+    aoneProcurarSub: ['Funções, telas e seções do app', 'Features, screens and sections of the app'],
+    aoneExemploBusca: ['Ex.: tom, afinador, importar', 'e.g. key, tuner, import'],
+    aoneOndeProcuro: ['Procuro nas funções, telas e seções deste app.', 'I search this app’s features, screens and sections.'],
+    aoneOQueProcura: ['O que você procura?', 'What are you looking for?'],
+    aoneNadaAchado: ['Não encontrei', 'I could not find'],
+    aoneQuisDizer: ['Você quis dizer:', 'Did you mean:'],
+    aoneTenteOutra: ['Tente outra palavra.', 'Try another word.'],
+    aoneAgoraNao: ['Agora não', 'Not now'],
+    aoneDesligar: ['Desligar o AssistONE', 'Turn AssistONE off'],
+    aoneLigado: ['AssistONE ligado.', 'AssistONE on.'],
+    aoneDesligado: ['AssistONE desligado. Para religar: ⚙ → AssistONE.', 'AssistONE off. To turn it back on: ⚙ → AssistONE.'],
+    aoneAtivado: ['ATIVADO', 'ON'],
+    aoneDesativado: ['DESATIVADO', 'OFF'],
+    aoneAbrir: ['Abrir o AssistONE', 'Open AssistONE'],
+    aoneRecomecar: ['Recomeçar o passo a passo e as dicas', 'Restart the walkthrough and tips'],
+    aoneRecomecou: ['Pronto: o passo a passo e as dicas vão aparecer de novo.', 'Done: the walkthrough and tips will show again.'],
+    aoneExplica: ['O assistente no canto da tela: ajuda de cada tela, tour, busca e passo a passo.',
+                  'The assistant in the corner of the screen: help for each screen, tour, search and walkthrough.'],
+    aoneProximo: ['Próximo', 'Next'],
+    aoneConcluir: ['Concluir', 'Finish'],
+    aoneSair: ['Sair', 'Exit'],
+    aoneFimTour: ['Fim do tour. Toque no AssistONE quando quiser.', 'Tour done. Tap AssistONE anytime.'],
+    aoneSouEu: ['Sou eu! Toque quando precisar de ajuda, de um tour ou para procurar algo.', 'That is me! Tap me for help, a tour or to find something.'],
+    aoneEntendi: ['Entendi', 'Got it'],
+    aoneMaisAjuda: ['Mais ajuda', 'More help'],
+    corsAviso: ['Chave salva, mas o teste não passou pelo navegador. Pode ser bloqueio do provedor: tente usar a IA normalmente.', 'Key saved, but the test could not go through the browser. It may be a provider block: try using the AI normally.'],
+    usarPara: ['Usar para', 'Use for'],
+    pedeCartao: ['pede cartão', 'asks for a card'],
+    chaveNuncaChat: ['Nunca cole a chave em chat, e-mail ou arquivo: ela é como uma senha.', 'Never paste the key in a chat, e-mail or file: it is like a password.'],
+    cofreExplica: ['A chave é sua e fica guardada só neste navegador. Vale para os seus apps, e não passa por servidor nenhum além do próprio provedor.',
+                   'The key is yours and is kept in this browser only. It works across your apps and goes to no server other than the provider itself.'],
+    ondePegar: ['Onde pegar a chave do', 'Where to get the key for'],
+    qualUsar: ['Qual usar', 'Which one to use'],
+    emUso: ['Em uso', 'In use'],
+    usarEste: ['Usar este', 'Use this one'],
+    chave: ['Chave', 'Key'],
+    chaveAvisoCusto: ['Nos provedores pagos, o uso é cobrado na sua conta. Nos grátis, há limite de pedidos por dia.',
+                      'On paid providers usage is billed to your account. On free ones there is a daily request limit.'],
+    gratis: ['grátis', 'free'],
+    pago: ['pago', 'paid'],
+    provedor: ['Provedor', 'Provider'],
+    escolhaProvedor: ['Escolha o provedor…', 'Choose the provider…'],
+    modelo: ['Modelo', 'Model'],
+    listarModelos: ['Ver modelos que esta chave aceita', 'List models this key accepts'],
+    modelosGratis: ['só os grátis', 'free only'],
+    endereco: ['Endereço da API', 'API address'],
+    colarChave: ['colar a chave', 'paste the key'],
+    semEndereco: ['Falta o endereço da API deste provedor.', 'This provider is missing its API address.'],
+    soWifi: ['Você escolheu usar a IA só no Wi-Fi. Conecte ao Wi-Fi ou mude em Configurações → Rede.',
+             'You chose to use the AI on Wi-Fi only. Connect to Wi-Fi or change it in Settings → Network.'],
+    redeTitulo: ['Rede e dados móveis', 'Network and mobile data'],
+    redeAgora: ['Conexão agora', 'Connection now'],
+    redePesado: ['Baixar imagens, sons e pacotes grandes', 'Download images, sounds and large packages'],
+    redeIA: ['Perguntar à IA', 'Ask the AI'],
+    redeSempre: ['Wi-Fi ou dados', 'Wi-Fi or data'],
+    redeWifi: ['Só no Wi-Fi', 'Wi-Fi only'],
+    redeNunca: ['Nunca', 'Never'],
+    redeDados: ['dados móveis', 'mobile data'],
+    redeOffline: ['sem internet', 'offline'],
+    redeDesconhecida: ['não dá para saber neste navegador', 'cannot tell in this browser'],
+    redeAviso: ['Você está em dados móveis', 'You are on mobile data'],
+    redeSoWifi: ['Este download foi marcado para acontecer só no Wi-Fi.', 'This download is set to happen on Wi-Fi only.'],
+    redeBaixarAgora: ['Baixar mesmo assim', 'Download anyway'],
+    redeEsperarWifi: ['Esperar o Wi-Fi', 'Wait for Wi-Fi'],
+    oQueAIARecebe: ['O que a IA recebe junto com a pergunta', 'What the AI receives with the question'],
+    avisoIA: ['A resposta vem de um modelo de linguagem: pode errar. A pergunta e o contexto acima vão para o provedor escolhido; nada mais sai daqui.',
+              'The answer comes from a language model: it can be wrong. The question and the context above go to the chosen provider; nothing else leaves.']
   };
 
   var Idioma = {
@@ -711,6 +1167,7 @@
       raiz.setTimeout(function () {
         Varredura.pendente = false;
         marcarIgnorados();
+        if (cfg.niveis.ativo) { try { Niveis.revisar(); } catch (e) {} }
         if (nos && nos.length) { nos.forEach(function (n) { try { Varredura.ramo(n); } catch (e) {} }); }
         else Varredura.tudo();
       }, 16);
@@ -744,18 +1201,32 @@
      7. SELETOR GLOBAL DE IDIOMA (sempre visivel)
      ------------------------------------------------------------------ */
   var seletorEl = null;
+
+  /* o par PT | EN, para viver dentro da faixa do topo */
+  function blocoIdioma() {
+    var bPT = el('button', { type: 'button', 'aria-label': 'Português', texto: 'PT',
+                             onclick: function () { Idioma.definir('pt'); } });
+    var bEN = el('button', { type: 'button', 'aria-label': 'English', texto: 'EN',
+                             onclick: function () { Idioma.definir('en'); } });
+    seletorEl = el('div', { class: 'dgo-idioma dgo-na-faixa', role: 'group' }, [bPT, bEN]);
+    seletorEl._pt = bPT; seletorEl._en = bEN;
+    return seletorEl;
+  }
+
   function montarSeletorIdioma() {
-    if (!cfg.seletorIdiomaVisivel || seletorEl) return;
-    var pos = 'dgo-' + (cfg.posicaoSeletorIdioma || 'topo-direita');
+    if (!cfg.seletorIdiomaVisivel) return;
+    if (cfg.posicaoSeletorIdioma === 'faixa' || !cfg.posicaoSeletorIdioma) return;  /* vai na faixa */
+    if (seletorEl && seletorEl.parentNode === d.body) return;
+    var pos = 'dgo-' + cfg.posicaoSeletorIdioma;
     var bPT = el('button', { type: 'button', 'aria-label': 'Portugues', texto: 'PT', onclick: function () { Idioma.definir('pt'); } });
     var bEN = el('button', { type: 'button', 'aria-label': 'English', texto: 'EN', onclick: function () { Idioma.definir('en'); } });
-    seletorEl = el('div', { class: 'dgo-idioma ' + pos, 'data-dgo-ui': '1', role: 'group' }, [bPT, bEN]);
+    seletorEl = el('div', { class: 'dgo-idioma dgo-flutua ' + pos, 'data-dgo-ui': '1', role: 'group' }, [bPT, bEN]);
     seletorEl._pt = bPT; seletorEl._en = bEN;
     d.body.appendChild(seletorEl);
     atualizarSeletorIdioma();
   }
   function atualizarSeletorIdioma() {
-    if (!seletorEl) return;
+    if (!seletorEl || !seletorEl._pt) return;
     seletorEl._pt.className = Idioma.atual === 'pt' ? 'dgo-on' : '';
     seletorEl._en.className = Idioma.atual === 'en' ? 'dgo-on' : '';
   }
@@ -764,22 +1235,112 @@
      8. BANNER DE ANUNCIO NO TOPO
         Fechavel durante a sessao; volta a aparecer no proximo login.
      ------------------------------------------------------------------ */
-  var bannerEl = null;
+  var faixaEl = null;
+  var bannerEl = null;          /* mantido por compatibilidade: aponta para a faixa */
 
-  function imagemPlaceholder() {
-    var txt = Idioma.atual === 'en' ? '&lt;ADVERTISE HERE&gt;' : '&lt;ANUNCIE AQUI&gt;';
-    var svg =
-      '<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="120" viewBox="0 0 1200 120">' +
-      '<defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1">' +
-      '<stop offset="0" stop-color="#1e293b"/><stop offset="1" stop-color="#0f766e"/></linearGradient></defs>' +
-      '<rect width="1200" height="120" fill="url(#g)"/>' +
-      '<rect x="6" y="6" width="1188" height="108" fill="none" stroke="#5eead4" stroke-width="2" stroke-dasharray="10 8" rx="10"/>' +
-      '<text x="600" y="58" text-anchor="middle" font-family="system-ui,Segoe UI,Roboto,sans-serif" ' +
-      'font-size="42" font-weight="700" fill="#f8fafc">' + txt + '</text>' +
-      '<text x="600" y="92" text-anchor="middle" font-family="system-ui,Segoe UI,Roboto,sans-serif" ' +
-      'font-size="20" fill="#5eead4">marceloneco.github.io</text></svg>';
-    return 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg);
-  }
+  /* ------------------------------------------------------------------
+     8-A. LISTA PADRAO DE ANUNCIOS  —  os proprios apps do hub
+     Fonte: marceloneco.github.io (nome, frase, link e cor de cada card).
+     O app que esta rodando nunca anuncia a si mesmo.
+     Para trocar: anuncios.lista no config, ou um anuncios.json na raiz.
+     ------------------------------------------------------------------ */
+  var APPS_HUB = [
+    { id: 'moneytrio', nome: 'MoneyTrio', cor: '#d6a076', glifo: '💰',
+      link: 'https://marceloneco.github.io/investify-me/',
+      frase: { pt: 'Finanças pessoais: BudgetONE, InvestifyONE e TaxONE',
+               en: 'Personal finance: BudgetONE, InvestifyONE and TaxONE' } },
+    { id: 'rise-one', nome: 'RiseONE', cor: '#beb0ec', glifo: '🏃',
+      link: 'https://marceloneco.github.io/rise-one/',
+      frase: { pt: 'Treino, corrida e dieta, com metas e evolução',
+               en: 'Training, running and diet, with goals and progress' } },
+    { id: 'omnilife-one', nome: 'OmniLifeONE', cor: '#e4a460', glifo: '🧩',
+      link: 'https://marceloneco.github.io/omnilife-one/', selo: { pt: 'EM BREVE', en: 'SOON' },
+      frase: { pt: 'A vida organizada em um só lugar', en: 'Life organized in one place' } },
+    { id: 'planos-candidatos-2026', nome: 'Eleições 2026', cor: '#a4c4a6', glifo: '🗳️',
+      link: 'https://marceloneco.github.io/planos-candidatos-2026/',
+      frase: { pt: 'Dados públicos transformados em informação clara',
+               en: 'Public data turned into clear information' } },
+    { id: 'contador-de-historias', nome: 'Contador de Histórias', cor: '#96c0e8', glifo: '📖',
+      link: 'https://marceloneco.github.io/contador-de-historias/',
+      frase: { pt: 'Cria e narra histórias de dormir', en: 'Creates and narrates bedtime stories' } },
+    { id: 'cifras-violao', nome: 'Cifras e Acordes', cor: '#eaa4b8', glifo: '🎸',
+      link: 'https://marceloneco.github.io/cifras-violao/',
+      frase: { pt: 'Cifras, troca de tom e dicionário de acordes',
+               en: 'Chord charts, key change and chord dictionary' } }
+  ];
+
+  var Anuncios = {
+    _lista: null,
+
+    lista: function () {
+      if (Anuncios._lista) return Anuncios._lista;
+      var base = (cfg.anuncios.lista && cfg.anuncios.lista.length) ? cfg.anuncios.lista : APPS_HUB;
+      Anuncios._lista = base.filter(function (a) { return a.id !== cfg.app; });
+      return Anuncios._lista;
+    },
+
+    /* carrega de um anuncios.json na raiz, se existir */
+    carregarArquivo: function () {
+      if (!cfg.anuncios.arquivo) return Promise.resolve(false);
+      return fetch(cfg.anuncios.arquivo, { cache: 'no-cache' })
+        .then(function (r) { return r.ok ? r.json() : null; })
+        .then(function (j) {
+          var lista = Array.isArray(j) ? j : (j && j.anuncios);
+          if (!lista || !lista.length) return false;
+          cfg.anuncios.lista = lista;
+          Anuncios._lista = null;
+          montarFaixa();
+          return true;
+        })
+        .catch(function () { return false; });
+    },
+
+    frase: function (a) {
+      if (!a.frase) return '';
+      return (typeof a.frase === 'string') ? a.frase : (a.frase[Idioma.atual] || a.frase.pt || '');
+    },
+    selo: function (a) {
+      if (!a.selo) return '';
+      return (typeof a.selo === 'string') ? a.selo : (a.selo[Idioma.atual] || a.selo.pt || '');
+    },
+    botao: function (a) {
+      var b = a.botao || cfg.anuncios.popup.botao;
+      if (!b) return t('conhecer');
+      return (typeof b === 'string') ? b : (b[Idioma.atual] || b.pt || t('conhecer'));
+    },
+
+    registrar: function (tipo, id) {
+      try {
+        var hoje = new Date().toISOString().slice(0, 10);
+        var m = Guardar.ler('metricas-anuncio', {}, true) || {};
+        if (!m[hoje]) m[hoje] = { exibicao: 0, clique: 0, por: {} };
+        if (!m[hoje].por) m[hoje].por = {};
+        m[hoje][tipo] = (m[hoje][tipo] || 0) + 1;
+        if (id) {
+          if (!m[hoje].por[id]) m[hoje].por[id] = { exibicao: 0, clique: 0 };
+          m[hoje].por[id][tipo] = (m[hoje].por[id][tipo] || 0) + 1;
+        }
+        var dias = Object.keys(m).sort().slice(-60), limpo = {};
+        dias.forEach(function (k) { limpo[k] = m[k]; });
+        Guardar.gravar('metricas-anuncio', limpo, true);
+      } catch (e) {}
+    },
+
+    totais: function () {
+      var m = Guardar.ler('metricas-anuncio', {}, true) || {}, tot = { exibicao: 0, clique: 0, por: {} };
+      Object.keys(m).forEach(function (k) {
+        tot.exibicao += m[k].exibicao || 0;
+        tot.clique += m[k].clique || 0;
+        var por = m[k].por || {};
+        Object.keys(por).forEach(function (id) {
+          if (!tot.por[id]) tot.por[id] = { exibicao: 0, clique: 0 };
+          tot.por[id].exibicao += por[id].exibicao || 0;
+          tot.por[id].clique += por[id].clique || 0;
+        });
+      });
+      return tot;
+    }
+  };
 
   /* o anuncio fica fechado so ate o fim da sessao (sessionStorage) */
   var FlagAnuncio = {
@@ -812,46 +1373,121 @@
     setInterval(function () {
       if (d.hidden) return;
       var agora = telaCheiaAberta();
-      if (agora !== anterior) { anterior = agora; montarBanner(); }
+      if (agora !== anterior) { anterior = agora; montarFaixa(); }
     }, 450);
   }
 
+  function semAnuncios() {
+    /* so Premium fica livre de anuncio. Membro ve. O admin simulando um nivel
+       ve o que aquele nivel veria — e para isso que o modo de teste existe. */
+    if (Sessao.tipo === 'anunciante') return true;
+    return Niveis.atual() === 'premium';
+  }
+
   function deveMostrarAnuncio() {
-    if (telaCheiaAberta()) return false;
     if (!cfg.anuncios.ativo) return false;
-    if (Sessao.tipo === 'pagante') return false;        // assinante: sem anuncios
-    if (Sessao.tipo === 'anunciante') return false;
+    if (semAnuncios()) return false;
     if (FlagAnuncio.fechado()) return false;
+    if (!Anuncios.lista().length) return false;
     return true;
   }
 
-  function montarBanner() {
-    if (bannerEl) { bannerEl.parentNode.removeChild(bannerEl); bannerEl = null; }
-    /* uma exibicao por sessao de banner aberto, nao a cada redesenho */
-    if (!deveMostrarAnuncio()) { ajustarTopo(0); return; }
-    var img = el('img', {
-      src: cfg.anuncios.imagem || imagemPlaceholder(),
-      alt: t('anuncio') + ' - ' + (cfg.anuncios.texto || t('anuncieAqui')),
-      loading: 'eager'
-    });
-    /* a altura so e conhecida depois que a imagem carrega */
-    img.addEventListener('load', function () { ajustarTopo(bannerEl ? bannerEl.offsetHeight : 0); });
-    var link = el('a', {
-      href: cfg.anuncios.link, target: '_blank', rel: 'noopener noreferrer',
-      onclick: function () { Anuncios.registrar('clique'); }
-    }, [img]);
-    var x = el('button', {
-      class: 'dgo-x', type: 'button', 'aria-label': t('fecharAnuncio'), title: t('fecharAnuncio'),
-      texto: '×',
-      onclick: function () { FlagAnuncio.fechar(); montarBanner(); }
-    });
-    bannerEl = el('div', { class: 'dgo-banner', 'data-dgo-ui': '1', role: 'complementary', 'aria-label': t('anuncio') }, [link, x]);
-    d.body.insertBefore(bannerEl, d.body.firstChild);
-    if (!montarBanner._contou) { montarBanner._contou = true; Anuncios.registrar('exibicao'); }
-    (raiz.requestAnimationFrame || setTimeout)(function () {
-      ajustarTopo(bannerEl ? bannerEl.offsetHeight : 0);
-    }, 30);
+  /* ------------------------------------------------------------------
+     8-B. A FAIXA DO TOPO
+     [ PT | EN ]  [ A N U N C I O ]  [ carrossel andando ]  [ x ]
+     O seletor de idioma mora aqui dentro, e nao flutuando sobre a tela,
+     para nunca cobrir o titulo nem os botoes do app.
+     ------------------------------------------------------------------ */
+  function cartaoAnuncio(a) {
+    var pt = el('i', { class: 'dgo-pt', style: { background: a.cor || cfg.cor } });
+    var nome = el('span', { class: 'dgo-nm' }, [pt, d.createTextNode(a.nome)]);
+    var selo = Anuncios.selo(a);
+    if (selo) nome.appendChild(el('em', { class: 'dgo-selo', texto: selo }));
+    nome.appendChild(el('b', { class: 'dgo-seta', texto: '→' }));
+
+    var icone = a.icone
+      ? el('img', { class: 'dgo-ic', src: a.icone, alt: '', loading: 'lazy' })
+      : el('span', { class: 'dgo-ic', style: { background: 'color-mix(in srgb, ' + (a.cor || cfg.cor) + ' 22%, #0b1220)',
+                                               borderColor: a.cor || cfg.cor },
+                     texto: a.glifo || '●' });
+
+    return el('a', {
+      class: 'dgo-card', href: a.link, target: '_blank', rel: 'noopener noreferrer',
+      'aria-label': a.nome + ' — ' + Anuncios.frase(a),
+      onclick: function () { Anuncios.registrar('clique', a.id); }
+    }, [
+      icone,
+      el('span', { class: 'dgo-tx' }, [nome, el('span', { class: 'dgo-fr', texto: Anuncios.frase(a) })])
+    ]);
   }
+
+  function montarFaixa() {
+    if (faixaEl && faixaEl.parentNode) faixaEl.parentNode.removeChild(faixaEl);
+    faixaEl = null; bannerEl = null;
+
+    var naFaixa = (cfg.posicaoSeletorIdioma === 'faixa' || !cfg.posicaoSeletorIdioma);
+    var querIdioma = cfg.seletorIdiomaVisivel && naFaixa;
+    var querIA = cfg.ia.ativo && cfg.ia.botaoNaFaixa !== false;
+    var querAnuncio = deveMostrarAnuncio();
+    var escondida = telaCheiaAberta();
+
+    if (escondida || (!querIdioma && !querAnuncio && !querIA)) { ajustarTopo(0); return; }
+
+    var filhos = [];
+
+    if (querIdioma) filhos.push(blocoIdioma());
+
+    if (cfg.ia.ativo && cfg.ia.botaoNaFaixa !== false) {
+      filhos.push(el('button', {
+        class: 'dgo-ia-bt', type: 'button', title: t('perguntarIA'), 'aria-label': t('perguntarIA'),
+        texto: '\u2728', onclick: function () { abrirIA(); }
+      }));
+    }
+
+    if (querAnuncio) {
+      var rot = cfg.anuncios.rotulo;
+      var rotulo = (rot && (rot[Idioma.atual] || rot.pt)) || t('anuncioRotulo');
+      filhos.push(el('span', { class: 'dgo-rot', 'aria-hidden': 'true', texto: rotulo }));
+
+      var lista = Anuncios.lista();
+      var trilho = el('div', { class: 'dgo-trilho' });
+      /* duas voltas do mesmo conteudo: o laco fica sem costura */
+      [0, 1].forEach(function (volta) {
+        lista.forEach(function (a) {
+          var c = cartaoAnuncio(a);
+          if (volta === 1) c.setAttribute('aria-hidden', 'true');
+          trilho.appendChild(c);
+        });
+      });
+      var segundos = Math.max(12, (cfg.anuncios.velocidade || 9) * lista.length);
+      trilho.style.animationDuration = segundos + 's';
+      if (raiz.matchMedia && raiz.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+        trilho.style.animation = 'none';
+      }
+      var janela = el('div', { class: 'dgo-carrossel', role: 'complementary',
+                               'aria-label': rotulo }, [trilho]);
+      filhos.push(janela);
+
+      filhos.push(el('button', {
+        class: 'dgo-x', type: 'button', 'aria-label': t('fecharAnuncio'), title: t('fecharAnuncio'),
+        texto: '×', onclick: function () { FlagAnuncio.fechar(); montarFaixa(); }
+      }));
+    }
+
+    faixaEl = el('div', { class: 'dgo-faixa' + (querAnuncio ? '' : ' dgo-fina'), 'data-dgo-ui': '1' }, filhos);
+    bannerEl = faixaEl;
+    d.body.insertBefore(faixaEl, d.body.firstChild);
+
+    if (querAnuncio && !montarFaixa._contou) {
+      montarFaixa._contou = true;
+      Anuncios.lista().forEach(function (a) { Anuncios.registrar('exibicao', a.id); });
+    }
+    atualizarSeletorIdioma();
+    raiz.setTimeout(function () { ajustarTopo(faixaEl ? faixaEl.offsetHeight : 0); }, 30);
+  }
+
+  /* compatibilidade com o nome antigo */
+  function montarBanner() { montarFaixa(); }
 
   function ajustarTopo(altura) {
     d.documentElement.style.setProperty('--dgo-topo', altura + 'px');
@@ -869,24 +1505,139 @@
     });
   }
 
-  var Anuncios = {
-    registrar: function (tipo) {
-      try {
-        var hoje = new Date().toISOString().slice(0, 10);
-        var m = Guardar.ler('metricas-anuncio', {}, true) || {};
-        if (!m[hoje]) m[hoje] = { exibicao: 0, clique: 0 };
-        m[hoje][tipo] = (m[hoje][tipo] || 0) + 1;
-        var dias = Object.keys(m).sort().slice(-60), limpo = {};
-        dias.forEach(function (k) { limpo[k] = m[k]; });
-        Guardar.gravar('metricas-anuncio', limpo, true);
-      } catch (e) {}
+  /* ------------------------------------------------------------------
+     8-C. POP-UP DE ANUNCIO
+     Aparece na area logada, sorteando um app por vez, com espera antes
+     do X. Nunca para quem nao ve anuncios, nunca sobre uma tela cheia.
+     ------------------------------------------------------------------ */
+  var Popup = {
+    _timer: null,
+
+    momento: function () { return Sessao.tipo ? 'depois' : 'antes'; },
+
+    podeMostrar: function (momento) {
+      var p = cfg.anuncios.popup || {};
+      momento = momento || Popup.momento();
+      if (!cfg.anuncios.ativo || !p.ativo) return false;
+      if (momento === 'antes' && p.antesDoLogin === false) return false;
+      if (momento === 'depois' && p.depoisDoLogin === false) return false;
+      if (semAnuncios()) return false;
+      if (telaCheiaAberta()) return false;
+      if (modalEl) return false;                      /* nao atropela login/configuracoes */
+      if (!Anuncios.lista().length) return false;
+      if (p.umaVezPorSessao !== false) {
+        try { if (raiz.sessionStorage.getItem('dgo:' + cfg.app + ':popup:' + momento) === '1') return false; } catch (e) {}
+      }
+      if (p.intervaloHoras) {
+        var ultimo = Guardar.ler('popup-em', 0, true);
+        if (ultimo && (Date.now() - ultimo) < p.intervaloHoras * 3600000) return false;
+      }
+      return true;
     },
-    totais: function () {
-      var m = Guardar.ler('metricas-anuncio', {}, true) || {}, tot = { exibicao: 0, clique: 0 };
-      Object.keys(m).forEach(function (k) {
-        tot.exibicao += m[k].exibicao || 0; tot.clique += m[k].clique || 0;
+
+    sortear: function () {
+      var lista = Anuncios.lista();
+      if (lista.length === 1) return lista[0];
+      var anterior = Guardar.ler('popup-ultimo', '', true);
+      var candidatos = lista.filter(function (a) { return a.id !== anterior; });
+      if (!candidatos.length) candidatos = lista;
+      return candidatos[Math.floor(Math.random() * candidatos.length)];
+    },
+
+    agendar: function (momento) {
+      var p = cfg.anuncios.popup || {};
+      momento = momento || Popup.momento();
+      var atraso = 1000 * (momento === 'antes'
+        ? (p.atrasoAntesDoLogin === undefined ? 5 : p.atrasoAntesDoLogin)
+        : (p.atrasoAbertura === undefined ? 8 : p.atrasoAbertura));
+      if (Popup._timer) clearTimeout(Popup._timer);
+      Popup._timer = setTimeout(function () {
+        if (Popup.podeMostrar(momento)) { Popup.abrir(null, momento); return; }
+        /* se havia uma janela aberta na hora, tenta de novo daqui a pouco */
+        if (modalEl || telaCheiaAberta()) {
+          Popup._timer = setTimeout(function esperar() {
+            if (Popup.podeMostrar(momento)) Popup.abrir(null, momento);
+            else if (modalEl || telaCheiaAberta()) Popup._timer = setTimeout(esperar, 4000);
+          }, 4000);
+        }
+      }, Math.max(0, atraso));
+    },
+
+    abrir: function (anuncio, momento) {
+      var a = anuncio || Popup.sortear();
+      if (!a) return null;
+      var p = cfg.anuncios.popup || {};
+      var espera = (p.esperaSegundos === undefined ? 3 : p.esperaSegundos);
+      momento = momento || Popup.momento();
+
+      try { raiz.sessionStorage.setItem('dgo:' + cfg.app + ':popup:' + momento, '1'); } catch (e) {}
+      Guardar.gravar('popup-em', Date.now(), true);
+      Guardar.gravar('popup-ultimo', a.id, true);
+      Anuncios.registrar('exibicao', a.id);
+
+      var fecharBt = el('button', {
+        class: 'dgo-pop-x', type: 'button', disabled: '', 'aria-label': t('fechar'),
+        texto: String(espera)
       });
-      return tot;
+      var cor = a.cor || cfg.cor;
+      var icone = a.icone
+        ? el('img', { class: 'dgo-pop-ic', src: a.icone, alt: '' })
+        : el('div', { class: 'dgo-pop-ic', style: { borderColor: cor,
+              background: 'color-mix(in srgb, ' + cor + ' 20%, #0b1220)' }, texto: a.glifo || '●' });
+
+      var rotuloTxt = (cfg.anuncios.rotulo &&
+            (cfg.anuncios.rotulo[Idioma.atual] || cfg.anuncios.rotulo.pt)) || t('anuncioRotulo');
+      var selo = Anuncios.selo(a);
+
+      var arte = el('div', { class: 'dgo-pop-arte' }, [
+        el('div', { class: 'dgo-pop-halo' }),
+        icone
+      ]);
+
+      var corpo = el('div', { class: 'dgo-pop-corpo' }, [
+        el('div', { class: 'dgo-pop-rot dgo-pop-rot-topo', texto: rotuloTxt }),
+        el('div', { class: 'dgo-pop-nome' }, [
+          d.createTextNode(a.nome),
+          selo ? el('em', { class: 'dgo-selo', texto: selo }) : null
+        ]),
+        el('div', { class: 'dgo-pop-frase', texto: Anuncios.frase(a) }),
+        el('a', {
+          class: 'dgo-pop-bt', href: a.link, target: '_blank', rel: 'noopener noreferrer',
+          onclick: function () { Anuncios.registrar('clique', a.id); }
+        }, [d.createTextNode(Anuncios.botao(a)), el('span', { class: 'dgo-pop-seta', texto: '\u2192' })]),
+        el('div', { class: 'dgo-pop-rot dgo-pop-rot-baixo', texto: rotuloTxt })
+      ]);
+
+      var caixa = el('div', { class: 'dgo-pop' }, [arte, corpo]);
+      caixa.style.setProperty('--c', cor);
+      caixa.style.setProperty('--c-suave', corSuave(cor, 0.22));
+      caixa.style.setProperty('--c-fraca', corSuave(cor, 0.10));
+
+      var envelope = el('div', { class: 'dgo-pop-env' }, [caixa, fecharBt]);
+      var fundo = el('div', { class: 'dgo-pop-fundo', 'data-dgo-ui': '1', role: 'dialog',
+                              'aria-modal': 'true' }, [envelope]);
+      d.body.appendChild(fundo);
+
+      var resta = espera;
+      var conta = setInterval(function () {
+        resta--;
+        if (resta > 0) { fecharBt.textContent = String(resta); return; }
+        clearInterval(conta);
+        fecharBt.removeAttribute('disabled');
+        fecharBt.textContent = '×';
+        fecharBt.classList.add('dgo-pronto');
+      }, 1000);
+
+      function fechar() {
+        clearInterval(conta);
+        if (fundo.parentNode) fundo.parentNode.removeChild(fundo);
+        d.removeEventListener('keydown', porTecla);
+      }
+      function porTecla(e) { if (e.key === 'Escape' && !fecharBt.disabled) fechar(); }
+      fecharBt.addEventListener('click', function () { if (!fecharBt.disabled) fechar(); });
+      fundo.addEventListener('click', function (e) { if (e.target === fundo && !fecharBt.disabled) fechar(); });
+      d.addEventListener('keydown', porTecla);
+      return fundo;
     }
   };
 
@@ -1147,8 +1898,11 @@
       Sessao.gravar();
       /* a cada novo login o anuncio volta a aparecer */
       FlagAnuncio.reabrir();
-      montarBanner._contou = false;
-      montarBanner();
+      montarFaixa._contou = false;
+      montarFaixa();
+      Niveis.revisar();
+      montarBarraAdmin();
+      Popup.agendar('depois');
       redesenharInterfaceDGO();
       if (typeof cfg.aoEntrar === 'function') { try { cfg.aoEntrar(Sessao.resumo()); } catch (e) {} }
       d.dispatchEvent(new CustomEvent('dgo:entrou', { detail: Sessao.resumo() }));
@@ -1163,7 +1917,10 @@
         raiz.sessionStorage.removeItem('dgo:' + cfg.app + ':sessao');
       } catch (e) {}
       Sessao.tipo = null; Sessao.usuario = null;
+      Guardar.apagar('admin-simular');
       montarBanner();
+      Niveis.revisar();
+      montarBarraAdmin();
       redesenharInterfaceDGO();
       if (typeof cfg.aoSair === 'function') { try { cfg.aoSair(); } catch (e) {} }
       d.dispatchEvent(new CustomEvent('dgo:saiu', {}));
@@ -1172,12 +1929,316 @@
     resumo: function () {
       return {
         tipo: Sessao.tipo,
+        nivel: (typeof Niveis !== 'undefined') ? Niveis.atual() : 'visitante',
         usuario: Sessao.usuario,
-        semAnuncios: Sessao.tipo === 'pagante' || Sessao.tipo === 'anunciante',
+        semAnuncios: semAnuncios(),
         guardaDados: Sessao.tipo !== 'visitante' && Sessao.tipo !== null
       };
     }
   };
+
+  /* ------------------------------------------------------------------
+     9-B. NIVEIS DE ACESSO:  Visitante -> Membro -> Premium
+     ------------------------------------------------------------------
+     Uma funcao so responde "esta pessoa pode usar este servico?".
+     Hoje ela olha o arquivo de configuracao e o nivel local. Quando
+     existir servidor, ela passa a perguntar para ele (DGO.niveis.backend)
+     e NADA MAIS no app muda.
+     ------------------------------------------------------------------ */
+  var ORDEM = { visitante: 0, membro: 1, premium: 2 };
+
+  var Niveis = {
+    backend: null,
+    _servicos: null,
+
+    /* o nivel efetivo de quem esta usando, respeitando a simulacao do admin */
+    atual: function () {
+      var fingido = Guardar.ler('admin-simular', null);
+      if (fingido && Sessao.tipo === 'admin') return fingido;
+      switch (Sessao.tipo) {
+        case 'premium': return 'premium';
+        case 'admin': return 'premium';
+        case 'pagante': return 'membro';      /* nome antigo */
+        case 'membro': return 'membro';
+        case 'anunciante': return 'membro';
+        default: return 'visitante';
+      }
+    },
+
+    ehAdmin: function () { return Sessao.tipo === 'admin'; },
+
+    servicos: function () {
+      if (Niveis._servicos) return Niveis._servicos;
+      var guardado = Guardar.ler('servicos', null, false);
+      var base = (cfg.niveis.servicos || []).map(function (s) {
+        var copia = {};
+        for (var k in s) copia[k] = s[k];
+        if (guardado && guardado[s.id]) copia.nivel = guardado[s.id];
+        return copia;
+      });
+      Niveis._servicos = base;
+      return base;
+    },
+
+    servico: function (id) {
+      var l = Niveis.servicos(), i;
+      for (i = 0; i < l.length; i++) if (l[i].id === id) return l[i];
+      return null;
+    },
+
+    nivelDoServico: function (id) {
+      var s = Niveis.servico(id);
+      return (s && s.nivel) || cfg.niveis.padraoServico || 'visitante';
+    },
+
+    definirNivelDoServico: function (id, nivel) {
+      var s = Niveis.servico(id);
+      if (s) s.nivel = nivel;
+      var guardado = Guardar.ler('servicos', {}, false) || {};
+      guardado[id] = nivel;
+      Guardar.gravar('servicos', guardado, false);
+      d.dispatchEvent(new CustomEvent('dgo:niveis', { detail: { servico: id, nivel: nivel } }));
+    },
+
+    /* carrega servicos.json da raiz, se existir — e a fonte da verdade */
+    carregarArquivo: function () {
+      if (!cfg.niveis.arquivo) return Promise.resolve(false);
+      return fetch(cfg.niveis.arquivo, { cache: 'no-cache' })
+        .then(function (r) { return r.ok ? r.json() : null; })
+        .then(function (j) {
+          var lista = Array.isArray(j) ? j : (j && j.servicos);
+          if (!lista || !lista.length) return false;
+          cfg.niveis.servicos = lista;
+          Niveis._servicos = null;
+          d.dispatchEvent(new CustomEvent('dgo:niveis', { detail: { origem: 'arquivo' } }));
+          return true;
+        })
+        .catch(function () { return false; });
+    },
+
+    /* A PERGUNTA UNICA */
+    pode: function (idServico) {
+      if (!cfg.niveis.ativo) return true;
+      if (Niveis.backend && typeof Niveis.backend.pode === 'function') {
+        try { return !!Niveis.backend.pode(idServico, Niveis.atual()); } catch (e) {}
+      }
+      var exigido = Niveis.nivelDoServico(idServico);
+      return (ORDEM[Niveis.atual()] || 0) >= (ORDEM[exigido] || 0);
+    },
+
+    /* roda a acao se puder; se nao, mostra o convite certo */
+    exigir: function (idServico, acao, opcoes) {
+      if (Niveis.pode(idServico)) {
+        if (typeof acao === 'function') acao();
+        return true;
+      }
+      Niveis.convite(idServico, opcoes);
+      return false;
+    },
+
+    rotulo: function (nivel) {
+      return nivel === 'premium' ? t('premium') : nivel === 'membro' ? t('membro') : t('visitante');
+    },
+
+    /* o aviso de bloqueio: cartao no celular, janela no computador */
+    convite: function (idServico, opcoes) {
+      opcoes = opcoes || {};
+      var s = Niveis.servico(idServico) || {};
+      var exigido = Niveis.nivelDoServico(idServico);
+      var nome = s.nome ? (s.nome[Idioma.atual] || s.nome.pt) : (opcoes.nome || idServico);
+      var desc = s.descricao ? (s.descricao[Idioma.atual] || s.descricao.pt) : '';
+
+      var caixa = el('div', { class: 'dgo-caixa', style: { maxWidth: '380px' } });
+      caixa.appendChild(el('div', { class: 'dgo-cadeado', texto: '🔒' }));
+      caixa.appendChild(el('h2', { texto: nome }));
+      if (desc) caixa.appendChild(el('p', { texto: desc }));
+      caixa.appendChild(aviso(
+        exigido === 'premium' ? t('sohPremium') : t('sohMembro'), 'info'));
+
+      if (exigido === 'membro' && !Sessao.tipo) {
+        caixa.appendChild(el('button', { class: 'dgo-b', type: 'button', texto: t('criarConta'),
+          onclick: function () { fecharModal(); abrirLogin('pagante'); } }));
+      } else if (exigido === 'premium') {
+        caixa.appendChild(el('button', { class: 'dgo-b', type: 'button', texto: t('virarPremium'),
+          onclick: function () {
+            fecharModal();
+            if (typeof cfg.niveis.aoQuererPremium === 'function') cfg.niveis.aoQuererPremium(idServico);
+            else abrirComoVirarPremium();
+          } }));
+      }
+      caixa.appendChild(el('button', { class: 'dgo-b dgo-b2', type: 'button', texto: t('entendi'),
+        onclick: fecharModal }));
+      return abrirModal(caixa);
+    },
+
+    /* marca de agua discreta nos botoes bloqueados */
+    marcar: function (seletorOuNo, idServico) {
+      var nos = (typeof seletorOuNo === 'string') ? d.querySelectorAll(seletorOuNo) : [seletorOuNo];
+      Array.prototype.forEach.call(nos, function (n) {
+        if (!n) return;
+        var liberado = Niveis.pode(idServico);
+        n.classList.toggle('dgo-bloqueado', !liberado);
+        if (!liberado) {
+          n.setAttribute('data-dgo-servico', idServico);
+          n.setAttribute('title', t('sohPremium'));
+        } else {
+          n.removeAttribute('data-dgo-servico');
+        }
+      });
+    },
+
+    /* passa por todos os elementos com data-servico="..." e marca */
+    revisar: function () {
+      Array.prototype.forEach.call(d.querySelectorAll('[data-servico]'), function (n) {
+        Niveis.marcar(n, n.getAttribute('data-servico'));
+      });
+    }
+  };
+
+  function abrirComoVirarPremium() {
+    var caixa = el('div', { class: 'dgo-caixa', style: { maxWidth: '380px' } });
+    caixa.appendChild(el('h2', { texto: t('virarPremium') }));
+    caixa.appendChild(aviso(t('premiumSemCobranca'), 'info'));
+    if (cfg.email.formulario) {
+      var cE = campo(t('email'), { type: 'email', inputmode: 'email' });
+      caixa.appendChild(cE);
+      var msg = el('div');
+      caixa.appendChild(el('button', { class: 'dgo-b', type: 'button', texto: t('enviarPedido'),
+        onclick: function () {
+          var b = this; b.disabled = true;
+          Email.enviarFormulario({ assunto: t('virarPremium') + ' - ' + nomeApp(),
+                                   mensagem: t('virarPremium'), responderPara: cE._input.value.trim() })
+            .then(function () { msg.innerHTML = ''; msg.appendChild(aviso(t('pedidoEnviado'), 'ok')); })
+            .catch(function () { msg.innerHTML = ''; msg.appendChild(aviso(t('pedidoFalhou'), 'erro')); })
+            .then(function () { b.disabled = false; });
+        } }));
+      caixa.appendChild(msg);
+    }
+    caixa.appendChild(el('button', { class: 'dgo-b dgo-b2', type: 'button', texto: t('fechar'), onclick: fecharModal }));
+    return abrirModal(caixa);
+  }
+
+  /* ---------------- painel do administrador ---------------- */
+  function abrirAdmin() {
+    if (!Niveis.ehAdmin()) { abrirLogin('admin'); return null; }
+
+    function montar() {
+      var caixa = el('div', { class: 'dgo-caixa dgo-larga' });
+      caixa.appendChild(el('h2', { texto: t('painelAdmin') }));
+      caixa.appendChild(aviso(t('adminNaoEhSeguranca'), 'info'));
+
+      /* ver o app como... */
+      caixa.appendChild(el('h3', { texto: t('verComo') }));
+      var atual = Guardar.ler('admin-simular', null) || 'premium';
+      var linha = el('div', { class: 'dgo-linha' });
+      ['visitante', 'membro', 'premium'].forEach(function (n) {
+        linha.appendChild(el('button', {
+          class: 'dgo-b' + (atual === n ? '' : ' dgo-b2'), type: 'button', texto: Niveis.rotulo(n),
+          onclick: function () {
+            Guardar.gravar('admin-simular', n);
+            montarFaixa(); Niveis.revisar(); montarBarraAdmin();
+            abrirAdmin();
+          }
+        }));
+      });
+      caixa.appendChild(linha);
+
+      /* servicos */
+      caixa.appendChild(el('h3', { texto: t('servicos') }));
+      var lista = Niveis.servicos();
+      if (!lista.length) caixa.appendChild(aviso(t('semServicos'), 'info'));
+      lista.forEach(function (s) {
+        var nome = s.nome ? (s.nome[Idioma.atual] || s.nome.pt) : s.id;
+        var desc = s.descricao ? (s.descricao[Idioma.atual] || s.descricao.pt) : '';
+        var sel = el('select');
+        [['visitante', t('visitante')], ['membro', t('membro')], ['premium', t('premium')]].forEach(function (p) {
+          var o = el('option', { value: p[0], texto: p[1] });
+          if (Niveis.nivelDoServico(s.id) === p[0]) o.selected = true;
+          sel.appendChild(o);
+        });
+        sel.addEventListener('change', function () {
+          Niveis.definirNivelDoServico(s.id, sel.value);
+          Niveis.revisar();
+        });
+        caixa.appendChild(el('div', {
+          style: { display: 'flex', gap: '10px', alignItems: 'center', padding: '9px 0',
+                   borderBottom: '1px solid rgba(255,255,255,.08)' }
+        }, [
+          el('div', { style: { flex: '1', minWidth: '0' } }, [
+            el('div', { style: { color: '#e2e8f0', fontSize: '14px', fontWeight: '600' }, texto: nome }),
+            desc ? el('div', { class: 'dgo-mini', texto: desc }) : null
+          ]),
+          el('div', { style: { flex: '0 0 auto', width: '130px' } }, [sel])
+        ]));
+      });
+
+      /* exportar servicos.json */
+      caixa.appendChild(el('div', { class: 'dgo-sep' }));
+      caixa.appendChild(el('button', {
+        class: 'dgo-b', type: 'button', texto: t('baixarServicos'),
+        onclick: function () {
+          Nuvem.salvarArquivo({ servicos: Niveis.servicos() }, cfg.niveis.arquivo || 'servicos.json');
+        }
+      }));
+      caixa.appendChild(el('div', { class: 'dgo-mini', texto: t('servicosComoSubir') }));
+
+      /* contas */
+      var contas = Contas.todas();
+      var emails = Object.keys(contas);
+      if (emails.length) {
+        caixa.appendChild(el('h3', { texto: t('contas') }));
+        emails.forEach(function (e) {
+          var c = contas[e];
+          var selC = el('select');
+          [['visitante', t('visitante')], ['pagante', t('membro')], ['premium', t('premium')],
+           ['anunciante', t('anunciante')], ['admin', t('admin')]].forEach(function (p) {
+            var o = el('option', { value: p[0], texto: p[1] });
+            if ((c.tipo || 'pagante') === p[0]) o.selected = true;
+            selC.appendChild(o);
+          });
+          selC.addEventListener('change', function () {
+            var todas = Contas.todas();
+            todas[e].tipo = selC.value;
+            Contas.gravarTodas(todas);
+          });
+          caixa.appendChild(el('div', {
+            style: { display: 'flex', gap: '10px', alignItems: 'center', padding: '7px 0',
+                     borderBottom: '1px solid rgba(255,255,255,.08)' }
+          }, [
+            el('div', { style: { flex: '1', minWidth: '0' } }, [
+              el('div', { style: { color: '#e2e8f0', fontSize: '13.5px' }, texto: c.apelido || e }),
+              el('div', { class: 'dgo-mini', texto: e })
+            ]),
+            el('div', { style: { flex: '0 0 auto', width: '130px' } }, [selC])
+          ]));
+        });
+      }
+
+      caixa.appendChild(el('div', { class: 'dgo-sep' }));
+      caixa.appendChild(el('button', { class: 'dgo-b dgo-b2', type: 'button', texto: t('fechar'), onclick: fecharModal }));
+      return caixa;
+    }
+    return abrirModal(montar(), abrirAdmin);
+  }
+
+  /* faixa de aviso quando o admin esta simulando um nivel */
+  var barraAdminEl = null;
+  function montarBarraAdmin() {
+    if (barraAdminEl && barraAdminEl.parentNode) barraAdminEl.parentNode.removeChild(barraAdminEl);
+    barraAdminEl = null;
+    if (!Niveis.ehAdmin()) return;
+    var fingido = Guardar.ler('admin-simular', null);
+    if (!fingido) return;
+    barraAdminEl = el('div', { class: 'dgo-admin-barra', 'data-dgo-ui': '1' }, [
+      el('span', { texto: t('modoTeste') + ': ' + Niveis.rotulo(fingido) }),
+      el('button', { type: 'button', texto: t('sairDoTeste'), onclick: function () {
+        Guardar.apagar('admin-simular');
+        montarFaixa(); Niveis.revisar(); montarBarraAdmin();
+      } }),
+      el('button', { type: 'button', texto: t('painelAdmin'), onclick: abrirAdmin })
+    ]);
+    d.body.appendChild(barraAdminEl);
+  }
 
   /* ---------------- biometria (WebAuthn) ---------------- */
   var Biometria = {
@@ -1340,7 +2401,97 @@
       return c;
     },
 
+    /* ---- motor hospedado no repositorio: sem internet, sem CDN ---- */
+    _local: null, _workerLocal: null, _fila: null,
+
+    temLocal: function () {
+      if (OCR._local !== null) return Promise.resolve(OCR._local);
+      if (cfg.ocr.local === false || !cfg.ocr.worker) { OCR._local = false; return Promise.resolve(false); }
+      if (cfg.ocr.local === true) { OCR._local = true; return Promise.resolve(true); }
+      if (typeof Worker !== 'function' || raiz.location.protocol === 'file:') {
+        OCR._local = false; return Promise.resolve(false);
+      }
+      return fetch(cfg.ocr.worker, { method: 'GET' })
+        .then(function (r) { OCR._local = !!r.ok; return OCR._local; })
+        .catch(function () { OCR._local = false; return false; });
+    },
+
+    motorJaBaixado: function () {
+      if (!raiz.caches) return Promise.resolve(false);
+      return raiz.caches.match('tesseract-core-simd-lstm.wasm.js')
+        .then(function (r) { return r ? true : raiz.caches.match('tesseract-core-lstm.wasm.js'); })
+        .then(function (r) { return !!r; }).catch(function () { return false; });
+    },
+
+    lerLocal: function (fonte, aoProgredir) {
+      if (OCR._workerLocal) return OCR._lerLocalAgora(fonte, aoProgredir);
+      /* primeira vez nesta sessao: o motor pesa ~11 MB - respeita a regra de rede */
+      return OCR.motorJaBaixado().then(function (ja) {
+        if (ja) return true;
+        return Rede.pedirPesado(t('escanear'), 11);
+      }).then(function (pode) {
+        if (!pode) throw new Error('so-wifi');
+        return OCR._lerLocalAgora(fonte, aoProgredir);
+      });
+    },
+
+    _lerLocalAgora: function (fonte, aoProgredir) {
+      return new Promise(function (ok, erro) {
+        var canvas = OCR.tratar(fonte);
+        var paraBlob = canvas.toBlob
+          ? new Promise(function (r) { canvas.toBlob(r, 'image/png'); })
+          : Promise.resolve(null);
+        paraBlob.then(function (blob) {
+          if (!blob) { erro(new Error('sem-imagem')); return; }
+          return blob.arrayBuffer();
+        }).then(function (buf) {
+          if (!buf) return;
+          if (!OCR._workerLocal) {
+            OCR._workerLocal = new Worker(cfg.ocr.worker);
+            OCR._workerLocal.onerror = function () {
+              OCR._local = false;
+              if (OCR._fila) { var f = OCR._fila; OCR._fila = null; f.erro(new Error('worker-falhou')); }
+              try { OCR._workerLocal.terminate(); } catch (e) {}
+              OCR._workerLocal = null;
+            };
+            OCR._workerLocal.onmessage = function (ev) {
+              var m = ev.data || {};
+              if (!OCR._fila) return;
+              if (m.tipo === 'estado') {
+                var p = m.etapa === 'lendo' ? 0.7 : m.etapa === 'idioma' ? 0.4 : 0.15;
+                if (OCR._fila.aoProgredir) OCR._fila.aoProgredir(p, m.etapa === 'lendo' ? 'recognizing text' : 'loading');
+                return;
+              }
+              var f = OCR._fila; OCR._fila = null;
+              if (m.tipo === 'pronto') f.ok({ texto: m.texto, confianca: m.confianca });
+              else f.erro(new Error(m.mensagem || 'falhou'));
+            };
+          }
+          OCR._fila = { ok: ok, erro: erro, aoProgredir: aoProgredir };
+          OCR._workerLocal.postMessage({ tipo: 'ler', imagem: buf, idiomas: cfg.ocr.idiomas }, [buf]);
+        }).catch(erro);
+      });
+    },
+
     ler: function (fonte, aoProgredir) {
+      return OCR.temLocal().then(function (local) {
+        if (local) {
+          return OCR.lerLocal(fonte, aoProgredir).then(function (r) {
+            return {
+              texto: texto(r.texto).replace(/[ \t]+\n/g, '\n').trim(),
+              confianca: r.confianca || 0,
+              linhas: texto(r.texto).split('\n').filter(function (l) { return l.trim(); })
+            };
+          }).catch(function (e) {
+            if (String(e && e.message) === 'worker-falhou') return OCR.lerPelaBiblioteca(fonte, aoProgredir);
+            throw e;
+          });
+        }
+        return OCR.lerPelaBiblioteca(fonte, aoProgredir);
+      });
+    },
+
+    lerPelaBiblioteca: function (fonte, aoProgredir) {
       return OCR.motor(aoProgredir).then(function (w) {
         return w.recognize(OCR.tratar(fonte));
       }).then(function (r) {
@@ -1388,6 +2539,10 @@
 
     pararCamera: function () {
       if (OCR._stream) { OCR._stream.getTracks().forEach(function (f) { f.stop(); }); OCR._stream = null; }
+    },
+
+    ondeEsta: function () {
+      return OCR._local === true ? 'repositorio' : OCR._local === false ? 'internet' : 'nao-verificado';
     }
   };
 
@@ -1671,10 +2826,9 @@
   }
   function redesenharInterfaceDGO() {
     if (modalEl && typeof modalEl._recriar === 'function') { var f = modalEl._recriar; fecharModal(); f(); }
-    if (bannerEl) { /* o texto do placeholder muda com o idioma */
-      var img = bannerEl.querySelector('img');
-      if (img && !cfg.anuncios.imagem) img.src = imagemPlaceholder();
-    }
+    /* a faixa e redesenhada inteira pelo montarFaixa() (o texto dos cartoes
+       muda com o idioma); a imagem-placeholder antiga nao existe mais */
+    if (bannerEl) montarFaixa();
   }
   function campo(rotulo, props) {
     var i = el('input', props || { type: 'text' });
@@ -1683,6 +2837,37 @@
     return l;
   }
   function aviso(txt, tipo) { return el('div', { class: 'dgo-aviso ' + (tipo || 'info'), texto: txt }); }
+
+  /* aviso curto que aparece embaixo e some sozinho (nao exige toque) */
+  var toastEl = null, toastTimer = null;
+  function avisoRapido(txt, ms) {
+    if (!d.body) return;
+    if (!toastEl || !toastEl.parentNode) {
+      toastEl = el('div', { class: 'dgo-toast', 'data-dgo-ui': '1', role: 'status', 'aria-live': 'polite' });
+      d.body.appendChild(toastEl);
+    }
+    toastEl.textContent = txt;
+    toastEl.classList.add('dgo-on');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(function () { toastEl.classList.remove('dgo-on'); }, ms || 4000);
+  }
+
+  /* pedido com insistencia: 429/503 = "ocupado", espera e tenta de novo.
+     rapido = ha outra IA de reserva, entao so 3 s antes de desistir desta. */
+  function esperar(ms) { return new Promise(function (ok) { setTimeout(ok, ms); }); }
+  function chamarComInsistencia(fn, rapido) {
+    var esperas = rapido ? [3000] : [6000, 15000, 30000];
+    function vez(i) {
+      return fn().catch(function (e) {
+        if (e && (e.status === 429 || e.status === 503) && i < esperas.length) {
+          avisoRapido('⏳ ' + t('iaOcupada'), 2500);
+          return esperar(esperas[i]).then(function () { return vez(i + 1); });
+        }
+        throw e;
+      });
+    }
+    return vez(0);
+  }
 
   /* ------------------------------------------------------------------
      16. TELA DE ACESSO
@@ -1699,7 +2884,7 @@
       var abas = el('div', { class: 'dgo-abas' });
       var lista = [];
       if (cfg.login.permitirVisitante) lista.push(['visitante', t('visitante')]);
-      if (cfg.login.permitirPagante) lista.push(['pagante', t('assinante')]);
+      if (cfg.login.permitirPagante) lista.push(['pagante', t('membro')]);
       if (cfg.login.permitirAnunciante) lista.push(['anunciante', t('anunciante')]);
       lista.forEach(function (par) {
         abas.appendChild(el('button', {
@@ -1720,7 +2905,7 @@
         }));
       } else {
         var ehAnunciante = (aba === 'anunciante');
-        corpo.appendChild(aviso(ehAnunciante ? t('avisoAnunciante') : t('avisoAssinante'), 'info'));
+        corpo.appendChild(aviso(ehAnunciante ? t('avisoAnunciante') : t('avisoMembro'), 'info'));
 
         var modoCriar = { v: false };
         var cApelido = campo(t('apelido'), { type: 'text', autocomplete: 'username',
@@ -1803,7 +2988,9 @@
             return;
           }
           Contas.conferir(ident, senha).then(function (c) {
-            Sessao.entrar(c.tipo || aba, { email: c.email, nome: c.apelido || c.nome, apelido: c.apelido });
+            var tipo = c.tipo || aba;
+            if ((cfg.login.emailsAdmin || []).indexOf(c.email) !== -1) tipo = 'admin';
+            Sessao.entrar(tipo, { email: c.email, nome: c.apelido || c.nome, apelido: c.apelido });
             fecharModal();
             if (cfg.login.biometria && Biometria.suportada() && !Biometria.registrada()) perguntarBiometria(c.email);
           }).catch(function (e) { mostrar(erroEmTexto(e)); }).then(fim, fim);
@@ -2060,8 +3247,9 @@
 
     function lerFonte(fonte) {
       progresso(0.02, '');
-      OCR.ler(fonte, progresso).then(mostrarResultado).catch(function () {
-        estado.innerHTML = ''; estado.appendChild(aviso(t('semCamera'), 'erro'));
+      OCR.ler(fonte, progresso).then(mostrarResultado).catch(function (e) {
+        estado.innerHTML = '';
+        estado.appendChild(aviso(String(e && e.message) === 'so-wifi' ? t('redeSoWifi') : t('semCamera'), 'erro'));
         barra.style.display = 'none';
       });
     }
@@ -2127,7 +3315,7 @@
   /* ------------------------------------------------------------------
      18. CONFIGURACOES (painel central; cada app mostra so o que usa)
      ------------------------------------------------------------------ */
-  var SECOES_PADRAO = ['idioma', 'conta', 'notificacoes', 'nuvem', 'ocr', 'app'];
+  var SECOES_PADRAO = ['idioma', 'assistente', 'conta', 'notificacoes', 'ia', 'rede', 'nuvem', 'ocr', 'app'];
 
   function montarConfiguracoes(opcoes) {
     opcoes = opcoes || {};
@@ -2147,6 +3335,11 @@
       raizEl.appendChild(linhaId);
       raizEl.appendChild(el('div', { class: 'dgo-mini', texto:
         (Idioma.atual === 'en' ? 'Date format: ' : 'Formato de data: ') + formatarData(new Date()) }));
+    }
+
+    if (tem('assistente') && Assistente.ativoNoApp()) {
+      raizEl.appendChild(el('h3', { texto: '💡 AssistONE' }));
+      raizEl.appendChild(Assistente.cartaoConfig(function () { abrirConfiguracoes(opcoes); }));
     }
 
     if (tem('conta')) {
@@ -2239,6 +3432,41 @@
       raizEl.appendChild(el('div', { class: 'dgo-mini', texto: Idioma.atual === 'en'
         ? 'The app only sees its own private folder in your drive.'
         : 'O app so enxerga a pasta privada dele dentro do seu drive.' }));
+    }
+
+    if (tem('rede')) {
+      raizEl.appendChild(el('h3', { texto: t('redeTitulo') }));
+      raizEl.appendChild(el('div', { class: 'dgo-mini', texto: t('redeAgora') + ': ' + Rede.rotuloTipo() +
+        (Rede.economia() ? '  ·  ' + (Idioma.atual === 'en' ? 'data saver on' : 'economia de dados ligada') : '') }));
+      [['pesado', t('redePesado')], ['ia', t('redeIA')]].forEach(function (par) {
+        var sel = el('select');
+        [['sempre', t('redeSempre')], ['wifi', t('redeWifi')], ['nunca', t('redeNunca')]].forEach(function (o) {
+          var op = el('option', { value: o[0], texto: o[1] });
+          if (Rede.preferencia(par[0]) === o[0]) op.selected = true;
+          sel.appendChild(op);
+        });
+        sel.addEventListener('change', function () { Rede.definir(par[0], sel.value); });
+        raizEl.appendChild(el('label', { class: 'dgo-campo' }, [el('span', { texto: par[1] }), sel]));
+      });
+      if (Rede.tipo() === 'desconhecido') {
+        raizEl.appendChild(el('div', { class: 'dgo-mini', texto: Idioma.atual === 'en'
+          ? 'This browser does not say whether it is on Wi-Fi or data. "Wi-Fi only" then blocks only when the browser asks for data saving.'
+          : 'Este navegador não diz se está no Wi-Fi ou em dados. "Só no Wi-Fi" então só bloqueia quando o navegador pede economia de dados.' }));
+      }
+    }
+
+    if (tem('ia') && cfg.ia.ativo) {
+      raizEl.appendChild(el('h3', { texto: t('perguntarIA') }));
+      var lIA = el('div', { class: 'dgo-linha' });
+      lIA.appendChild(el('button', { class: 'dgo-b', type: 'button', texto: t('perguntarIA'),
+        onclick: abrirIA }));
+      lIA.appendChild(el('button', { class: 'dgo-b dgo-b2', type: 'button', texto: t('cofreChaves'),
+        onclick: abrirChaves }));
+      raizEl.appendChild(lIA);
+      var prontos = IA.provedoresProntos();
+      raizEl.appendChild(el('div', { class: 'dgo-mini', texto: prontos.length
+        ? (t('qualUsar') + ': ' + PROVEDORES[IA.provedor()].nome)
+        : t('semChave') }));
     }
 
     if (tem('ocr') && cfg.ocr.ativo) {
@@ -2799,6 +4027,1207 @@
   }
 
   /* ------------------------------------------------------------------
+     19-C. MOTOR DE WIZARD
+     ------------------------------------------------------------------
+     A diretriz e oferecer a capacidade, nao um wizard pronto. Aqui esta
+     o que e igual em qualquer wizard: sequencia, avancar e voltar,
+     barra de progresso, pular, guardar o que ja foi respondido, retomar
+     de onde parou e as duas linguas. Cada app declara os passos.
+
+       DGO.wizard.definir('cadastro', {
+         titulo: { pt:'Vamos comecar', en:'Let us start' },
+         umaVezSo: true,
+         passos: [
+           { id:'idade', titulo:{pt:'Para quem e a historia?'},
+             campos:[ { id:'faixa', tipo:'escolha', rotulo:{pt:'Idade'},
+                        opcoes:[ {valor:'2-5', rotulo:{pt:'2 a 5 anos'}} ] } ] }
+         ],
+         aoConcluir: function (dados) { ... }
+       });
+       DGO.wizard.abrir('cadastro');
+     ------------------------------------------------------------------ */
+  var Wizard = {
+    _defs: {},
+
+    definir: function (id, def) {
+      Wizard._defs[id] = def || {};
+      if (def && def.abrirNaPrimeiraVez && !Wizard.feito(id)) {
+        setTimeout(function () { Wizard.abrir(id); }, (def.atraso || 1) * 1000);
+      }
+      return id;
+    },
+
+    def: function (id) { return Wizard._defs[id] || null; },
+    feito: function (id) { return !!prefLer('wizard:' + id + ':feito', false); },
+    dados: function (id) { return prefLer('wizard:' + id + ':dados', {}) || {}; },
+    reiniciar: function (id) {
+      prefGravar('wizard:' + id + ':feito', false);
+      prefGravar('wizard:' + id + ':dados', {});
+      prefGravar('wizard:' + id + ':passo', 0);
+    },
+
+    txt: function (v, padrao) {
+      if (v === undefined || v === null) return padrao || '';
+      if (typeof v === 'string') return v;
+      return v[Idioma.atual] || v.pt || padrao || '';
+    },
+
+    abrir: function (id, passoInicial) {
+      var def = Wizard.def(id);
+      if (!def || !def.passos || !def.passos.length) return null;
+      if (def.umaVezSo && Wizard.feito(id) && passoInicial === undefined) return null;
+
+      var dados = Wizard.dados(id);
+      var i = (passoInicial !== undefined) ? passoInicial : (prefLer('wizard:' + id + ':passo', 0) || 0);
+      if (i >= def.passos.length) i = 0;
+
+      function guardar() {
+        prefGravar('wizard:' + id + ':dados', dados);
+        prefGravar('wizard:' + id + ':passo', i);
+      }
+
+      function concluir(pulou) {
+        prefGravar('wizard:' + id + ':feito', true);
+        prefGravar('wizard:' + id + ':passo', 0);
+        guardar();
+        fecharModal();
+        if (pulou && typeof def.aoPular === 'function') { try { def.aoPular(dados); } catch (e) {} }
+        if (!pulou && typeof def.aoConcluir === 'function') { try { def.aoConcluir(dados); } catch (e) {} }
+        d.dispatchEvent(new CustomEvent('dgo:wizard', {
+          detail: { wizard: id, concluido: !pulou, pulado: !!pulou, dados: dados }
+        }));
+      }
+
+      function montar() {
+        var passo = def.passos[i];
+        var caixa = el('div', { class: 'dgo-caixa' });
+
+        /* cabecalho: titulo do wizard + progresso */
+        if (def.titulo) caixa.appendChild(el('div', { class: 'dgo-wz-topo', texto: Wizard.txt(def.titulo) }));
+        var barra = el('div', { class: 'dgo-wz-barra' });
+        def.passos.forEach(function (x, n) {
+          barra.appendChild(el('i', { class: n <= i ? 'dgo-on' : '' }));
+        });
+        caixa.appendChild(barra);
+        caixa.appendChild(el('div', { class: 'dgo-mini',
+          texto: (i + 1) + ' / ' + def.passos.length }));
+
+        if (passo.titulo) caixa.appendChild(el('h2', { texto: Wizard.txt(passo.titulo) }));
+        if (passo.texto) caixa.appendChild(el('p', { texto: Wizard.txt(passo.texto) }));
+        if (passo.html) caixa.appendChild(el('div', { html: passo.html }));
+
+        var entradas = [];
+        (passo.campos || []).forEach(function (c) {
+          var valor = (dados[c.id] !== undefined) ? dados[c.id] : (c.padrao !== undefined ? c.padrao : '');
+          var ent;
+          if (c.tipo === 'escolha') {
+            ent = el('select');
+            (c.opcoes || []).forEach(function (o) {
+              var op = el('option', { value: o.valor, texto: Wizard.txt(o.rotulo, o.valor) });
+              if (String(valor) === String(o.valor)) op.selected = true;
+              ent.appendChild(op);
+            });
+          } else if (c.tipo === 'sim-nao') {
+            ent = el('input', { type: 'checkbox' });
+            ent.checked = !!valor;
+            ent.style.width = '20px'; ent.style.height = '20px'; ent.style.accentColor = cfg.cor;
+          } else if (c.tipo === 'texto-longo') {
+            ent = el('textarea', { rows: 4 });
+            ent.value = valor;
+          } else {
+            var TIPOS = { texto: 'text', senha: 'password', email: 'email', numero: 'number',
+                          data: 'date', hora: 'time', telefone: 'tel', link: 'url', cor: 'color' };
+            ent = el('input', { type: TIPOS[c.tipo] || c.tipo || 'text' });
+            ent.value = valor;
+            if (c.dica) ent.setAttribute('placeholder', Wizard.txt(c.dica));
+            if (c.tipo === 'email') ent.setAttribute('inputmode', 'email');
+            if (c.tipo === 'numero') ent.setAttribute('inputmode', 'decimal');
+          }
+          var rotulo = Wizard.txt(c.rotulo, c.id);
+          var linha;
+          if (c.tipo === 'sim-nao') {
+            linha = el('label', { style: { display: 'flex', gap: '10px', alignItems: 'center',
+                                           margin: '8px 0', cursor: 'pointer' } },
+                       [ent, el('span', { style: { fontSize: '14px', color: '#e2e8f0' }, texto: rotulo })]);
+          } else {
+            linha = el('label', { class: 'dgo-campo' }, [el('span', { texto: rotulo }), ent]);
+          }
+          if (c.ajuda) linha.appendChild(el('div', { class: 'dgo-mini', texto: Wizard.txt(c.ajuda) }));
+          caixa.appendChild(linha);
+          entradas.push({ campo: c, ent: ent });
+        });
+
+        var msg = el('div');
+
+        function colher() {
+          var faltou = null;
+          entradas.forEach(function (x) {
+            var v = (x.campo.tipo === 'sim-nao') ? x.ent.checked : x.ent.value;
+            if (x.campo.obrigatorio && (v === '' || v === null || v === undefined)) {
+              faltou = faltou || Wizard.txt(x.campo.rotulo, x.campo.id);
+            }
+            dados[x.campo.id] = v;
+          });
+          return faltou;
+        }
+
+        var acoes = el('div', { class: 'dgo-linha' });
+        if (i > 0) {
+          acoes.appendChild(el('button', { class: 'dgo-b dgo-b2', type: 'button', texto: t('wzVoltar'),
+            onclick: function () { colher(); i--; guardar(); abrirModal(montar(), function () { Wizard.abrir(id, i); }); } }));
+        }
+        acoes.appendChild(el('button', {
+          class: 'dgo-b', type: 'button',
+          texto: (i === def.passos.length - 1) ? t('wzConcluir') : t('wzAvancar'),
+          onclick: function () {
+            var faltou = colher();
+            if (faltou) { msg.innerHTML = ''; msg.appendChild(aviso(t('wzObrigatorio') + ' ' + faltou, 'erro')); return; }
+            if (typeof passo.aoSair === 'function') { try { passo.aoSair(dados); } catch (e) {} }
+            if (i === def.passos.length - 1) { concluir(false); return; }
+            i++; guardar();
+            abrirModal(montar(), function () { Wizard.abrir(id, i); });
+          }
+        }));
+        caixa.appendChild(acoes);
+        caixa.appendChild(msg);
+
+        if (def.pularVisivel !== false) {
+          caixa.appendChild(el('button', {
+            class: 'dgo-b dgo-b2', type: 'button', texto: t('wzPular'),
+            style: { background: 'transparent', border: '0', color: '#94a3b8', minHeight: '36px' },
+            onclick: function () { colher(); concluir(true); }
+          }));
+        }
+
+        if (typeof passo.aoEntrar === 'function') { try { passo.aoEntrar(dados); } catch (e) {} }
+        return caixa;
+      }
+
+      return abrirModal(montar(), function () { Wizard.abrir(id, i); });
+    }
+  };
+
+  /* ------------------------------------------------------------------
+     19-D. COFRE DE CHAVES E WIDGET DE IA
+     ------------------------------------------------------------------
+     Os repositórios são publicos: nenhuma chave pode morar no codigo.
+     Entao a chave e da pessoa, colada uma vez e guardada no navegador.
+     Como os apps moram todos em marceloneco.github.io, o cofre e um so
+     e vale para os tres: cola no InvestifyONE, funciona no Contador.
+
+     A chave NAO viaja para lugar nenhum a nao ser para o proprio
+     provedor (Google, OpenAI, Anthropic). Nao passa por servidor meu.
+     ------------------------------------------------------------------ */
+  /* ------------------------------------------------------------------
+     PROVEDORES DE IA
+     ------------------------------------------------------------------
+     Quase todos falam o mesmo formato (o da OpenAI): endereco/chat/completions
+     com a chave no cabecalho. Entao existe UM adaptador generico com o
+     endereco configuravel, e so o Gemini e a Anthropic tem adaptador proprio.
+     Provedor novo no futuro = uma entrada nesta lista, ou o "Personalizado"
+     com o endereco colado pela pessoa. Nada de codigo novo.
+
+     gratis: tem plano sem pagar (limites conferidos em set/2026 - podem mudar)
+     onde:   onde criar a chave
+     base:   endereco da API (formato OpenAI), sem barra no fim
+     ------------------------------------------------------------------ */
+  function lerResposta(r) {
+    return r.json().catch(function () { return {}; }).then(function (j) {
+      if (!r.ok) {
+        var m = (j && (j.error && (j.error.message || j.error.type))) || (j && j.message) ||
+                (j && j.detail && (j.detail.message || j.detail.status)) || ('HTTP ' + r.status);
+        var e = new Error(m); e.status = r.status; e.corpo = j; throw e;
+      }
+      return j;
+    });
+  }
+
+  /* adaptador generico, formato OpenAI */
+  function chamarCompativel(base, chave, modelo, sistema, mensagens, extras, limite) {
+    var msgs = [];
+    if (sistema) msgs.push({ role: 'system', content: sistema });
+    mensagens.forEach(function (m) {
+      msgs.push({ role: m.papel === 'ia' ? 'assistant' : 'user', content: m.texto });
+    });
+    var cab = { 'Content-Type': 'application/json' };
+    if (chave) cab.Authorization = 'Bearer ' + chave;
+    if (extras) for (var k in extras) cab[k] = extras[k];
+    return fetch(base + '/chat/completions', {
+      method: 'POST', headers: cab,
+      body: JSON.stringify({ model: modelo, messages: msgs, max_tokens: limite || 900 })
+    }).then(lerResposta).then(function (j) {
+      return ((j.choices && j.choices[0] && j.choices[0].message && j.choices[0].message.content) || '').trim();
+    });
+  }
+  function listarCompativel(base, chave, extras) {
+    var cab = {};
+    if (chave) cab.Authorization = 'Bearer ' + chave;
+    if (extras) for (var k in extras) cab[k] = extras[k];
+    return fetch(base + '/models', { headers: cab }).then(lerResposta).then(function (j) {
+      var lista = Array.isArray(j) ? j : (j.data || j.models || []);
+      return lista.map(function (m) {
+        var id = m.id || m.name || '';
+        var gratis = /:free$/.test(id) ||
+          (m.pricing && String(m.pricing.prompt) === '0' && String(m.pricing.completion) === '0');
+        return { id: id, nome: m.name || id, gratis: !!gratis };
+      }).filter(function (m) { return m.id; });
+    });
+  }
+
+  function cabecalhosOpenRouter() {
+    /* a OpenRouter pede para o site se identificar (nao e segredo, e atribuicao) */
+    return { 'HTTP-Referer': raiz.location.origin, 'X-Title': nomeApp() };
+  }
+
+  var PROVEDORES = {
+    openrouter: {
+      nome: 'OpenRouter', gratis: true, ordem: 3,
+      onde: 'https://openrouter.ai/keys',
+      base: 'https://openrouter.ai/api/v1',
+      modelo: 'openrouter/free',      /* roteador que escolhe um modelo gratis disponivel */
+      nota: { pt: 'Modelos com ":free" no nome. Grátis: 20 pedidos por minuto e 50 por dia (1000 por dia se um dia comprar 10 dólares de crédito). Um cadastro, várias IAs.',
+              en: 'Models ending in ":free". Free: 20 requests per minute and 50 per day (1000 per day if you ever buy 10 dollars of credit). One sign-up, many AIs.' },
+      chamar: function (chave, modelo, sistema, msgs, limite) { return chamarCompativel(this.base, chave, modelo, sistema, msgs, cabecalhosOpenRouter(), limite); },
+      listar: function (chave) { return listarCompativel(this.base, chave, cabecalhosOpenRouter()); }
+    },
+    groq: {
+      nome: 'Groq', gratis: true, ordem: 2,
+      onde: 'https://console.groq.com/keys',
+      base: 'https://api.groq.com/openai/v1',
+      modelo: 'llama-3.3-70b-versatile',
+      nota: { pt: 'Muito rápido. Plano grátis com cerca de 30 pedidos por minuto e 1.000 por dia no modelo comum.',
+              en: 'Very fast. Free plan around 30 requests per minute and 1,000 per day on the common model.' },
+      chamar: function (chave, modelo, sistema, msgs, limite) { return chamarCompativel(this.base, chave, modelo, sistema, msgs, null, limite); },
+      listar: function (chave) { return listarCompativel(this.base, chave); }
+    },
+    gemini: {
+      nome: 'Google Gemini', gratis: true, ordem: 1,
+      onde: 'https://aistudio.google.com/apikey',
+      modelo: 'gemini-2.0-flash',
+      nota: { pt: 'Plano grátis com limites que o Google mostra no AI Studio. Confira o aviso de privacidade ao criar a chave.',
+              en: 'Free plan with limits shown by Google in AI Studio. Check the privacy notice when creating the key.' },
+      chamar: function (chave, modelo, sistema, mensagens, limite) {
+        var corpo = {
+          contents: mensagens.map(function (m) {
+            return { role: m.papel === 'ia' ? 'model' : 'user', parts: [{ text: m.texto }] };
+          })
+        };
+        if (sistema) corpo.systemInstruction = { parts: [{ text: sistema }] };
+        if (limite) corpo.generationConfig = { maxOutputTokens: limite };
+        return fetch('https://generativelanguage.googleapis.com/v1beta/models/' +
+                     encodeURIComponent(modelo) + ':generateContent', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'x-goog-api-key': chave },
+          body: JSON.stringify(corpo)
+        }).then(lerResposta).then(function (j) {
+          var c = j.candidates && j.candidates[0];
+          var partes = c && c.content && c.content.parts;
+          return (partes || []).map(function (x) { return x.text || ''; }).join('').trim();
+        });
+      },
+      listar: function (chave) {
+        return fetch('https://generativelanguage.googleapis.com/v1beta/models', {
+          headers: { 'x-goog-api-key': chave }
+        }).then(lerResposta).then(function (j) {
+          return (j.models || []).filter(function (m) {
+            return (m.supportedGenerationMethods || []).indexOf('generateContent') !== -1;
+          }).map(function (m) {
+            return { id: String(m.name || '').replace(/^models\//, ''), nome: m.displayName || m.name, gratis: true };
+          });
+        });
+      }
+    },
+    mistral: {
+      nome: 'Mistral', gratis: true, ordem: 4,
+      onde: 'https://console.mistral.ai/api-keys',
+      base: 'https://api.mistral.ai/v1',
+      modelo: 'mistral-small-latest',
+      nota: { pt: 'Tem plano grátis com limites apertados; os números aparecem dentro da conta depois de entrar.',
+              en: 'Has a free plan with tight limits; the numbers show inside the account after signing in.' },
+      chamar: function (chave, modelo, sistema, msgs, limite) { return chamarCompativel(this.base, chave, modelo, sistema, msgs, null, limite); },
+      listar: function (chave) { return listarCompativel(this.base, chave); }
+    },
+    openai: {
+      nome: 'OpenAI', gratis: false, ordem: 10,
+      onde: 'https://platform.openai.com/api-keys',
+      base: 'https://api.openai.com/v1',
+      modelo: 'gpt-4o-mini',
+      nota: { pt: 'Pago por uso, sem plano grátis.', en: 'Pay per use, no free plan.' },
+      chamar: function (chave, modelo, sistema, msgs, limite) { return chamarCompativel(this.base, chave, modelo, sistema, msgs, null, limite); },
+      listar: function (chave) { return listarCompativel(this.base, chave); }
+    },
+    anthropic: {
+      nome: 'Anthropic Claude', gratis: false, ordem: 11,
+      onde: 'https://console.anthropic.com/settings/keys',
+      modelo: 'claude-3-5-haiku-20241022',
+      nota: { pt: 'Pago por uso, sem plano grátis.', en: 'Pay per use, no free plan.' },
+      chamar: function (chave, modelo, sistema, mensagens, limite) {
+        var corpo = {
+          model: modelo, max_tokens: limite || 900,
+          messages: mensagens.map(function (m) {
+            return { role: m.papel === 'ia' ? 'assistant' : 'user', content: m.texto };
+          })
+        };
+        if (sistema) corpo.system = sistema;
+        return fetch('https://api.anthropic.com/v1/messages', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'x-api-key': chave,
+            'anthropic-version': '2023-06-01',
+            'anthropic-dangerous-direct-browser-access': 'true'
+          },
+          body: JSON.stringify(corpo)
+        }).then(lerResposta).then(function (j) {
+          return ((j.content || []).map(function (x) { return x.text || ''; }).join('')).trim();
+        });
+      },
+      listar: function (chave) {
+        return fetch('https://api.anthropic.com/v1/models', {
+          headers: { 'x-api-key': chave, 'anthropic-version': '2023-06-01',
+                     'anthropic-dangerous-direct-browser-access': 'true' }
+        }).then(lerResposta).then(function (j) {
+          return (j.data || []).map(function (m) { return { id: m.id, nome: m.display_name || m.id, gratis: false }; });
+        });
+      }
+    },
+    personalizado: {
+      nome: 'Outro (formato OpenAI)', gratis: null, ordem: 13,
+      onde: '',
+      base: '',                          /* a pessoa cola o endereco */
+      modelo: '',
+      nota: { pt: 'Qualquer serviço que fale o formato da OpenAI: Cerebras, Together, Hugging Face, um Ollama na sua rede… Cole o endereço da API e o nome do modelo.',
+              en: 'Any service speaking the OpenAI format: Cerebras, Together, Hugging Face, an Ollama on your network… Paste the API address and the model name.' },
+      chamar: function (chave, modelo, sistema, msgs, limite) {
+        var base = IA.baseDe('personalizado');
+        if (!base) return Promise.reject(new Error('sem-endereco'));
+        return chamarCompativel(base, chave, modelo, sistema, msgs, null, limite);
+      },
+      listar: function (chave) {
+        var base = IA.baseDe('personalizado');
+        if (!base) return Promise.reject(new Error('sem-endereco'));
+        return listarCompativel(base, chave);
+      }
+    }
+  };
+
+  var IA = {
+    _conversa: [],
+    cofreBackend: null,      /* futuro: { ler(), gravar(obj) } para sincronizar entre aparelhos */
+
+    /* ---- cofre, compartilhado entre os apps (mesma origem) ---- */
+    chaves: function () { return Guardar.ler('chaves-ia', {}, true) || {}; },
+    chave: function (prov) { return IA.chaves()[prov] || ''; },
+    definirChave: function (prov, valor) {
+      var c = IA.chaves();
+      if (valor) c[prov] = String(valor).trim(); else delete c[prov];
+      Guardar.gravar('chaves-ia', c, true);
+      if (IA.cofreBackend && IA.cofreBackend.gravar) { try { IA.cofreBackend.gravar(c); } catch (e) {} }
+      d.dispatchEvent(new CustomEvent('dgo:ia-chaves', { detail: { provedor: prov, tem: !!valor } }));
+      return true;
+    },
+    temChave: function (prov) {
+      prov = prov || IA.provedor();
+      if (PROVEDORES[prov] && PROVEDORES[prov].semChave) return true;
+      /* um proxy no servidor dispensa chave no navegador */
+      if (IA.proxyDe(prov)) return true;
+      return !!IA.chave(prov);
+    },
+
+    /* ---- provedor e modelo escolhidos (valem para todos os apps) ---- */
+    provedor: function () {
+      var p = Guardar.ler('ia-provedor', null, true) || cfg.ia.provedorPadrao || 'openrouter';
+      if (!PROVEDORES[p]) p = 'openrouter';
+      return p;
+    },
+    definirProvedor: function (p) { if (PROVEDORES[p]) Guardar.gravar('ia-provedor', p, true); },
+    modelo: function (prov) {
+      prov = prov || IA.provedor();
+      var escolhido = (Guardar.ler('ia-modelos', {}, true) || {})[prov];
+      return escolhido || (cfg.ia.modelos && cfg.ia.modelos[prov]) || PROVEDORES[prov].modelo || '';
+    },
+    definirModelo: function (prov, modelo) {
+      var m = Guardar.ler('ia-modelos', {}, true) || {};
+      if (modelo) m[prov] = modelo; else delete m[prov];
+      Guardar.gravar('ia-modelos', m, true);
+    },
+    baseDe: function (prov) {
+      var extras = Guardar.ler('ia-enderecos', {}, true) || {};
+      return String(extras[prov] || (cfg.ia.enderecos && cfg.ia.enderecos[prov]) || PROVEDORES[prov].base || '')
+        .replace(/\/+$/, '');
+    },
+    definirBase: function (prov, url) {
+      var e = Guardar.ler('ia-enderecos', {}, true) || {};
+      if (url) e[prov] = String(url).trim().replace(/\/+$/, ''); else delete e[prov];
+      Guardar.gravar('ia-enderecos', e, true);
+    },
+    /* futuro: um servidor seu que guarda a chave e repassa o pedido */
+    proxyDe: function (prov) { return (cfg.ia.proxy && cfg.ia.proxy[prov]) || ''; },
+
+    provedoresProntos: function () {
+      completarProvedores();
+      return Object.keys(PROVEDORES).filter(function (p) { return !PROVEDORES[p].soVoz && IA.temChave(p); })
+        .sort(function (a, b) { return (PROVEDORES[a].ordem || 9) - (PROVEDORES[b].ordem || 9); });
+    },
+    provedoresOrdenados: function () {
+      completarProvedores();
+      return Object.keys(PROVEDORES).filter(function (p) { return !PROVEDORES[p].soVoz; }).sort(function (a, b) { return (PROVEDORES[a].ordem || 9) - (PROVEDORES[b].ordem || 9); });
+    },
+
+    listarModelos: function (prov) {
+      prov = prov || IA.provedor();
+      var pr = PROVEDORES[prov];
+      if (!pr || !pr.listar) return Promise.resolve([]);
+      return pr.listar(IA.chave(prov)).then(function (lista) {
+        var cache = Guardar.ler('ia-lista-modelos', {}, true) || {};
+        cache[prov] = { em: Date.now(), modelos: lista.slice(0, 400) };
+        Guardar.gravar('ia-lista-modelos', cache, true);
+        return lista;
+      });
+    },
+
+    contexto: function () {
+      var base = cfg.ia.contexto;
+      var texto0 = (typeof base === 'function') ? base() : base;
+      texto0 = (texto0 && typeof texto0 === 'object') ? (texto0[Idioma.atual] || texto0.pt) : texto0;
+      var idioma = Idioma.atual === 'en'
+        ? 'Answer in English, briefly and plainly.'
+        : 'Responda em português do Brasil, com frases curtas e sem jargão.';
+      return 'Você ajuda dentro do app "' + nomeApp() + '". ' + (texto0 || '') + ' ' + idioma;
+    },
+
+    /* ---- uso direto, sem interface ---- */
+    perguntar: function (pergunta, opcoes) {
+      opcoes = opcoes || {};
+      var prov = opcoes.provedor || IA.provedor();
+      var pr = PROVEDORES[prov];
+      if (!pr) return Promise.reject(new Error('provedor-desconhecido'));
+      if (!navigator.onLine) return Promise.reject(new Error('sem-internet'));
+      if (!Rede.podeUsarIA()) return Promise.reject(new Error('so-wifi'));
+      var msgs = opcoes.historico || [{ papel: 'pessoa', texto: pergunta }];
+      var modelo = opcoes.modelo || IA.modelo(prov);
+      var sistema = opcoes.contexto || IA.contexto();
+
+      var proxy = IA.proxyDe(prov);
+      if (proxy) {
+        /* o servidor guarda a chave; o navegador so manda a pergunta */
+        return fetch(proxy, {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ provedor: prov, modelo: modelo, sistema: sistema, mensagens: msgs, app: cfg.app, limite: opcoes.limite || null })
+        }).then(lerResposta).then(function (j) { return String(j.texto || j.resposta || '').trim(); });
+      }
+      var chave = IA.chave(prov);
+      if (!chave && prov !== 'personalizado') return Promise.reject(new Error('sem-chave'));
+
+      /* Se a IA escolhida falhar (sem cota gratis, sem credito, chave recusada,
+         servidor fora), passa sozinho para a proxima que tem chave, na ordem da
+         lista, e avisa na tela qual esta usando. Com reserva disponivel, espera
+         so 3 s antes de desistir da atual; sem reserva, insiste mais (6, 15, 30 s).
+         opcoes.semTroca = true desliga isso para quem quer um provedor fixo. */
+      var fila = [prov];
+      if (opcoes.semTroca !== true) {
+        IA.provedoresProntos().forEach(function (p) {
+          if (p !== prov && fila.indexOf(p) === -1 && (p !== 'personalizado' || IA.baseDe(p))) fila.push(p);
+        });
+      }
+      function tentar(i) {
+        var p = fila[i], pr2 = PROVEDORES[p], temReserva = i < fila.length - 1;
+        var mod = (p === prov) ? modelo : IA.modelo(p);
+        /* opcoes.limite: tamanho maximo da resposta (textos longos, como termos) */
+        return chamarComInsistencia(function () {
+          return pr2.chamar(IA.chave(p), mod, sistema, msgs, opcoes.limite);
+        }, temReserva).catch(function (e) {
+          if (!temReserva || !e || !e.status) throw e;
+          IA.avisarTroca(p, fila[i + 1], e.status);
+          return tentar(i + 1);
+        });
+      }
+      return tentar(0);
+    },
+
+    /* "🔁 Groq está sem cota agora — usando Gemini" */
+    avisarTroca: function (de, para, status) {
+      var motivo = (status === 402 || status === 429) ? t('iaSemCota')
+                 : (status === 401 || status === 403) ? t('iaRecusouChave') : t('iaNaoRespondeu');
+      var txt = '🔁 ' + nomeProv(PROVEDORES[de]) + ' ' + motivo + ' — ' + t('iaUsando') + ' ' + nomeProv(PROVEDORES[para]);
+      avisoRapido(txt, 4500);
+      d.dispatchEvent(new CustomEvent('dgo:ia-troca', { detail: { de: de, para: para, status: status, texto: txt } }));
+    },
+
+    limparConversa: function () { IA._conversa = []; }
+  };
+
+  /* ------------------------------------------------------------------
+     REDE: wifi ou dados moveis? A pessoa decide o que pode baixar onde.
+     A API de rede so existe no Chrome/Android; no iPhone e no Firefox a
+     resposta e "nao sei" - e nesse caso a regra e nao bloquear, so
+     respeitar o modo economia de dados quando o navegador avisa.
+     ------------------------------------------------------------------ */
+  var Rede = {
+    tipo: function () {
+      if (navigator.onLine === false) return 'offline';
+      var c = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
+      if (!c) return 'desconhecido';
+      if (c.type === 'wifi' || c.type === 'ethernet') return 'wifi';
+      if (c.type === 'cellular') return 'dados';
+      if (c.type === 'none') return 'offline';
+      return 'desconhecido';
+    },
+    economia: function () {
+      var c = navigator.connection;
+      return !!(c && c.saveData);
+    },
+    preferencia: function (chave) {
+      var padrao = cfg.rede && cfg.rede[chave];
+      return prefLer('rede:' + chave, padrao || 'sempre');
+    },
+    definir: function (chave, valor) { prefGravar('rede:' + chave, valor); },
+
+    /* 'sempre' | 'wifi' | 'nunca' -> pode fazer agora? */
+    permite: function (chave) {
+      var pref = Rede.preferencia(chave);
+      var tipo = Rede.tipo();
+      if (tipo === 'offline') return false;
+      if (pref === 'nunca') return false;
+      if (pref === 'sempre') return true;
+      /* pref === 'wifi' */
+      if (tipo === 'wifi') return true;
+      if (tipo === 'dados') return false;
+      return !Rede.economia();          /* desconhecido: deixa, a menos que o navegador peca economia */
+    },
+    podeBaixarPesado: function () { return Rede.permite('pesado'); },
+    podeUsarIA: function () { return Rede.permite('ia'); },
+
+    /* pergunta antes de um download grande, quando a preferencia for 'wifi' e a rede for dados */
+    pedirPesado: function (descricao, tamanhoMB) {
+      if (Rede.podeBaixarPesado()) return Promise.resolve(true);
+      if (Rede.tipo() === 'offline') return Promise.resolve(false);
+      return new Promise(function (ok) {
+        var caixa = el('div', { class: 'dgo-caixa', style: { maxWidth: '380px' } });
+        caixa.appendChild(el('h2', { texto: t('redeAviso') }));
+        caixa.appendChild(el('p', { texto: (descricao || '') + (tamanhoMB ? ' (' + tamanhoMB + ' MB)' : '') }));
+        caixa.appendChild(aviso(t('redeSoWifi'), 'info'));
+        caixa.appendChild(el('button', { class: 'dgo-b', type: 'button', texto: t('redeBaixarAgora'),
+          onclick: function () { fecharModal(); ok(true); } }));
+        caixa.appendChild(el('button', { class: 'dgo-b dgo-b2', type: 'button', texto: t('redeEsperarWifi'),
+          onclick: function () { fecharModal(); ok(false); } }));
+        abrirModal(caixa);
+      });
+    },
+
+    rotuloTipo: function () {
+      var tp = Rede.tipo();
+      return tp === 'wifi' ? 'Wi-Fi' : tp === 'dados' ? t('redeDados') : tp === 'offline' ? t('redeOffline') : t('redeDesconhecida');
+    }
+  };
+
+  /* ---------------- tela do cofre de chaves ---------------- */
+  function notaProvedor(pr) {
+    if (!pr.nota) return '';
+    return (typeof pr.nota === 'string') ? pr.nota : (pr.nota[Idioma.atual] || pr.nota.pt || '');
+  }
+  function seloProvedor(pr) {
+    if (pr.gratis === true) return el('em', { class: 'dgo-selo dgo-selo-ok', texto: t('gratis') });
+    if (pr.gratis === false) return el('em', { class: 'dgo-selo dgo-selo-pago', texto: t('pago') });
+    return null;
+  }
+
+  /* ------------------------------------------------------------------
+     GUIA DE CHAVES: o que cada provedor faz, como pegar a chave (passo a
+     passo para leigo), limites do plano gratis e teste da chave.
+     Cada app herda isto: e o mesmo cofre e o mesmo guia em todos.
+     Os passos vem com uma ilustracao desenhada; para trocar por um print
+     de verdade, basta por na raiz do app um arquivo guia-<provedor>-<n>.png
+     (ex.: guia-groq-2.png) - se existir, ele aparece no lugar do desenho.
+     ------------------------------------------------------------------ */
+  var CAPS = {
+    texto: { icone: '✍️', pt: 'Texto e escrita', en: 'Text and writing',
+             expl: { pt: 'Perguntar, escrever, resumir, melhorar textos, sugerir respostas.', en: 'Ask, write, summarise, improve texts, suggest replies.' } },
+    stt:   { icone: '🎤', pt: 'Voz → texto', en: 'Speech → text',
+             expl: { pt: 'Transcrever áudio e ditado (quando o navegador não devolve o texto).', en: 'Transcribe audio and dictation (when the browser gives no text).' } },
+    tts:   { icone: '🔊', pt: 'Texto → voz', en: 'Text → speech',
+             expl: { pt: 'Ler histórias, tutoriais e avisos em voz alta com voz natural.', en: 'Read stories, tutorials and notices aloud with a natural voice.' } },
+    visao: { icone: '🖼️', pt: 'Imagens e documentos', en: 'Images and documents',
+             expl: { pt: 'Entender fotos, rótulos, exames e PDFs (OCR com IA).', en: 'Understand photos, labels, lab results and PDFs (AI OCR).' } }
+  };
+
+  /* passos comuns, para nao repetir texto em cada provedor */
+  function P(pt, en, ilu) { return { pt: pt, en: en, ilu: ilu || 'site' }; }
+  function passosPadrao(nome, botaoConta, botaoChave, rotuloNome, extra) {
+    var ps = [
+      P('Toque em “Abrir o site”. Ele abre em outra aba; esta tela continua aqui esperando.',
+        'Tap “Open the site”. It opens in another tab; this screen stays here waiting.', 'abrir'),
+      P('Crie a conta (ou entre): ' + botaoConta + '. Use um e-mail seu; não precisa de cartão.',
+        'Create the account (or sign in): ' + botaoConta + '. Use your own e-mail; no card needed.', 'conta'),
+      P('Na página de chaves, toque em “' + botaoChave + '”.' + (rotuloNome ? ' Se pedir um nome, escreva “' + rotuloNome + '”.' : ''),
+        'On the keys page, tap “' + botaoChave + '”.' + (rotuloNome ? ' If it asks for a name, type “' + rotuloNome + '”.' : ''), 'botao'),
+      P('A chave aparece UMA vez. Toque no botão de copiar ao lado dela (não feche antes de copiar).',
+        'The key shows ONCE. Tap the copy button next to it (do not close before copying).', 'copiar'),
+      P('Volte para esta aba, cole a chave no campo abaixo e toque em “Salvar e testar”.',
+        'Come back to this tab, paste the key in the field below and tap “Save and test”.', 'colar')
+    ];
+    if (extra) ps.splice(2, 0, extra);
+    return ps;
+  }
+  function limiteTxt(pr) { return pr.limite ? (pr.limite[Idioma.atual] || pr.limite.pt) : ''; }
+
+  /* provedores que nao conversam (so voz), mais os que conversam e tambem
+     fazem voz - a lista de chat continua sendo os que tem cap 'texto' */
+  function completarProvedores() {
+    var X = PROVEDORES;
+    X.openrouter.cap = ['texto']; X.openrouter.prefixo = 'sk-or-';
+    X.openrouter.conta = { pt: 'Google, GitHub ou e-mail', en: 'Google, GitHub or e-mail' };
+    X.openrouter.limite = { pt: 'Grátis nos modelos com “:free”: ~20 pedidos por minuto e 50 por dia (1.000/dia se um dia comprar US$ 10 de crédito). Sem cartão.',
+                            en: 'Free on “:free” models: ~20 requests per minute and 50 per day (1,000/day if you ever buy US$ 10 of credit). No card.' };
+    X.openrouter.passos = passosPadrao('OpenRouter', 'Sign in → Google ou e-mail', 'Create API Key', 'SolverONE');
+    X.openrouter.serve = { pt: 'Um cadastro só dá acesso a dezenas de IAs (Llama, Qwen, Gemma, DeepSeek…). Ótimo para começar.', en: 'One sign-up gives access to dozens of AIs (Llama, Qwen, Gemma, DeepSeek…). Great to start.' };
+
+    X.groq.cap = ['texto', 'stt']; X.groq.prefixo = 'gsk_';
+    X.groq.conta = { pt: 'Google, GitHub ou e-mail', en: 'Google, GitHub or e-mail' };
+    X.groq.limite = { pt: 'Grátis e muito rápido: ~30 pedidos por minuto e até 1.000 por dia no texto; transcrição (Whisper) com ~2 h de áudio por hora. Sem cartão.',
+                      en: 'Free and very fast: ~30 requests per minute and up to 1,000 per day for text; transcription (Whisper) with ~2 h of audio per hour. No card.' };
+    X.groq.passos = passosPadrao('Groq', 'Google, GitHub ou e-mail', 'Create API Key', 'SolverONE');
+    X.groq.serve = { pt: 'Melhor opção grátis para voz → texto (Whisper) e respostas instantâneas.', en: 'Best free option for speech → text (Whisper) and instant answers.' };
+    X.groq.stt = { url: 'https://api.groq.com/openai/v1/audio/transcriptions', modelo: 'whisper-large-v3-turbo' };
+
+    X.gemini.cap = ['texto', 'stt', 'tts', 'visao']; X.gemini.prefixo = 'AIza';
+    X.gemini.conta = { pt: 'conta Google', en: 'Google account' };
+    X.gemini.limite = { pt: 'Grátis (AI Studio): centenas de pedidos por dia no Flash e Flash-Lite; a cota exata aparece na sua conta. Sem cartão. A voz (TTS) e a leitura de imagens também entram no grátis.',
+                        en: 'Free (AI Studio): hundreds of requests per day on Flash and Flash-Lite; the exact quota shows in your account. No card. Voice (TTS) and image reading are free too.' };
+    X.gemini.passos = passosPadrao('Google AI Studio', 'entrar com a conta Google e aceitar os termos', 'Create API key / Criar chave de API', null,
+      P('Se pedir um projeto, toque em “Create API key in new project” (ele cria um projeto para você).',
+        'If it asks for a project, tap “Create API key in new project” (it creates one for you).', 'botao'));
+    X.gemini.serve = { pt: 'A mais completa grátis: texto, ouvir áudio, falar (voz natural) e ler imagens com uma chave só.', en: 'The most complete free one: text, hearing audio, speaking (natural voice) and reading images with a single key.' };
+    X.gemini.tts = { modelo: 'gemini-2.5-flash-preview-tts' };
+
+    X.mistral.cap = ['texto', 'stt', 'visao'];
+    X.mistral.conta = { pt: 'e-mail + confirmação por celular', en: 'e-mail + phone verification' };
+    X.mistral.limite = { pt: 'Plano “Experiment” grátis (pede número de celular): ~1 pedido por segundo e cota mensal. Sem cartão. Tem transcrição (Voxtral) e OCR.',
+                         en: 'Free “Experiment” plan (asks for a phone number): ~1 request per second and a monthly quota. No card. Has transcription (Voxtral) and OCR.' };
+    X.mistral.passos = passosPadrao('Mistral', 'e-mail ou Google; depois escolha o plano Experiment (grátis)', 'Nova chave / Create new key', 'SolverONE');
+    X.mistral.serve = { pt: 'Boa em português e em ler documentos (OCR).', en: 'Good in Portuguese and at reading documents (OCR).' };
+    X.mistral.stt = { url: 'https://api.mistral.ai/v1/audio/transcriptions', modelo: 'voxtral-mini-latest' };
+
+    X.openai.cap = ['texto', 'stt', 'tts', 'visao']; X.openai.prefixo = 'sk-';
+    X.openai.conta = { pt: 'e-mail, Google ou Apple + cartão', en: 'e-mail, Google or Apple + card' };
+    X.openai.limite = { pt: 'Pago por uso (mínimo US$ 5 de crédito). Sem plano grátis. Tem voz → texto (Whisper), texto → voz e imagens.',
+                        en: 'Pay per use (US$ 5 minimum credit). No free plan. Has speech → text (Whisper), text → speech and images.' };
+    X.openai.passos = passosPadrao('OpenAI', 'e-mail, Google ou Apple; depois Billing → Add credit (US$ 5)', 'Create new secret key', 'SolverONE');
+    X.openai.serve = { pt: 'Tudo numa conta só, com qualidade alta. Custa pouco para uso pessoal.', en: 'Everything in one account, high quality. Cheap for personal use.' };
+    X.openai.stt = { url: 'https://api.openai.com/v1/audio/transcriptions', modelo: 'whisper-1' };
+    X.openai.tts = { url: 'https://api.openai.com/v1/audio/speech', modelo: 'gpt-4o-mini-tts' };
+
+    X.anthropic.cap = ['texto', 'visao']; X.anthropic.prefixo = 'sk-ant-';
+    X.anthropic.conta = { pt: 'e-mail ou Google + cartão', en: 'e-mail or Google + card' };
+    X.anthropic.limite = { pt: 'Pago por uso (compra de crédito antes). Sem plano grátis.', en: 'Pay per use (buy credit first). No free plan.' };
+    X.anthropic.passos = passosPadrao('Anthropic Console', 'e-mail ou Google; depois Plans & billing → comprar crédito', 'Create Key', 'SolverONE');
+    X.anthropic.serve = { pt: 'Claude: muito boa em textos longos e cuidadosos (termos, políticas).', en: 'Claude: very good at long, careful texts (terms, policies).' };
+
+    X.personalizado.cap = ['texto'];
+    X.personalizado.limite = { pt: 'Depende do serviço. Serve para Cerebras, Together, Hugging Face, um Ollama na sua rede…', en: 'Depends on the service. For Cerebras, Together, Hugging Face, an Ollama on your network…' };
+    X.personalizado.passos = [P('Cole o endereço da API (termina em /v1), a chave e o nome do modelo, como o serviço informa.', 'Paste the API address (ends in /v1), the key and the model name, as the service states.', 'colar')];
+
+    X.cerebras = {
+      nome: 'Cerebras', gratis: null, ordem: 9, cap: ['texto'], prefixo: 'csk-',
+      onde: 'https://cloud.cerebras.ai/', base: 'https://api.cerebras.ai/v1', modelo: 'llama-3.3-70b',
+      conta: { pt: 'e-mail ou Google + cartão (não cobra)', en: 'e-mail or Google + card (not charged)' },
+      limite: { pt: 'US$ 5 de crédito por 30 dias, mas pede um cartão para ativar. Muito rápido.', en: 'US$ 5 credit for 30 days, but asks for a card to activate. Very fast.' },
+      nota: { pt: 'Crédito inicial de US$ 5 (30 dias); pede cartão.', en: 'US$ 5 starting credit (30 days); asks for a card.' },
+      passos: passosPadrao('Cerebras Cloud', 'e-mail ou Google; adicionar cartão em Billing', 'Create API Key', 'SolverONE'),
+      serve: { pt: 'Respostas quase instantâneas.', en: 'Near-instant answers.' },
+      chamar: function (chave, modelo, sistema, msgs, limite) { return chamarCompativel(this.base, chave, modelo, sistema, msgs, null, limite); },
+      listar: function (chave) { return listarCompativel(this.base, chave); }
+    };
+    X.deepseek = {
+      nome: 'DeepSeek', gratis: false, ordem: 12, cap: ['texto'], prefixo: 'sk-',
+      onde: 'https://platform.deepseek.com/api_keys', base: 'https://api.deepseek.com/v1', modelo: 'deepseek-chat',
+      conta: { pt: 'e-mail ou Google + crédito', en: 'e-mail or Google + credit' },
+      limite: { pt: 'Pago, mas muito barato (centavos por milhão de palavras). Sem plano grátis.', en: 'Paid but very cheap (cents per million words). No free plan.' },
+      nota: { pt: 'Pago por uso, barato.', en: 'Pay per use, cheap.' },
+      passos: passosPadrao('DeepSeek', 'e-mail ou Google; depois Top up (comprar crédito)', 'Create new API key', 'SolverONE'),
+      serve: { pt: 'Barata e boa para textos longos.', en: 'Cheap and good for long texts.' },
+      chamar: function (chave, modelo, sistema, msgs, limite) { return chamarCompativel(this.base, chave, modelo, sistema, msgs, null, limite); },
+      listar: function (chave) { return listarCompativel(this.base, chave); }
+    };
+    /* so voz: nao entram na lista de chat */
+    X.deepgram = {
+      nome: 'Deepgram', gratis: true, ordem: 6, cap: ['stt'], soVoz: true,
+      onde: 'https://console.deepgram.com/',
+      conta: { pt: 'e-mail, Google ou GitHub', en: 'e-mail, Google or GitHub' },
+      limite: { pt: 'US$ 200 de crédito ao criar a conta (dá centenas de horas de transcrição). Sem cartão. Depois, pago por minuto.',
+                en: 'US$ 200 credit on sign-up (hundreds of hours of transcription). No card. Then pay per minute.' },
+      nota: { pt: 'US$ 200 de crédito inicial; sem cartão.', en: 'US$ 200 starting credit; no card.' },
+      passos: passosPadrao('Deepgram Console', 'e-mail, Google ou GitHub', 'Create a New API Key', 'SolverONE'),
+      serve: { pt: 'Transcrição rápida e precisa, inclusive em tempo real.', en: 'Fast, accurate transcription, including real time.' },
+      stt: { url: 'https://api.deepgram.com/v1/listen?model=nova-3&language=pt&smart_format=true', auth: 'Token' },
+      testar: function (chave) { return fetch('https://api.deepgram.com/v1/projects', { headers: { Authorization: 'Token ' + chave } }).then(lerResposta); }
+    };
+    X.assemblyai = {
+      nome: 'AssemblyAI', gratis: true, ordem: 7, cap: ['stt'], soVoz: true,
+      onde: 'https://www.assemblyai.com/app/api-keys',
+      conta: { pt: 'e-mail, Google ou GitHub', en: 'e-mail, Google or GitHub' },
+      limite: { pt: 'US$ 50 de crédito ao criar a conta (dezenas de horas). Sem cartão. Depois, pago por hora.',
+                en: 'US$ 50 credit on sign-up (tens of hours). No card. Then pay per hour.' },
+      nota: { pt: 'US$ 50 de crédito inicial; sem cartão.', en: 'US$ 50 starting credit; no card.' },
+      passos: passosPadrao('AssemblyAI', 'e-mail, Google ou GitHub', 'Copy API key', null),
+      serve: { pt: 'Transcrição com resumo e identificação de quem fala.', en: 'Transcription with summary and speaker identification.' },
+      stt: { url: 'https://api.assemblyai.com/v2', auth: 'plain' },
+      testar: function (chave) { return fetch('https://api.assemblyai.com/v2/transcript?limit=1', { headers: { authorization: chave } }).then(lerResposta); }
+    };
+    X.elevenlabs = {
+      nome: 'ElevenLabs', gratis: true, ordem: 8, cap: ['tts'], soVoz: true,
+      onde: 'https://elevenlabs.io/app/settings/api-keys',
+      conta: { pt: 'e-mail ou Google', en: 'e-mail or Google' },
+      limite: { pt: 'Grátis: ~10 mil caracteres por mês (uns 10 minutos de áudio), só para uso pessoal. Planos pagos a partir de US$ 5/mês.',
+                en: 'Free: ~10k characters per month (about 10 minutes of audio), personal use only. Paid plans from US$ 5/month.' },
+      nota: { pt: '~10 min de áudio por mês grátis.', en: '~10 min of audio per month free.' },
+      passos: passosPadrao('ElevenLabs', 'e-mail ou Google', 'Create API Key', 'SolverONE'),
+      serve: { pt: 'As vozes mais naturais para ler histórias.', en: 'The most natural voices for reading stories.' },
+      tts: { url: 'https://api.elevenlabs.io/v1/text-to-speech', auth: 'xi-api-key' },
+      testar: function (chave) { return fetch('https://api.elevenlabs.io/v1/user', { headers: { 'xi-api-key': chave } }).then(lerResposta); }
+    };
+    X.aparelho = {
+      nome: { pt: 'Voz do aparelho', en: 'Device voice' }, gratis: true, ordem: 5, cap: ['tts', 'stt'], soVoz: true, semChave: true,
+      onde: '',
+      limite: { pt: 'Grátis e sem chave: usa a voz e o reconhecimento que já vêm no celular ou computador. Qualidade varia por aparelho.',
+                en: 'Free and no key: uses the voice and recognition built into the phone or computer. Quality varies by device.' },
+      passos: [P('Não precisa de chave. Para melhorar a voz no Android: Configurações → Conversão de texto em voz → instalar dados de voz em Português (Brasil).',
+                 'No key needed. To improve the voice on Android: Settings → Text-to-speech → install Portuguese (Brazil) voice data.', 'site')],
+      serve: { pt: 'Plano B que sempre funciona, até sem internet.', en: 'Plan B that always works, even offline.' }
+    };
+  }
+
+  /* validacao leve: so o formato, para pegar chave colada pela metade */
+  function chaveParece(prov, valor) {
+    var pr = PROVEDORES[prov]; valor = String(valor || '').trim();
+    if (!valor) return { ok: false, pt: 'Cole a chave.', en: 'Paste the key.' };
+    if (/\s/.test(valor)) return { ok: false, pt: 'A chave tem espaço ou quebra de linha no meio: copie de novo, inteira.', en: 'The key has a space or line break inside: copy it again, whole.' };
+    if (valor.length < 20) return { ok: false, pt: 'Curta demais: parece que faltou um pedaço.', en: 'Too short: looks like part is missing.' };
+    if (pr && pr.prefixo && valor.indexOf(pr.prefixo) !== 0) return { ok: false, pt: 'Chave do ' + nomeProv(pr) + ' começa com “' + pr.prefixo + '”. Confira se copiou do site certo.', en: nomeProv(pr) + ' keys start with “' + pr.prefixo + '”. Check you copied from the right site.' };
+    return { ok: true };
+  }
+  function nomeProv(pr) { return typeof pr.nome === 'string' ? pr.nome : (pr.nome[Idioma.atual] || pr.nome.pt); }
+  /* "Falta permissao" nao e chave errada. O ElevenLabs, por exemplo, cria chaves
+     com permissoes escolhidas (so "Text to Speech"): o teste, que le a conta,
+     volta 401 "missing_permissions". A chave e valida - so nao pode ler a conta. */
+  function faltaPermissao(e) {
+    if (!e || (e.status !== 401 && e.status !== 403)) return false;
+    var txt = String(e.message || '');
+    try { txt += ' ' + JSON.stringify(e.corpo || ''); } catch (x) {}
+    return /missing_permission|insufficient_permission|permission|permiss/i.test(txt);
+  }
+  function testarChave(prov, chave) {
+    var pr = PROVEDORES[prov];
+    if (pr.semChave) return Promise.resolve({ ok: true });
+    var teste = pr.testar ? pr.testar(chave).then(function () { return { ok: true }; })
+              : pr.listar ? pr.listar(chave).then(function (l) { return { ok: true, modelos: l }; })
+              : null;
+    if (!teste) return Promise.resolve({ ok: true, semTeste: true });
+    return teste.catch(function (e) {
+      if (faltaPermissao(e)) return { ok: true, semLerConta: true };
+      throw e;
+    });
+  }
+
+  /* escolha por uso: texto continua sendo IA.provedor(); voz tem a sua */
+  var PorUso = {
+    ler: function () { return Guardar.ler('ia-por-uso', {}, true) || {}; },
+    definir: function (cap, prov) { var m = PorUso.ler(); if (prov) m[cap] = prov; else delete m[cap]; Guardar.gravar('ia-por-uso', m, true);
+      d.dispatchEvent(new CustomEvent('dgo:ia-uso', { detail: { cap: cap, provedor: prov } })); },
+    provedor: function (cap) {
+      if (cap === 'texto') return IA.provedor();
+      var m = PorUso.ler(), p = m[cap];
+      if (p && PROVEDORES[p] && (PROVEDORES[p].semChave || IA.temChave(p))) return p;
+      var prontos = Object.keys(PROVEDORES).filter(function (k) { var pr = PROVEDORES[k]; return (pr.cap || []).indexOf(cap) !== -1 && !pr.semChave && IA.temChave(k); })
+        .sort(function (a, b) { return (PROVEDORES[a].ordem || 9) - (PROVEDORES[b].ordem || 9); });
+      if (prontos.length) return prontos[0];
+      return (cap === 'tts' || cap === 'stt') ? 'aparelho' : '';
+    },
+    chave: function (cap) { var p = PorUso.provedor(cap); return p ? IA.chave(p) : ''; }
+  };
+
+  /* ---- ilustracao desenhada de cada passo (SVG), ou o print do app ---- */
+  function iluPasso(prov, n, tipo, rotulo) {
+    var pr = PROVEDORES[prov], nome = nomeProv(pr);
+    var cor = 'var(--dgo-cor)';
+    function esc(s) { return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;'); }
+    var miolo = '';
+    if (tipo === 'abrir') {
+      miolo = '<rect x="20" y="52" width="200" height="44" rx="10" fill="' + cor + '"/><text x="120" y="80" font-size="15" font-weight="700" text-anchor="middle" fill="#04121f">' + esc(t('abrirSite')) + ' ↗</text>' +
+        '<text x="120" y="122" font-size="11" text-anchor="middle" fill="#94a3b8">' + esc(nome) + '</text>';
+    } else if (tipo === 'conta') {
+      miolo = '<rect x="30" y="40" width="180" height="26" rx="6" fill="#0b1220" stroke="#334155"/><text x="40" y="57" font-size="11" fill="#64748b">e-mail</text>' +
+        '<rect x="30" y="74" width="180" height="26" rx="6" fill="#0b1220" stroke="#334155"/><text x="40" y="91" font-size="11" fill="#64748b">••••••••</text>' +
+        '<rect x="30" y="108" width="180" height="26" rx="6" fill="' + cor + '"/><text x="120" y="125" font-size="12" font-weight="700" text-anchor="middle" fill="#04121f">Sign up / Log in</text>';
+    } else if (tipo === 'botao') {
+      var r = rotulo || 'Create API Key';
+      miolo = '<text x="24" y="52" font-size="12" fill="#94a3b8">API keys</text><line x1="24" y1="60" x2="216" y2="60" stroke="#334155"/>' +
+        '<rect x="24" y="72" width="192" height="30" rx="7" fill="' + cor + '"/><text x="120" y="92" font-size="12" font-weight="700" text-anchor="middle" fill="#04121f">+ ' + esc(r) + '</text>' +
+        '<circle cx="204" cy="87" r="16" fill="none" stroke="#f59e0b" stroke-width="3"/>';
+    } else if (tipo === 'copiar') {
+      miolo = '<text x="24" y="50" font-size="11" fill="#94a3b8">' + esc(t('suaChave')) + '</text>' +
+        '<rect x="24" y="60" width="150" height="30" rx="7" fill="#0b1220" stroke="#334155"/><text x="34" y="80" font-size="12" font-family="monospace" fill="#e2e8f0">' + esc((pr.prefixo || 'sk-') + '••••••••') + '</text>' +
+        '<rect x="182" y="60" width="34" height="30" rx="7" fill="' + cor + '"/><text x="199" y="81" font-size="15" text-anchor="middle" fill="#04121f">⎘</text>' +
+        '<circle cx="199" cy="75" r="20" fill="none" stroke="#f59e0b" stroke-width="3"/><text x="120" y="120" font-size="11" text-anchor="middle" fill="#fbbf24">' + esc(t('umaVez')) + '</text>';
+    } else if (tipo === 'colar') {
+      miolo = '<text x="24" y="50" font-size="11" fill="#94a3b8">' + esc(nomeApp()) + ' → ' + esc(t('cofreChaves')) + '</text>' +
+        '<rect x="24" y="60" width="192" height="30" rx="7" fill="#0b1220" stroke="' + cor + '" stroke-width="2"/><text x="34" y="80" font-size="12" font-family="monospace" fill="#e2e8f0">' + esc((pr.prefixo || 'sk-') + '••••••••••••') + '</text>' +
+        '<rect x="24" y="100" width="192" height="28" rx="7" fill="' + cor + '"/><text x="120" y="118" font-size="12" font-weight="700" text-anchor="middle" fill="#04121f">' + esc(t('salvarTestar')) + '</text>';
+    } else {
+      miolo = '<text x="120" y="88" font-size="30" text-anchor="middle">⚙️</text>';
+    }
+    var svg = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 140" role="img" aria-hidden="true">' +
+      '<rect x="0" y="0" width="240" height="140" rx="12" fill="#111a2e" stroke="#334155"/>' +
+      '<rect x="0" y="0" width="240" height="24" rx="12" fill="#1e293b"/><circle cx="14" cy="12" r="4" fill="#ef4444"/><circle cx="26" cy="12" r="4" fill="#f59e0b"/><circle cx="38" cy="12" r="4" fill="#22c55e"/>' +
+      '<text x="120" y="16" font-size="9" text-anchor="middle" fill="#94a3b8">' + esc(tipo === 'colar' ? location.host : (pr.onde || '').replace(/^https?:\/\//, '').replace(/\/.*$/, '')) + '</text>' + miolo + '</svg>';
+    var fig = el('figure', { class: 'dgo-guia-ilu' });
+    var img = el('img', { src: 'guia-' + prov + '-' + n + '.png', alt: '', loading: 'lazy' });
+    img.onerror = function () { fig.innerHTML = svg; };   /* sem print: fica o desenho */
+    fig.appendChild(img);
+    return fig;
+  }
+
+  function abrirChaves(provedorAberto, capInicial) {
+    completarProvedores();
+    var aberto = provedorAberto || '';
+    var filtro = capInicial || Guardar.ler('ia-cofre-filtro', '', true) || '';
+    if (aberto && !PROVEDORES[aberto]) aberto = '';
+    /* guia acompanhado: um passo por vez, com "ja fiz, proximo"; o passo atual fica guardado */
+    var guia = Guardar.ler('ia-guia', {}, true) || {};
+    function guiaDefinir(p, n) { if (n === null || n === undefined) delete guia[p]; else guia[p] = n; Guardar.gravar('ia-guia', guia, true); }
+    function emGuiaDe(p) { var pr = PROVEDORES[p]; return !!(pr.passos && pr.passos.length > 1 && guia[p] !== undefined && !pr.semChave); }
+    var janelaGuia = null;
+    function abrirAoLado(pr, p) {
+      /* os sites dos provedores nao deixam ser mostrados dentro de outra pagina (X-Frame-Options),
+         entao a saida e uma janela separada, colocada ao lado desta */
+      var w = raiz.screen && raiz.screen.availWidth || 1200, h = raiz.screen && raiz.screen.availHeight || 800;
+      var largura = Math.max(420, Math.round(w * 0.5)), esquerda = Math.max(0, w - largura);
+      try {
+        janelaGuia = raiz.open(pr.onde, 'dgo-guia-' + p, 'popup=yes,width=' + largura + ',height=' + Math.round(h * 0.92) + ',left=' + esquerda + ',top=0');
+      } catch (e) { janelaGuia = null; }
+      if (!janelaGuia) { try { raiz.open(pr.onde, '_blank', 'noopener'); } catch (e2) {} }
+    }
+
+    function selos(pr) {
+      var s = [];
+      if (pr.gratis === true) s.push(el('em', { class: 'dgo-selo dgo-selo-ok', texto: t('gratis') }));
+      else if (pr.gratis === false) s.push(el('em', { class: 'dgo-selo dgo-selo-pago', texto: t('pago') }));
+      else if (pr.gratis === null && pr.conta) s.push(el('em', { class: 'dgo-selo', texto: t('pedeCartao') }));
+      (pr.cap || []).forEach(function (c) { s.push(el('span', { class: 'dgo-cap', title: CAPS[c][Idioma.atual] || CAPS[c].pt, texto: CAPS[c].icone })); });
+      return s;
+    }
+    function emUsoPara(p) {
+      var usos = [];
+      if (IA.provedor() === p && IA.temChave(p) && (PROVEDORES[p].cap || []).indexOf('texto') !== -1) usos.push(CAPS.texto.icone);
+      ['stt', 'tts'].forEach(function (c) { if ((PROVEDORES[p].cap || []).indexOf(c) !== -1 && PorUso.provedor(c) === p) usos.push(CAPS[c].icone); });
+      return usos;
+    }
+    function reabrir() { abrirModal(montar(), function () { abrirChaves(aberto, filtro); }); }
+
+    function montar() {
+      var caixa = el('div', { class: 'dgo-caixa dgo-larga dgo-cofre' });
+      caixa.appendChild(el('h2', { texto: '🔑 ' + t('cofreChaves') }));
+      caixa.appendChild(el('p', { class: 'dgo-mini', texto: t('cofreExplica') }));
+
+      /* filtro: para que serve */
+      var chips = el('div', { class: 'dgo-chips', role: 'tablist' });
+      [['', t('tudo')]].concat(Object.keys(CAPS).map(function (c) { return [c, CAPS[c].icone + ' ' + (CAPS[c][Idioma.atual] || CAPS[c].pt)]; })).forEach(function (o) {
+        chips.appendChild(el('button', { type: 'button', role: 'tab', class: 'dgo-chip' + (filtro === o[0] ? ' dgo-on' : ''), 'aria-selected': filtro === o[0] ? 'true' : 'false', texto: o[1],
+          onclick: function () { filtro = o[0]; Guardar.gravar('ia-cofre-filtro', filtro, true); aberto = ''; reabrir(); } }));
+      });
+      caixa.appendChild(chips);
+      if (filtro && CAPS[filtro]) caixa.appendChild(el('p', { class: 'dgo-mini', texto: CAPS[filtro].expl[Idioma.atual] || CAPS[filtro].expl.pt }));
+
+      /* resumo do que esta em uso */
+      var resumo = ['texto', 'stt', 'tts'].map(function (c) {
+        var p = PorUso.provedor(c), ok = p && (PROVEDORES[p].semChave || IA.temChave(p));
+        return CAPS[c].icone + ' ' + (ok ? nomeProv(PROVEDORES[p]) : '—');
+      }).join('   ');
+      caixa.appendChild(el('p', { class: 'dgo-mini', texto: t('emUsoAgora') + ': ' + resumo }));
+
+      /* de relance: quais IAs ja tem chave salva - elas vem primeiro, com o selo */
+      function temChaveSalva(p) { return !PROVEDORES[p].semChave && !!IA.chave(p); }
+      var comChave = Object.keys(PROVEDORES).filter(temChaveSalva)
+        .sort(function (a, b) { return (PROVEDORES[a].ordem || 9) - (PROVEDORES[b].ordem || 9); });
+      var resumoChaves = el('p', { class: 'dgo-chaves-resumo' + (comChave.length ? ' dgo-ok' : '') });
+      if (comChave.length) {
+        resumoChaves.appendChild(d.createTextNode('✓ ' + t('comChaveSalva') + ' (' + comChave.length + '): '));
+        resumoChaves.appendChild(el('b', { texto: comChave.map(function (p) { return nomeProv(PROVEDORES[p]); }).join(', ') }));
+      } else resumoChaves.textContent = t('nenhumaChaveAinda');
+      caixa.appendChild(resumoChaves);
+
+      var lista = Object.keys(PROVEDORES).filter(function (p) { return !filtro || (PROVEDORES[p].cap || []).indexOf(filtro) !== -1; })
+        .sort(function (a, b) {
+          var ca = temChaveSalva(a) ? 0 : 1, cb = temChaveSalva(b) ? 0 : 1;
+          return (ca - cb) || ((PROVEDORES[a].ordem || 9) - (PROVEDORES[b].ordem || 9));
+        });
+
+      lista.forEach(function (p) {
+        var pr = PROVEDORES[p];
+        var tem = pr.semChave || IA.temChave(p);
+        var ehAberto = (p === aberto);
+        var usos = emUsoPara(p);
+        var cab = el('button', { type: 'button', class: 'dgo-prov-cab' + (ehAberto ? ' dgo-on' : ''), 'aria-expanded': ehAberto ? 'true' : 'false',
+          onclick: function () { aberto = ehAberto ? '' : p; reabrir(); } }, [
+          el('span', { class: 'dgo-prov-nome' }, [d.createTextNode(nomeProv(pr) + ' ')].concat(selos(pr)).concat([
+            pr.semChave ? null : (tem
+              ? el('em', { class: 'dgo-selo dgo-selo-ok', texto: '✓ ' + t('chaveSalvaSelo') })
+              : el('em', { class: 'dgo-selo dgo-selo-fraco', texto: t('semChaveSelo') })),
+            usos.length ? el('em', { class: 'dgo-selo', texto: t('emUso') + ' ' + usos.join(' ') }) : null
+          ])),
+          el('span', { class: 'dgo-mini', texto: ehAberto ? '▴' : '▾' })
+        ]);
+        caixa.appendChild(cab);
+        if (!ehAberto) return;
+
+        var corpo = el('div', { class: 'dgo-prov-corpo' });
+        if (pr.serve) corpo.appendChild(el('p', { class: 'dgo-serve', texto: (pr.serve[Idioma.atual] || pr.serve.pt) }));
+        if (pr.limite) corpo.appendChild(el('p', { class: 'dgo-mini' }, [el('b', { texto: t('limitesTit') + ': ' }), d.createTextNode(limiteTxt(pr))]));
+        if (pr.conta) corpo.appendChild(el('p', { class: 'dgo-mini' }, [el('b', { texto: t('contaTit') + ': ' }), d.createTextNode(pr.conta[Idioma.atual] || pr.conta.pt)]));
+
+        if (pr.onde && !emGuiaDe(p)) {
+          corpo.appendChild(el('a', { class: 'dgo-b', href: pr.onde, target: '_blank', rel: 'noopener noreferrer', style: { textDecoration: 'none' },
+            texto: t('abrirSite') + ' ↗ ' + nomeProv(pr) }));
+        }
+
+        var emGuia = emGuiaDe(p);
+        if (emGuia) {
+          var n = Math.min(guia[p], pr.passos.length - 1), ps = pr.passos[n], ultimo = n === pr.passos.length - 1;
+          var rotB = null;
+          if (ps.ilu === 'botao') { var mm = (ps[Idioma.atual] || ps.pt).match(/“([^”]+)”/); rotB = mm ? mm[1].split(' / ')[0] : null; }
+          var passo = el('div', { class: 'dgo-passo', role: 'group', 'aria-label': t('guiaPasso') }, [
+            el('div', { class: 'dgo-passo-cab' }, [
+              el('b', { texto: t('passo') + ' ' + (n + 1) + ' ' + t('de') + ' ' + pr.passos.length }),
+              el('span', { class: 'dgo-passo-barra' }, [el('span', { style: { width: Math.round(((n + 1) / pr.passos.length) * 100) + '%' } })])
+            ]),
+            el('p', { class: 'dgo-passo-txt', texto: ps[Idioma.atual] || ps.pt }),
+            iluPasso(p, n + 1, ps.ilu, rotB)
+          ]);
+          var lp = el('div', { class: 'dgo-linha dgo-usar' });
+          if (ps.ilu !== 'colar') {
+            lp.appendChild(el('button', { class: 'dgo-b', type: 'button', texto: t('abrirAoLado') + ' ↗', onclick: function () { abrirAoLado(pr, p); } }));
+          }
+          if (n > 0) lp.appendChild(el('button', { class: 'dgo-b dgo-b2', type: 'button', texto: '‹ ' + t('anterior'), onclick: function () { guiaDefinir(p, n - 1); reabrir(); } }));
+          if (!ultimo) lp.appendChild(el('button', { class: 'dgo-b', type: 'button', texto: '✓ ' + t('jaFiz') + ' ›', onclick: function () { guiaDefinir(p, n + 1); reabrir(); } }));
+          lp.appendChild(el('button', { class: 'dgo-b dgo-b2', type: 'button', texto: t('sairGuia'), onclick: function () { guiaDefinir(p, null); reabrir(); } }));
+          passo.appendChild(lp);
+          if (ultimo) passo.appendChild(el('p', { class: 'dgo-mini', texto: t('colarAbaixo') }));
+          corpo.appendChild(passo);
+        }
+        /* guia passo a passo (lista inteira), aberto quando ainda nao ha chave */
+        if (pr.passos && pr.passos.length && !emGuia) {
+          var det = el('details', { class: 'dgo-guia' });
+          if (!tem) det.open = true;
+          det.appendChild(el('summary', { texto: '🧭 ' + t('guiaPasso') + ' (' + pr.passos.length + ')' }));
+          var ol = el('ol', { class: 'dgo-guia-lista' });
+          pr.passos.forEach(function (ps, i) {
+            var rot = null;
+            if (ps.ilu === 'botao') { var m = (ps[Idioma.atual] || ps.pt).match(/“([^”]+)”/); rot = m ? m[1].split(' / ')[0] : null; }
+            ol.appendChild(el('li', {}, [el('p', { texto: ps[Idioma.atual] || ps.pt }), iluPasso(p, i + 1, ps.ilu, rot)]));
+          });
+          det.appendChild(ol);
+          det.appendChild(el('p', { class: 'dgo-mini', texto: t('guiaPrintDica').replace('{arq}', 'guia-' + p + '-2.png') }));
+          if (pr.passos.length > 1 && !pr.semChave) corpo.appendChild(el('button', { class: 'dgo-b', type: 'button', texto: '▶ ' + t('comecarGuia'),
+            onclick: function () { guiaDefinir(p, 0); reabrir(); } }));
+          corpo.appendChild(det);
+        }
+
+        var msg = el('div');
+        if (!pr.semChave) {
+          if (p === 'personalizado') {
+            var cB = campo(t('endereco'), { type: 'url', placeholder: 'https://…/v1', autocapitalize: 'none', spellcheck: 'false' });
+            cB._input.value = IA.baseDe(p);
+            cB._input.addEventListener('change', function () { IA.definirBase(p, cB._input.value); });
+            corpo.appendChild(cB);
+          }
+          var cK = campo(t('chave') + ' — ' + nomeProv(pr), { type: 'password', autocomplete: 'off', spellcheck: 'false', autocapitalize: 'none',
+            placeholder: IA.chave(p) ? '••••••••' : (pr.prefixo ? pr.prefixo + '…' : '') });
+          cK._input.value = IA.chave(p);
+          var olho = el('button', { type: 'button', class: 'dgo-olho', 'aria-label': t('mostrarChave'), texto: '👁', onclick: function () {
+            cK._input.type = cK._input.type === 'password' ? 'text' : 'password'; } });
+          cK.appendChild(olho);
+          corpo.appendChild(cK);
+
+          var cM = null, dl = null;
+          if ((pr.cap || []).indexOf('texto') !== -1) {
+            cM = campo(t('modelo'), { type: 'text', autocapitalize: 'none', spellcheck: 'false', list: 'dgo-modelos-' + p });
+            cM._input.value = IA.modelo(p);
+            dl = el('datalist', { id: 'dgo-modelos-' + p });
+            var cache = (Guardar.ler('ia-lista-modelos', {}, true) || {})[p];
+            (cache && cache.modelos || []).forEach(function (m) { dl.appendChild(el('option', { value: m.id })); });
+            cM.appendChild(dl);
+            corpo.appendChild(cM);
+          }
+
+          var l1 = el('div', { class: 'dgo-linha' });
+          l1.appendChild(el('button', { class: 'dgo-b', type: 'button', texto: t('salvarTestar'), onclick: function () {
+            var b = this, valor = cK._input.value.trim();
+            var chk = chaveParece(p, valor);
+            msg.innerHTML = '';
+            if (!chk.ok && !(p === 'personalizado' && !valor)) { msg.appendChild(aviso(chk[Idioma.atual] || chk.pt, 'erro')); return; }
+            IA.definirChave(p, valor);
+            if (cM) IA.definirModelo(p, cM._input.value.trim());
+            if ((pr.cap || []).indexOf('texto') !== -1 && IA.temChave(p) && !IA.provedoresProntos().filter(function (x) { return x !== p; }).length) IA.definirProvedor(p);
+            b.disabled = true; msg.appendChild(aviso(t('testando'), 'info'));
+            testarChave(p, valor).then(function (r) {
+              msg.innerHTML = '';
+              msg.appendChild(aviso(r.semTeste ? t('chaveSalva') : t('chaveOk'), 'ok'));
+              guiaDefinir(p, null);
+              if (janelaGuia && !janelaGuia.closed) { try { janelaGuia.close(); } catch (e3) {} }
+              if (r.modelos && dl) {
+                var gratis = r.modelos.filter(function (m) { return m.gratis; });
+                var usar = (gratis.length && pr.gratis) ? gratis : r.modelos;
+                dl.innerHTML = ''; usar.slice(0, 300).forEach(function (m) { dl.appendChild(el('option', { value: m.id })); });
+                if (cM && !cM._input.value && usar.length) { cM._input.value = usar[0].id; IA.definirModelo(p, usar[0].id); }
+              }
+              setTimeout(reabrir, 900);
+            }).catch(function (e) {
+              msg.innerHTML = '';
+              var st = e && e.status;
+              var txt = st === 401 || st === 403 ? t('chaveRecusada') : (!st && /fetch|network/i.test(String(e && e.message)) ? t('corsAviso') : t('erroIA') + ' ' + ((e && e.message) || ''));
+              msg.appendChild(aviso(txt, st === 401 || st === 403 ? 'erro' : 'info'));
+            }).then(function () { b.disabled = false; });
+          } }));
+          corpo.appendChild(l1);
+        }
+
+        /* usar para: texto / voz -> texto / texto -> voz */
+        if (tem) {
+          var lu = el('div', { class: 'dgo-linha dgo-usar' });
+          (pr.cap || []).filter(function (c) { return c !== 'visao'; }).forEach(function (c) {
+            var ativo = PorUso.provedor(c) === p;
+            lu.appendChild(el('button', { class: 'dgo-b dgo-b2' + (ativo ? ' dgo-on' : ''), type: 'button', 'aria-pressed': ativo ? 'true' : 'false',
+              texto: (ativo ? '✓ ' : '') + t('usarPara') + ' ' + CAPS[c].icone + ' ' + (CAPS[c][Idioma.atual] || CAPS[c].pt),
+              onclick: function () { if (c === 'texto') IA.definirProvedor(p); else PorUso.definir(c, p); reabrir(); } }));
+          });
+          if (!pr.semChave) lu.appendChild(el('button', { class: 'dgo-b dgo-b2', type: 'button', texto: t('remover'), onclick: function () {
+            IA.definirChave(p, ''); ['stt', 'tts'].forEach(function (c) { if (PorUso.ler()[c] === p) PorUso.definir(c, ''); }); reabrir(); } }));
+          corpo.appendChild(lu);
+        }
+        corpo.appendChild(msg);
+        caixa.appendChild(corpo);
+      });
+
+      caixa.appendChild(aviso(t('chaveAvisoCusto') + ' ' + t('chaveNuncaChat'), 'info'));
+      caixa.appendChild(el('button', { class: 'dgo-b dgo-b2', type: 'button', texto: t('fechar'), onclick: fecharModal }));
+      return caixa;
+    }
+    return abrirModal(montar(), function () { abrirChaves(aberto, filtro); });
+  }
+
+  /* ---------------- widget de consulta ---------------- */
+  function abrirIA() {
+    if (cfg.niveis.ativo && cfg.ia.servico && !Niveis.pode(cfg.ia.servico)) {
+      return Niveis.convite(cfg.ia.servico);
+    }
+    if (!IA.provedoresProntos().length) return abrirChaves();
+
+    var caixa = el('div', { class: 'dgo-caixa dgo-larga' });
+    caixa.appendChild(el('h2', { texto: '✨ ' + t('perguntarIA') }));
+
+    /* escolha do provedor, como no desenho do BudgetONE */
+    var sel = el('select', { 'aria-label': t('provedor') });
+    sel.appendChild(el('option', { value: '', texto: t('escolhaProvedor') }));
+    IA.provedoresOrdenados().forEach(function (p) {
+      var pr = PROVEDORES[p], tem = IA.temChave(p);
+      var o = el('option', { value: p, texto: pr.nome + (pr.gratis === true ? ' · ' + t('gratis') : '') + (tem ? '' : ' · ' + t('colarChave')) });
+      if (p === IA.provedor() && tem) o.selected = true;
+      sel.appendChild(o);
+    });
+    sel.addEventListener('change', function () {
+      var p = sel.value;
+      if (!p) return;
+      if (!IA.temChave(p)) { fecharModal(); abrirChaves(p); return; }
+      IA.definirProvedor(p); linhaTopo.textContent = rotuloTopo();
+    });
+    var topo = el('div', { class: 'dgo-linha' });
+    topo.appendChild(el('div', { style: { flex: '2' } }, [sel]));
+    topo.appendChild(el('button', { class: 'dgo-b dgo-b2', type: 'button', texto: t('colarChave'),
+      style: { marginTop: '0', minHeight: '40px' }, onclick: function () { fecharModal(); abrirChaves(sel.value || IA.provedor()); } }));
+    caixa.appendChild(topo);
+
+    function rotuloTopo() { return PROVEDORES[IA.provedor()].nome + ' · ' + (IA.modelo() || '—'); }
+    var linhaTopo = el('div', { class: 'dgo-mini', texto: rotuloTopo() });
+    caixa.appendChild(linhaTopo);
+
+    var fio = el('div', { class: 'dgo-ia-fio' });
+    caixa.appendChild(fio);
+
+    function pintar() {
+      fio.innerHTML = '';
+      IA._conversa.forEach(function (m) {
+        fio.appendChild(el('div', { class: 'dgo-ia-msg dgo-' + (m.papel === 'ia' ? 'ia' : 'eu'), texto: m.texto }));
+      });
+      fio.scrollTop = fio.scrollHeight;
+    }
+
+    var entrada = el('textarea', { rows: 2, class: 'dgo-ia-entrada', placeholder: t('escrevaPergunta') });
+
+    if (!IA._conversa.length) {
+      var sugs = cfg.ia.sugestoes || [];
+      if (sugs.length) {
+        var chips = el('div', { class: 'dgo-ia-chips' });
+        sugs.forEach(function (sg) {
+          var txt = (typeof sg === 'string') ? sg : (sg[Idioma.atual] || sg.pt);
+          chips.appendChild(el('button', { type: 'button', texto: txt, onclick: function () { entrada.value = txt; enviar(); } }));
+        });
+        fio.appendChild(el('div', { class: 'dgo-mini', texto: t('sugestoes') }));
+        fio.appendChild(chips);
+      }
+    } else { pintar(); }
+
+    var bEnviar = el('button', { class: 'dgo-b', type: 'button', texto: t('perguntar') });
+
+    function enviar() {
+      var pergunta = entrada.value.trim();
+      if (!pergunta) return;
+      entrada.value = '';
+      IA._conversa.push({ papel: 'pessoa', texto: pergunta });
+      pintar();
+      var pensando = el('div', { class: 'dgo-ia-msg dgo-ia dgo-pensando', texto: t('pensando') });
+      fio.appendChild(pensando); fio.scrollTop = fio.scrollHeight;
+      bEnviar.disabled = true;
+      IA.perguntar(pergunta, { historico: IA._conversa.slice(-12) })
+        .then(function (resposta) {
+          IA._conversa.push({ papel: 'ia', texto: resposta || t('semResposta') });
+          pintar();
+        })
+        .catch(function (e) {
+          pensando.remove();
+          var m = (e && e.message) || '';
+          fio.appendChild(aviso(
+            m === 'sem-chave' ? t('semChave') :
+            m === 'sem-internet' ? t('semInternet') :
+            m === 'so-wifi' ? t('soWifi') :
+            m === 'sem-endereco' ? t('semEndereco') : (t('erroIA') + ' ' + m), 'erro'));
+          fio.scrollTop = fio.scrollHeight;
+        })
+        .then(function () { bEnviar.disabled = false; });
+    }
+
+    entrada.addEventListener('keydown', function (e) { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); enviar(); } });
+    bEnviar.addEventListener('click', enviar);
+
+    caixa.appendChild(entrada);
+    var acoes = el('div', { class: 'dgo-linha' });
+    acoes.appendChild(bEnviar);
+    acoes.appendChild(el('button', { class: 'dgo-b dgo-b2', type: 'button', texto: t('limparConversa'),
+      onclick: function () { IA.limparConversa(); fecharModal(); abrirIA(); } }));
+    caixa.appendChild(acoes);
+
+    /* o que a IA recebe junto com a pergunta - transparencia, como no desenho */
+    var det = el('details', { class: 'dgo-mini', style: { margin: '8px 0' } }, [
+      el('summary', { texto: t('oQueAIARecebe') }),
+      el('div', { style: { marginTop: '6px', whiteSpace: 'pre-wrap' }, texto: IA.contexto() })
+    ]);
+    caixa.appendChild(det);
+    caixa.appendChild(el('div', { class: 'dgo-mini', texto: t('avisoIA') }));
+    caixa.appendChild(el('button', { class: 'dgo-b dgo-b2', type: 'button', texto: t('fechar'), onclick: fecharModal }));
+    return abrirModal(caixa, abrirIA);
+  }
+
+
+  /* ------------------------------------------------------------------
      20. DICIONARIO BASE  Portugues -> Ingles
          Para acrescentar palavras do seu app, use:
          DGO.iniciar({ traducoes: { 'Minha palavra': 'My word' } })
@@ -2880,6 +5309,390 @@
   };
 
   /* ------------------------------------------------------------------
+     19-D. ASSISTONE — o assistente de todos os apps
+     ------------------------------------------------------------------
+     Personagem redondo no canto de baixo, a direita (acima da barra de
+     baixo no celular). Ligado por padrao; liga e desliga em Configuracoes.
+     O que ele mostra vem do config de cada app (cfg.assistente):
+
+       imagem: 'ajuda-botao.png'                  // a arte do personagem
+       tela:   function () { return 'inicio'; }   // padrao: <body data-pagina="...">
+       telas:  { inicio: { titulo:{pt,en}, frase:{pt,en},
+                           atalhos:[ { rotulo:{pt,en}, acao: function|url, principal:true } ] } }
+       tour:   [ { seletor:'#busca', titulo:{pt,en}, texto:{pt,en} } ]
+       dicas:  { inicio: {pt,en} }                 // uma por tela, uma vez so
+       busca:  [ { termo:{pt,en}, sinonimos:['...'], destino: url|function, icone:'🎸' } ]
+       wizard: 'inicio'                            // id de um DGO.wizard.definir(...) do app
+       esconderCom: ['body.modo-palco']            // com isto visivel, o personagem some
+
+     O balao NAO entra no historico (o Voltar do celular continua levando
+     as telas). Some quando ha janela, menu ou tela cheia aberta.
+     ------------------------------------------------------------------ */
+  var Assistente = {
+    el: null, bolha: null, botao: null, vista: null, _tour: null, _dicaT: null, _syncT: null, _res: [],
+
+    ativoNoApp: function () { return !!(cfg.assistente && cfg.assistente.ativo !== false); },
+    ligado: function () { return Assistente.ativoNoApp() && prefLer('aone:ligado', true) !== false; },
+    ligar: function (v) {
+      prefGravar('aone:ligado', !!v);
+      Assistente.fechar();
+      if (v) { Assistente.montar(); avisoRapido('✓ ' + t('aoneLigado'), 3000); }
+      else avisoRapido(t('aoneDesligado'), 5000);
+      Assistente.sincronizar();
+      d.dispatchEvent(new CustomEvent('dgo:assistente', { detail: { ligado: !!v } }));
+    },
+    tx: function (v) { if (!v) return ''; return typeof v === 'string' ? v : (v[Idioma.atual] || v.pt || ''); },
+    tela: function () {
+      var c = cfg.assistente || {};
+      try { if (typeof c.tela === 'function') return c.tela() || ''; } catch (e) {}
+      return (d.body && d.body.getAttribute('data-pagina')) || 'inicio';
+    },
+    imagem: function () { return (cfg.assistente && cfg.assistente.imagem) || 'ajuda-botao.png'; },
+    img: function (cls) {
+      var i = el('img', { src: Assistente.imagem(), alt: '', class: cls || '' });
+      i.onerror = function () { var s = el('span', { class: 'dgo-aone-glifo', texto: '?' }); if (i.parentNode) i.parentNode.replaceChild(s, i); };
+      return i;
+    },
+
+    /* ---- monta o personagem uma vez ---- */
+    montar: function () {
+      if (Assistente.el || !d.body) return;
+      Assistente.botao = el('button', { type: 'button', class: 'dgo-aone-bt', 'aria-haspopup': 'dialog', title: 'AssistONE',
+        'aria-label': t('aoneRotulo'), onclick: function () { if (Assistente.vista) Assistente.fechar(); else Assistente.abrir(); } },
+        [Assistente.img()]);
+      Assistente.bolha = el('div', { class: 'dgo-aone-bolha dgo-oculto', role: 'dialog', 'aria-live': 'polite', 'aria-label': 'AssistONE' });
+      Assistente.el = el('div', { id: 'dgo-aone', 'data-dgo-ui': '1', class: 'dgo-oculto' }, [Assistente.bolha, Assistente.botao]);
+      d.body.appendChild(Assistente.el);
+      /* tocar fora fecha o balao; Esc tambem (e encerra o tour) */
+      d.addEventListener('pointerdown', function (e) {
+        if (!Assistente.vista || Assistente.el.contains(e.target)) return;
+        if (e.target.closest && e.target.closest('.dgo-aone-tour')) return;
+        Assistente.fechar();
+      }, true);
+      d.addEventListener('keydown', function (e) {
+        if (e.key !== 'Escape') return;
+        if (Assistente._tour) { e.stopPropagation(); Assistente.tourFim(); }
+        else if (Assistente.vista && !modalEl) Assistente.fechar();
+      }, true);
+      if (raiz.MutationObserver) {
+        new MutationObserver(function () {
+          if (Assistente._syncT) return;
+          Assistente._syncT = setTimeout(function () { Assistente._syncT = null; Assistente.sincronizar(); }, 150);
+        }).observe(d.body, { childList: true, subtree: true, attributes: true, attributeFilter: ['class', 'aberta', 'open', 'hidden'] });
+      }
+      Assistente.sincronizar();
+    },
+    escondido: function () {
+      if (modalEl || telaCheiaAberta()) return true;
+      var sels = (cfg.assistente && cfg.assistente.esconderCom) || [];
+      for (var i = 0; i < sels.length; i++) {
+        var nos; try { nos = d.querySelectorAll(sels[i]); } catch (e) { continue; }
+        for (var j = 0; j < nos.length; j++) {
+          if (nos[j].getClientRects().length && raiz.getComputedStyle(nos[j]).visibility !== 'hidden') return true;
+        }
+      }
+      return false;
+    },
+    /* aparece so com o app livre: sem janela, menu ou tela cheia por cima */
+    sincronizar: function () {
+      if (!Assistente.el) return;
+      var mostrar = Assistente.ligado() && !Assistente.escondido() && !Assistente._tour;
+      Assistente.el.classList.toggle('dgo-oculto', !mostrar);
+      d.body.classList.toggle('dgo-aone-on', mostrar);
+      if (!mostrar && Assistente.vista) Assistente.fechar();
+    },
+    iniciar: function () {
+      if (!Assistente.ativoNoApp()) return;
+      Assistente.montar();
+      if (!Assistente.ligado()) return;
+      if (!prefLer('aone:ola', false)) {
+        setTimeout(function () {
+          if (Assistente.vista || Assistente.escondido() || !Assistente.ligado()) return;
+          prefGravar('aone:ola', true);
+          Assistente.abrir(true);
+        }, 1500);
+        return;
+      }
+      Assistente.dica();
+    },
+
+    /* ---- balao ---- */
+    mostrar: function (filhos, vista) {
+      if (!Assistente.el) Assistente.montar();
+      Assistente.vista = vista;
+      Assistente.bolha.innerHTML = '';
+      Assistente.bolha.appendChild(el('button', { type: 'button', class: 'dgo-aone-x', 'aria-label': t('fechar'), texto: '✕',
+        onclick: function () { Assistente.fechar(); } }));
+      filhos.forEach(function (f) { if (f) Assistente.bolha.appendChild(f); });
+      Assistente.bolha.classList.remove('dgo-oculto');
+      Assistente.el.classList.add('dgo-falando');
+      Assistente.botao.setAttribute('aria-expanded', 'true');
+    },
+    fechar: function () {
+      if (!Assistente.bolha) return;
+      clearTimeout(Assistente._dicaX);
+      Assistente.bolha.classList.add('dgo-oculto');
+      Assistente.bolha.innerHTML = '';
+      Assistente.vista = null;
+      Assistente.el.classList.remove('dgo-falando');
+      Assistente.botao.setAttribute('aria-expanded', 'false');
+    },
+    cabecalho: function (titulo) { return el('h4', {}, [Assistente.img(), d.createTextNode(titulo)]); },
+
+    /* o primeiro bloco e sempre a ajuda da tela onde a pessoa esta */
+    blocoTela: function () {
+      var telas = (cfg.assistente && cfg.assistente.telas) || {};
+      var x = telas[Assistente.tela()];
+      if (!x) return null;
+      var atalhos = el('div', { class: 'dgo-aone-atalhos' });
+      (x.atalhos || []).forEach(function (a) {
+        atalhos.appendChild(el('button', { type: 'button', class: a.principal ? 'dgo-on' : '', texto: Assistente.tx(a.rotulo),
+          onclick: function () { Assistente.fechar(); setTimeout(function () { Assistente.executar(a.acao); }, 60); } }));
+      });
+      return el('div', { class: 'dgo-aone-aqui' }, [
+        el('div', { class: 'dgo-aone-t', texto: '📍 ' + t('aoneVoceEsta') + ' ' + Assistente.tx(x.titulo) }),
+        x.frase ? el('p', { texto: Assistente.tx(x.frase) }) : null,
+        (x.atalhos && x.atalhos.length) ? atalhos : null
+      ]);
+    },
+    executar: function (acao) {
+      if (typeof acao === 'function') { try { acao(); } catch (e) {} return; }
+      if (typeof acao === 'string' && acao) {
+        if (acao.charAt(0) === '#') {
+          var alvo = $(acao);
+          if (alvo) { alvo.scrollIntoView({ behavior: 'smooth', block: 'center' }); Assistente.destacar(alvo); if (alvo.focus) try { alvo.focus({ preventScroll: true }); } catch (e) {} }
+          return;
+        }
+        raiz.location.href = acao;
+      }
+    },
+    destacar: function (no) {
+      no.classList.add('dgo-aone-achado');
+      setTimeout(function () { no.classList.remove('dgo-aone-achado'); }, 1600);
+    },
+
+    abrir: function (primeira) {
+      var c = cfg.assistente || {};
+      var wid = c.wizard && Wizard.def(c.wizard) ? c.wizard : '';
+      var aqui = Assistente.blocoTela();
+      var ops = el('div', { class: 'dgo-aone-ops' });
+      function op(icone, titulo, sub, acao, principal) {
+        ops.appendChild(el('button', { type: 'button', class: principal ? 'dgo-on' : '', onclick: acao }, [
+          el('span', { texto: icone }),
+          el('span', {}, [d.createTextNode(titulo), sub ? el('small', { texto: sub }) : null])
+        ]));
+      }
+      if (wid) op('🚀', Wizard.feito(wid) ? t('aoneRever') : t('aoneComecar'), t('aonePoucosMinutos'), function () {
+        Assistente.fechar(); Wizard.abrir(wid, Wizard.feito(wid) ? 0 : undefined);
+      }, !aqui);
+      if (c.tour && c.tour.length) op('🧭', t('aoneTour'), t('aoneTourSub'), function () { Assistente.fechar(); Assistente.tour(0); });
+      op('🔎', t('aoneProcurar'), t('aoneProcurarSub'), function () { Assistente.procurar(); });
+      op('💤', t('aoneAgoraNao'), '', function () { Assistente.fechar(); });
+      Assistente.mostrar([
+        Assistente.cabecalho(primeira ? t('aoneOla') : t('aoneComoAjudo')),
+        el('p', { texto: primeira ? t('aoneApresenta').replace('{app}', nomeApp()) : t('aoneVejaTela') }),
+        aqui, ops,
+        el('div', { class: 'dgo-aone-linha' }, [el('button', { type: 'button', class: 'dgo-aone-link', texto: t('aoneDesligar'),
+          onclick: function () { Assistente.ligar(false); } })])
+      ], 'menu');
+      setTimeout(function () { var f = $('.dgo-aone-aqui button, .dgo-aone-ops button', Assistente.bolha); if (f && !Plataforma.ehCelular()) try { f.focus(); } catch (e) {} }, 50);
+    },
+
+    /* ---- busca dentro do balao: o indice do config + os titulos da pagina ---- */
+    normal: function (s) {
+      s = String(s || '');
+      try { s = s.normalize('NFD').replace(/[̀-ͯ]/g, ''); } catch (e) {}
+      return s.toLowerCase();
+    },
+    indice: function () {
+      var lista = [];
+      ((cfg.assistente && cfg.assistente.busca) || cfg.busca || []).forEach(function (b) {
+        var termo = Assistente.tx(b.termo);
+        var sin = (b.sinonimos || []).map(function (s) { return Assistente.tx(s); }).join(' ');
+        lista.push({ titulo: termo, icone: b.icone || '›', sub: Assistente.tx(b.descricao), chave: Assistente.normal(termo + ' ' + sin + ' ' + (b.termo && b.termo.pt || '') + ' ' + (b.termo && b.termo.en || '')), acao: b.destino });
+      });
+      Array.prototype.forEach.call(d.querySelectorAll('main h1, main h2, main h3, [data-busca]'), function (h) {
+        if (h.closest && h.closest('[data-dgo-ui]')) return;
+        var txt = (h.getAttribute('data-busca') || h.textContent || '').trim();
+        if (!txt || txt.length > 80) return;
+        lista.push({ titulo: txt, icone: '§', sub: '', chave: Assistente.normal(txt), acao: function () {
+          h.scrollIntoView({ behavior: 'smooth', block: 'start' }); Assistente.destacar(h); } });
+      });
+      return lista;
+    },
+    achar: function (q) {
+      var partes = Assistente.normal(q).split(/\s+/).filter(Boolean);
+      if (!partes.length) return [];
+      return Assistente.indice().filter(function (i) {
+        return partes.every(function (p) { return i.chave.indexOf(p) !== -1; });
+      }).slice(0, 8);
+    },
+    parecidos: function (q) {
+      var palavras = {}, saida = [];
+      Assistente.indice().forEach(function (i) {
+        (i.titulo + ' ' + i.sub).split(/[^A-Za-z0-9À-ɏ]+/).forEach(function (w) { if (w.length >= 3) palavras[Assistente.normal(w)] = w; });
+      });
+      Assistente.normal(q).split(/\s+/).filter(Boolean).forEach(function (p) {
+        var lim = p.length <= 4 ? 1 : p.length <= 7 ? 2 : 3;
+        Object.keys(palavras).map(function (w) { return [w, distancia(p, w.slice(0, Math.max(p.length, Math.min(w.length, p.length + 2))))]; })
+          .filter(function (x) { return x[1] <= lim; }).sort(function (a, b) { return a[1] - b[1]; }).slice(0, 3)
+          .forEach(function (x) { if (saida.indexOf(palavras[x[0]]) === -1) saida.push(palavras[x[0]]); });
+      });
+      return saida.slice(0, 4);
+    },
+    procurar: function (pre) {
+      var caixa = el('input', { type: 'search', autocomplete: 'off', placeholder: t('aoneExemploBusca'), 'aria-label': t('aoneProcurar') });
+      if (pre) caixa.value = pre;
+      var res = el('div', { class: 'dgo-aone-res', 'aria-live': 'polite' });
+      var temporizador = null;
+      function desenhar() {
+        var q = caixa.value.trim();
+        res.innerHTML = '';
+        if (!q) { res.appendChild(el('p', { class: 'dgo-mini', texto: t('aoneOndeProcuro') })); return; }
+        Assistente._res = Assistente.achar(q);
+        if (Assistente._res.length) {
+          var ops = el('div', { class: 'dgo-aone-ops' });
+          Assistente._res.forEach(function (r) {
+            ops.appendChild(el('button', { type: 'button', onclick: function () { Assistente.fechar(); Assistente.executar(r.acao); } }, [
+              el('span', { texto: r.icone }), el('span', {}, [d.createTextNode(r.titulo), r.sub ? el('small', { texto: r.sub }) : null])
+            ]));
+          });
+          res.appendChild(ops);
+        } else {
+          var sug = Assistente.parecidos(q);
+          res.appendChild(el('p', { texto: t('aoneNadaAchado') + ' “' + q + '”. ' + (sug.length ? t('aoneQuisDizer') : t('aoneTenteOutra')) }));
+          if (sug.length) {
+            var s = el('div', { class: 'dgo-aone-sug' });
+            sug.forEach(function (w) { s.appendChild(el('button', { type: 'button', texto: w, onclick: function () { caixa.value = w; desenhar(); caixa.focus(); } })); });
+            res.appendChild(s);
+          }
+        }
+      }
+      caixa.addEventListener('input', function () { clearTimeout(temporizador); temporizador = setTimeout(desenhar, 120); });
+      caixa.addEventListener('keydown', function (e) {
+        if (e.key === 'Enter' && Assistente._res[0]) { e.preventDefault(); var r = Assistente._res[0]; Assistente.fechar(); Assistente.executar(r.acao); }
+      });
+      Assistente.mostrar([Assistente.cabecalho(t('aoneOQueProcura')), caixa, res], 'busca');
+      desenhar();
+      setTimeout(function () { try { caixa.focus(); } catch (e) {} }, 60);
+    },
+
+    /* ---- tour rapido: destaca cada parte da tela, com Proximo e Sair ---- */
+    passosTour: function () {
+      var c = cfg.assistente || {};
+      return (c.tour || []).concat([{ seletor: '#dgo-aone .dgo-aone-bt', titulo: 'AssistONE', texto: { pt: t('aoneSouEu'), en: t('aoneSouEu') } }]);
+    },
+    visivel: function (sel) {
+      var e2 = null; try { e2 = $(sel); } catch (x) {}
+      if (!e2) return null;
+      var r = e2.getBoundingClientRect();
+      return (r.width > 0 && r.height > 0 && raiz.getComputedStyle(e2).visibility !== 'hidden') ? e2 : null;
+    },
+    tour: function (i) {
+      var T = Assistente.passosTour();
+      i = i || 0;
+      Assistente.tourFim(true);
+      Assistente._tour = true; Assistente.sincronizar();
+      /* o proprio personagem precisa estar visivel para ser o ultimo passo */
+      if (Assistente.el) Assistente.el.classList.remove('dgo-oculto');
+      while (i < T.length && !Assistente.visivel(T[i].seletor)) i++;
+      if (i >= T.length) { prefGravar('aone:tour', true); Assistente.tourFim(); avisoRapido('✓ ' + t('aoneFimTour'), 3500); return; }
+      var alvo = Assistente.visivel(T[i].seletor);
+      alvo.scrollIntoView({ block: 'nearest' });
+      var r = alvo.getBoundingClientRect(), pad = 6;
+      var foco = el('div', { class: 'dgo-aone-foco', 'data-dgo-ui': '1', style: {
+        left: (r.left - pad) + 'px', top: (r.top - pad) + 'px', width: (r.width + pad * 2) + 'px', height: (r.height + pad * 2) + 'px' } });
+      var ultimo = i === T.length - 1;
+      var caixa = el('div', { class: 'dgo-aone-tour', 'data-dgo-ui': '1', role: 'dialog', 'aria-label': Assistente.tx(T[i].titulo) }, [
+        Assistente.cabecalho(Assistente.tx(T[i].titulo)),
+        el('p', { texto: Assistente.tx(T[i].texto) }),
+        el('div', { class: 'dgo-aone-linha' }, [
+          el('span', { class: 'dgo-mini', texto: (i + 1) + ' / ' + T.length }),
+          el('span', { style: { display: 'flex', gap: '6px' } }, [
+            el('button', { type: 'button', class: 'dgo-b dgo-b2', texto: t('aoneSair'), onclick: function () { Assistente.tourFim(); } }),
+            el('button', { type: 'button', class: 'dgo-b', texto: ultimo ? t('aoneConcluir') : (t('aoneProximo') + ' ›'), onclick: function () { Assistente.tour(i + 1); } })
+          ])
+        ])
+      ]);
+      d.body.appendChild(foco); d.body.appendChild(caixa);
+      var W = caixa.offsetWidth, H = caixa.offsetHeight, vw = raiz.innerWidth, vh = raiz.innerHeight;
+      var topo = r.bottom + 14; if (topo + H > vh - 8) topo = Math.max(8, r.top - H - 14);
+      var esq = Math.min(Math.max(8, r.left + r.width / 2 - W / 2), vw - W - 8);
+      caixa.style.top = topo + 'px'; caixa.style.left = esq + 'px';
+      Assistente._tourEls = [foco, caixa];
+      setTimeout(function () { var b = caixa.querySelector('.dgo-b:not(.dgo-b2)'); if (b) try { b.focus(); } catch (e) {} }, 40);
+    },
+    tourFim: function (soLimpar) {
+      (Assistente._tourEls || []).forEach(function (x) { if (x.parentNode) x.parentNode.removeChild(x); });
+      Assistente._tourEls = null;
+      if (soLimpar) return;
+      Assistente._tour = false;
+      Assistente.sincronizar();
+    },
+
+    /* ---- dica curta da tela, uma vez so, alguns segundos depois de entrar ---- */
+    dica: function () {
+      var c = cfg.assistente || {}, tela = Assistente.tela();
+      var txt = c.dicas && Assistente.tx(c.dicas[tela]);
+      var vistas = prefLer('aone:dicas', {}) || {};
+      if (!txt || vistas[tela] || Assistente.vista) return;
+      clearTimeout(Assistente._dicaT);
+      Assistente._dicaT = setTimeout(function () {
+        if (Assistente.vista || Assistente.escondido() || !Assistente.ligado()) return;
+        vistas[tela] = 1; prefGravar('aone:dicas', vistas);
+        Assistente.mostrar([
+          Assistente.cabecalho('AssistONE'),
+          el('p', { texto: txt }),
+          el('div', { class: 'dgo-aone-linha' }, [
+            el('button', { type: 'button', class: 'dgo-b dgo-b2', style: { width: 'auto', minHeight: '36px', padding: '8px 14px' }, texto: t('aoneEntendi'), onclick: function () { Assistente.fechar(); } }),
+            el('button', { type: 'button', class: 'dgo-b dgo-b2', style: { width: 'auto', minHeight: '36px', padding: '8px 14px' }, texto: t('aoneMaisAjuda'), onclick: function () { Assistente.abrir(); } })
+          ])
+        ], 'dica');
+        Assistente._dicaX = setTimeout(function () { if (Assistente.vista === 'dica') Assistente.fechar(); }, 12000);
+      }, 2200);
+    },
+    recomecar: function () {
+      prefGravar('aone:ola', false); prefGravar('aone:dicas', {}); prefGravar('aone:tour', false);
+      var c = cfg.assistente || {};
+      if (c.wizard) Wizard.reiniciar(c.wizard);
+      avisoRapido('✓ ' + t('aoneRecomecou'), 3500);
+    },
+
+    /* ---- cartao em Configuracoes ---- */
+    cartaoConfig: function (reabrir) {
+      var on = Assistente.ligado();
+      var caixa = el('div');
+      var toggle = el('button', { type: 'button', class: 'dgo-aone-toggle' + (on ? ' dgo-on' : ''), role: 'switch', 'aria-checked': on ? 'true' : 'false',
+        onclick: function () { Assistente.ligar(!Assistente.ligado()); if (reabrir) reabrir(); } }, [
+        Assistente.img(), el('span', { texto: 'ASSIST ONE ' + (on ? t('aoneAtivado') : t('aoneDesativado')) }),
+        el('span', { class: 'dgo-aone-sw', 'aria-hidden': 'true' })
+      ]);
+      caixa.appendChild(toggle);
+      caixa.appendChild(el('div', { class: 'dgo-mini', texto: t('aoneExplica') }));
+      var linha = el('div', { class: 'dgo-linha' });
+      linha.appendChild(el('button', { class: 'dgo-b dgo-b2', type: 'button', texto: '💬 ' + t('aoneAbrir'), onclick: function () {
+        if (!Assistente.ligado()) Assistente.ligar(true);
+        fecharModal(); setTimeout(function () { Assistente.abrir(); }, 200);
+      } }));
+      linha.appendChild(el('button', { class: 'dgo-b dgo-b2', type: 'button', texto: '🔄 ' + t('aoneRecomecar'), onclick: function () { Assistente.recomecar(); } }));
+      caixa.appendChild(linha);
+      return caixa;
+    }
+  };
+
+  /* distancia de letras entre duas palavras (para o "voce quis dizer") */
+  function distancia(a, b) {
+    if (a === b) return 0; if (!a.length) return b.length; if (!b.length) return a.length;
+    var p = [], i, j; for (j = 0; j <= b.length; j++) p[j] = j;
+    for (i = 1; i <= a.length; i++) {
+      var c = [i];
+      for (j = 1; j <= b.length; j++) c[j] = Math.min(p[j] + 1, c[j - 1] + 1, p[j - 1] + (a[i - 1] === b[j - 1] ? 0 : 1));
+      p = c;
+    }
+    return p[b.length];
+  }
+
+  /* ------------------------------------------------------------------
      21. API PUBLICA
      ------------------------------------------------------------------ */
   var API = {
@@ -2909,18 +5722,27 @@
           });
         });
         marcarIgnorados();
-        montarBanner();
+        Niveis.carregarArquivo().then(function () { Niveis.revisar(); });
+        montarFaixa();
+        montarBarraAdmin();
+        Anuncios.carregarArquivo();
         vigiarTelaCheia();
+        Popup.agendar();                 /* 'antes' se ninguem entrou; 'depois' se ja entrou */
         raiz.addEventListener('resize', function () {
-          ajustarTopo(bannerEl ? bannerEl.offsetHeight : 0);
+          ajustarTopo(faixaEl ? faixaEl.offsetHeight : 0);
         });
         raiz.addEventListener('orientationchange', function () {
-          raiz.setTimeout(function () { ajustarTopo(bannerEl ? bannerEl.offsetHeight : 0); }, 250);
+          raiz.setTimeout(function () { ajustarTopo(faixaEl ? faixaEl.offsetHeight : 0); }, 250);
         });
         montarSeletorIdioma();
+        Assistente.iniciar();
         PWA.preparar();
         if (cfg.login.biometria) Biometria.verificarAparelho();
         Notif.iniciar();
+        var con = navigator.connection;
+        if (con && con.addEventListener) {
+          con.addEventListener('change', function () { d.dispatchEvent(new CustomEvent('dgo:rede', { detail: { tipo: Rede.tipo() } })); });
+        }
         Varredura.iniciar();
         if (cfg.login.ativo && cfg.login.exigirNaAbertura && !Sessao.tipo) abrirLogin();
         d.dispatchEvent(new CustomEvent('dgo:pronto', { detail: API.sessao() }));
@@ -2964,9 +5786,13 @@
 
     /* anuncios */
     anuncios: {
-      mostrar: function () { FlagAnuncio.reabrir(); montarBanner(); },
-      esconder: function () { FlagAnuncio.fechar(); montarBanner(); },
+      mostrar: function () { FlagAnuncio.reabrir(); montarFaixa(); },
+      esconder: function () { FlagAnuncio.fechar(); montarFaixa(); },
+      lista: function () { return Anuncios.lista(); },
+      definirLista: function (l) { cfg.anuncios.lista = l || []; Anuncios._lista = null; montarFaixa(); },
       metricas: Anuncios.totais,
+      popup: function (anuncio, momento) { return Popup.abrir(anuncio, momento); },
+      agendarPopup: function (momento) { Popup.agendar(momento); },
       painel: abrirPainelAnunciante
     },
 
@@ -2976,7 +5802,11 @@
       ler: OCR.ler,
       lerArquivo: OCR.lerArquivo,
       extrair: OCR.extrair,
-      preAquecer: function () { return OCR.motor(function () {}); }
+      preAquecer: function () {
+        return OCR.temLocal().then(function (l) { return l ? true : OCR.motor(function () {}); });
+      },
+      ondeEsta: function () { return OCR.ondeEsta(); },
+      temLocal: function () { return OCR.temLocal(); }
     },
 
     /* notificacoes */
@@ -2997,6 +5827,99 @@
       distintivo: function (n) { return Notif.distintivo(n); },
       abrirPainel: abrirNotificacoes,
       montarPainel: montarNotificacoes
+    },
+
+    /* IA */
+    ia: {
+      abrir: abrirIA,
+      chaves: abrirChaves,
+      perguntar: function (p, o) { return IA.perguntar(p, o); },
+      temChave: function (prov) { return IA.temChave(prov); },
+      definirChave: function (prov, k) { return IA.definirChave(prov, k); },
+      provedor: function () { return IA.provedor(); },
+      definirProvedor: function (p) { return IA.definirProvedor(p); },
+      provedores: function (cap) {
+        completarProvedores();
+        return Object.keys(PROVEDORES).filter(function (p) { return cap ? (PROVEDORES[p].cap || []).indexOf(cap) !== -1 : !PROVEDORES[p].soVoz; })
+          .sort(function (a, b) { return (PROVEDORES[a].ordem || 9) - (PROVEDORES[b].ordem || 9); }).map(function (p) {
+          var pr = PROVEDORES[p];
+          return { id: p, nome: nomeProv(pr), gratis: pr.gratis, onde: pr.onde, cap: pr.cap || [], temChave: IA.temChave(p), modelo: IA.modelo(p),
+                   stt: pr.stt || null, tts: pr.tts || null, semChave: !!pr.semChave };
+        });
+      },
+      /* por uso: 'texto' | 'stt' | 'tts' | 'visao' - o app pergunta qual provedor e qual chave usar */
+      capacidades: function () { return Object.keys(CAPS).map(function (c) { return { id: c, icone: CAPS[c].icone, nome: CAPS[c][Idioma.atual] || CAPS[c].pt }; }); },
+      provedorPara: function (cap) { completarProvedores(); return PorUso.provedor(cap); },
+      chavePara: function (cap) { completarProvedores(); return PorUso.chave(cap); },
+      definirPara: function (cap, prov) { if (cap === 'texto') IA.definirProvedor(prov); else PorUso.definir(cap, prov); },
+      guia: function (prov, cap) { return abrirChaves(prov, cap); },
+      provedoresProntos: function () { return IA.provedoresProntos(); },
+      modelo: function (prov) { return IA.modelo(prov); },
+      definirModelo: function (prov, m) { return IA.definirModelo(prov, m); },
+      listarModelos: function (prov) { return IA.listarModelos(prov); },
+      definirEndereco: function (prov, url) { return IA.definirBase(prov, url); },
+      limpar: function () { return IA.limparConversa(); },
+      set cofreBackend(b2) { IA.cofreBackend = b2; },
+      get cofreBackend() { return IA.cofreBackend; }
+    },
+
+    /* rede: wifi ou dados */
+    rede: {
+      tipo: function () { return Rede.tipo(); },
+      economia: function () { return Rede.economia(); },
+      preferencia: function (c) { return Rede.preferencia(c); },
+      definir: function (c, v) { return Rede.definir(c, v); },
+      podeBaixarPesado: function () { return Rede.podeBaixarPesado(); },
+      podeUsarIA: function () { return Rede.podeUsarIA(); },
+      pedirPesado: function (desc, mb) { return Rede.pedirPesado(desc, mb); }
+    },
+
+    /* AssistONE */
+    assistente: {
+      abrir: function () { Assistente.abrir(); },
+      fechar: function () { Assistente.fechar(); },
+      ligado: function () { return Assistente.ligado(); },
+      ligar: function (v) { Assistente.ligar(v !== false); },
+      tour: function () { Assistente.tour(0); },
+      procurar: function (q) { Assistente.procurar(q); },
+      dica: function () { Assistente.dica(); },
+      recomecar: function () { Assistente.recomecar(); },
+      atualizar: function () { Assistente.sincronizar(); }
+    },
+
+    /* wizard */
+    wizard: {
+      definir: function (id, def) { return Wizard.definir(id, def); },
+      abrir: function (id, passo) { return Wizard.abrir(id, passo); },
+      feito: function (id) { return Wizard.feito(id); },
+      dados: function (id) { return Wizard.dados(id); },
+      reiniciar: function (id) { return Wizard.reiniciar(id); }
+    },
+
+    /* niveis de acesso */
+    pode: function (id) { return Niveis.pode(id); },
+    exigir: function (id, acao, opcoes) { return Niveis.exigir(id, acao, opcoes); },
+    nivel: function () { return Niveis.atual(); },
+    niveis: {
+      pode: function (id) { return Niveis.pode(id); },
+      exigir: function (id, a2, o) { return Niveis.exigir(id, a2, o); },
+      atual: function () { return Niveis.atual(); },
+      servicos: function () { return Niveis.servicos(); },
+      definir: function (id, n) { return Niveis.definirNivelDoServico(id, n); },
+      marcar: function (sel, id) { return Niveis.marcar(sel, id); },
+      revisar: function () { return Niveis.revisar(); },
+      convite: function (id, o) { return Niveis.convite(id, o); },
+      set backend(b2) { Niveis.backend = b2; },
+      get backend() { return Niveis.backend; }
+    },
+    admin: {
+      ehAdmin: function () { return Niveis.ehAdmin(); },
+      abrir: abrirAdmin,
+      simular: function (n) {
+        if (n) Guardar.gravar('admin-simular', n); else Guardar.apagar('admin-simular');
+        montarFaixa(); Niveis.revisar(); montarBarraAdmin();
+        return Niveis.atual();
+      }
     },
 
     /* e-mail */
@@ -3035,6 +5958,7 @@
     },
 
     /* utilidades internas expostas por conveniencia */
+    avisar: avisoRapido,
     guardar: Guardar,
     modal: { abrir: abrirModal, fechar: fecharModal, caixa: function (props, filhos) { return el('div', props, filhos); } }
   };

@@ -1,0 +1,23 @@
+{
+  "comentario": "Quem pode usar cada recurso do CifrasONE (lido pelo módulo comum, DGO.niveis). Níveis: visitante (aberto a todos), membro (precisa de conta), premium (conta sem anúncios). Hoje tudo é aberto; o administrador muda aqui (ou no RootifyONE) sem mexer no código.",
+  "servicos": [
+    { "id": "cifras",   "nome": { "pt": "Cifras com rolagem automática", "en": "Charts with auto-scroll" },
+      "descricao": { "pt": "Ler a cifra, mudar o tom, capotraste e modo celular", "en": "Read the chart, change key, capo and phone mode" }, "nivel": "visitante" },
+    { "id": "acordes",  "nome": { "pt": "Dicionário de acordes", "en": "Chord dictionary" },
+      "descricao": { "pt": "Posições no braço, som e campo harmônico", "en": "Fretboard positions, sound and harmonic field" }, "nivel": "visitante" },
+    { "id": "afinador", "nome": { "pt": "Afinador", "en": "Tuner" },
+      "descricao": { "pt": "Ouvir a nota certa de cada corda", "en": "Hear the right note for each string" }, "nivel": "visitante" },
+    { "id": "voz",      "nome": { "pt": "Ler a letra em voz alta", "en": "Read the lyrics aloud" },
+      "descricao": { "pt": "Voz do aparelho ou voz de internet (chave da pessoa)", "en": "Device voice or internet voice (the person's own key)" }, "nivel": "visitante" },
+    { "id": "importar", "nome": { "pt": "Importar cifra", "en": "Import chart" },
+      "descricao": { "pt": "Colar texto, abrir .txt ou .pdf e montar o arquivo", "en": "Paste text, open .txt or .pdf and build the file" }, "nivel": "visitante" },
+    { "id": "ocr",      "nome": { "pt": "Foto vira cifra", "en": "Photo to chart" },
+      "descricao": { "pt": "Ler a cifra de uma foto, no próprio aparelho", "en": "Read a chart from a photo, on the device" }, "nivel": "visitante" },
+    { "id": "favoritos","nome": { "pt": "Favoritas", "en": "Favorites" },
+      "descricao": { "pt": "Marcar músicas com a estrela", "en": "Star songs" }, "nivel": "visitante" },
+    { "id": "ia",       "nome": { "pt": "Perguntar à IA", "en": "Ask the AI" },
+      "descricao": { "pt": "Com a chave da própria pessoa (cofre de IA)", "en": "With the person's own key (AI vault)" }, "nivel": "visitante" },
+    { "id": "nuvem",    "nome": { "pt": "Nuvem e backup", "en": "Cloud and backup" },
+      "descricao": { "pt": "Guardar favoritos e ajustes no Drive ou OneDrive", "en": "Keep favorites and settings on Drive or OneDrive" }, "nivel": "visitante" }
+  ]
+}

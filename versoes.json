@@ -1,6 +1,35 @@
 {
-  "comentario": "Histórico de versões do CifrasONE. A mais nova fica EM CIMA. Ao publicar, acrescente um bloco novo no topo da lista e troque também o VERSAO do comum.js e do sw.js.",
+  "comentario": "Histórico de versões do CifrasONE. A mais nova fica EM CIMA. Ao publicar, acrescente um bloco novo no topo da lista (com data e hora) e troque também o VERSAO do comum.js, o versaoApp do diretrizes-config.js e o VERSAO do sw.js.",
   "versoes": [
+    {
+      "versao": "2.7.0",
+      "data": "2026-09-26",
+      "hora": "12:00:00",
+      "pt": [
+        "✨ Visual novo, mais limpo e pensado primeiro para o celular: cantos mais suaves, menos texto, ícones no lugar de palavras no topo e janelas que sobem de baixo como uma folha.",
+        "☰ Menu lateral com todas as funções em grupos (Tocar, Trazer cifras, Ajustes, Ajuda e mais), PT|EN dentro dele no celular e no cabeçalho no computador.",
+        "🏠 Início fixo no cabeçalho e barra de baixo no celular com Início, Acordes, Importar e Foto.",
+        "💡 Chegou o AssistONE: o assistente no canto da tela, com a ajuda da tela onde você está, tour rápido, busca e dicas. Liga e desliga em ⚙ → AssistONE.",
+        "↩️ O Voltar do celular fecha o menu, o afinador e o modo celular em vez de sair da página.",
+        "🤖 Cofre de IA completo (módulo comum 1.1.2): texto, voz → texto, texto → voz e fotos, com guia passo a passo por provedor. Cole a chave uma vez e ela vale em todos os apps SolverONE.",
+        "🔁 Se a IA escolhida ficar sem cota grátis, sem créditos ou recusar a chave, o app passa sozinho para a próxima que tem chave e avisa na tela qual está usando (espera só 3 s quando há outra disponível).",
+        "🔑 O cofre mostra no topo quais IAs já têm chave salva; elas aparecem primeiro, com o selo “✓ chave salva” (as outras, “sem chave”).",
+        "🔊 ElevenLabs: chaves criadas só com permissão de “Text to Speech” agora são aceitas (o provedor responde “falta permissão”, e isso não é chave errada).",
+        "📢 A faixa de anúncios e o pop-up passaram a ser do módulo comum, com a mesma lista dos outros apps (anuncios.json) e links que funcionam em qualquer endereço."
+      ],
+      "en": [
+        "✨ New, cleaner look designed mobile-first: softer corners, less text, icons instead of words at the top and windows that slide up like a sheet.",
+        "☰ Side menu with every feature in groups (Play, Bring in charts, Settings, Help and more); PT|EN inside it on phones and in the header on computers.",
+        "🏠 Home fixed in the header and a bottom bar on phones with Home, Chords, Import and Photo.",
+        "💡 Meet AssistONE: the assistant in the corner of the screen, with help for the current screen, a quick tour, search and tips. Turn it on or off in ⚙ → AssistONE.",
+        "↩️ The phone Back button closes the menu, the tuner and phone mode instead of leaving the page.",
+        "🤖 Full AI vault (shared module 1.1.2): text, voice → text, text → voice and photos, with a step-by-step guide per provider. Paste the key once and it works across all SolverONE apps.",
+        "🔁 If the chosen AI runs out of free quota or credits, or rejects the key, the app switches by itself to the next AI with a key and tells you which one it is using (it waits only 3 s when another is available).",
+        "🔑 The vault shows at the top which AIs already have a saved key; they come first, with the “✓ key saved” badge (the others, “no key”).",
+        "🔊 ElevenLabs: keys created with only the “Text to Speech” permission are now accepted (the provider answers “missing permission”, which is not a wrong key).",
+        "📢 The ad strip and pop-up are now drawn by the shared module, with the same list as the other apps (anuncios.json) and links that work at any address."
+      ]
+    },
     {
       "versao": "2.6.1",
       "data": "2026-09-25",
