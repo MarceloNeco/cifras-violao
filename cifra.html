@@ -41,10 +41,10 @@
       <button class="botao icone" id="tom-menos" data-i18n-title="cifra.abaixar">−</button>
       <span class="valor" id="tom-atual">C</span>
       <button class="botao icone" id="tom-mais" data-i18n-title="cifra.subir">+</button>
-      <button class="botao icone some-no-palco" id="tom-zero" data-i18n-title="cifra.tomOriginal">↺</button>
+      <button class="botao icone some-no-palco secundario" id="tom-zero" data-i18n-title="cifra.tomOriginal">↺</button>
     </div>
 
-    <div class="grupo some-no-palco">
+    <div class="grupo some-no-palco secundario">
       <span class="rotulo" data-i18n="cifra.capo">Capo</span>
       <button class="botao icone" id="capo-menos" data-i18n-title="cifra.capoMenos">−</button>
       <span class="valor" id="capo-atual">0</span>
@@ -58,7 +58,7 @@
       <span class="valor" id="velocidade-valor">8</span>
     </div>
 
-    <div class="grupo">
+    <div class="grupo secundario">
       <button class="botao" id="btn-guia" aria-pressed="false"
               data-i18n="cifra.guia" data-i18n-title="cifra.guiaTitulo">◉ Guia</button>
       <button class="botao icone" id="btn-guia-som" aria-pressed="false" hidden
@@ -71,14 +71,18 @@
       <span class="rotulo some-no-palco" data-i18n="cifra.letra">Letra</span>
       <button class="botao icone" id="fonte-menos" data-i18n-title="cifra.menor">A−</button>
       <button class="botao icone" id="fonte-mais" data-i18n-title="cifra.maior">A+</button>
-      <button class="botao icone" id="btn-caber" data-i18n-title="cifra.caber">⤢</button>
+      <button class="botao icone secundario" id="btn-caber" data-i18n-title="cifra.caber">⤢</button>
     </div>
 
     <div class="grupo some-no-palco">
-      <button class="botao so-no-computador" id="btn-so-cifra" aria-pressed="false"
+      <button class="botao so-no-computador secundario" id="btn-so-cifra" aria-pressed="false"
               data-i18n-title="cifra.soCifraTitulo">▤ Só a cifra</button>
-      <button class="botao" id="btn-palco" data-i18n="cifra.palco" data-i18n-title="cifra.palcoTitulo">📱 Modo celular</button>
+      <button class="botao" id="btn-palco" data-i18n-title="cifra.palcoTitulo" data-i18n-aria="cifra.palcoTitulo">📱<span class="so-pc-inline" data-i18n="cifra.palcoTexto"> Modo celular</span></button>
     </div>
+
+    <!-- só no celular: abre a segunda linha (capo, guia, voz, ajustar, sair) -->
+    <button class="botao icone so-celular-inline" id="btn-mais" type="button" aria-expanded="false"
+            data-i18n-title="cifra.mais" data-i18n-aria="cifra.mais">⋯</button>
   </div>
 
   <div class="diagramas" id="diagramas"></div>

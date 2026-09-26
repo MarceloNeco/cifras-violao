@@ -260,6 +260,8 @@ function pintarBotoesPlay(){
   f.textContent = rolando ? '⏸' : '▶';
   f.classList.toggle('ativo', rolando);
   f.setAttribute('aria-label', rolando ? 'Pause' : 'Play');
+  /* quem desenha os comandos em outro lugar (balão do AssistONE) acompanha */
+  document.dispatchEvent(new CustomEvent('cifra:estado'));
 }
 
 function comecarRolagem(){
@@ -303,6 +305,8 @@ function agendarRecolher(){
 function mostrarBarra(reagendar = true){
   clearTimeout(relogioRecolher);
   document.body.classList.remove('barra-oculta');
+  /* ao voltar, a barra vem enxuta (uma linha) */
+  const p = $('#painel'); if (p && reagendar === false) { p.classList.remove('expandido'); const m = $('#btn-mais'); if (m) m.setAttribute('aria-expanded', 'false'); }
   if (reagendar) agendarRecolher();
 }
 
@@ -316,7 +320,7 @@ function ligarGestos(){
     agendarRecolher();
   };
   document.addEventListener('touchstart', e=>{
-    if (e.target.closest('.painel, .faixa-palco, .play-flutuante, .gaveta, .regua')) return;
+    if (e.target.closest('.painel, .faixa-palco, .play-flutuante, .gaveta, .regua, #dgo-aone, .dgo-aone-tour, .dgo-modal')) return;
     dedoNaTela = true;
     mostrarBarra(false);
   }, {passive:true});
@@ -324,7 +328,7 @@ function ligarGestos(){
   document.addEventListener('touchcancel', acabou, {passive:true});
   /* no computador, o clique na cifra também traz a barra de volta */
   document.addEventListener('mousedown', e=>{
-    if (e.target.closest('.painel, .faixa-palco, .play-flutuante, .gaveta, .regua')) return;
+    if (e.target.closest('.painel, .faixa-palco, .play-flutuante, .gaveta, .regua, #dgo-aone, .dgo-aone-tour, .dgo-modal')) return;
     mostrarBarra();
   });
   /* mexeu na barra? ela fica mais um tempo na tela */
@@ -401,6 +405,13 @@ function ligarBotoes(){
   $('#btn-so-cifra').onclick = ()=> aplicarSoCifra(!document.body.classList.contains('so-cifra'));
 
   $('#btn-palco').onclick  = ()=> modoPalco(true);
+  /* celular: a barra mostra só o essencial numa linha; ⋯ abre o resto */
+  const mais = $('#btn-mais');
+  if (mais) mais.onclick = ()=>{
+    const aberto = !$('#painel').classList.contains('expandido');
+    $('#painel').classList.toggle('expandido', aberto);
+    mais.setAttribute('aria-expanded', String(aberto));
+  };
   $('#btn-caber').onclick  = ajustarAoEcra;
   let temporizador = null, larguraAntes = window.innerWidth;
   window.addEventListener('resize', ()=>{

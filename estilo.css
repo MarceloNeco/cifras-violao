@@ -584,9 +584,25 @@ body.modo-palco .fixavel{
   .diagramas .diagrama{ width:74px; }
 }
 
-/* ---------- barra de ferramentas mais enxuta no celular ---------- */
+/* ---------- barra de ferramentas no celular: uma linha só ----------
+   Fica o essencial (tom, Play, velocidade, letra, 📱); o ⋯ abre o resto
+   (↺, capo, guia, voz, ⤢). Vale no modo normal e no modo celular. */
+.so-celular-inline{ display:none; }
+@media (max-width:760px){
+  .so-pc-inline{ display:none; }
+  .so-celular-inline{ display:inline-flex; }
+  .painel .secundario{ display:none !important; }
+  .painel.expandido .secundario{ display:inline-flex !important; }
+  .painel.expandido .grupo.secundario{ display:flex !important; }
+  .painel > .rotulo, .painel .grupo > .rotulo{ display:none; }
+  .painel #btn-mais{ margin-left:auto; }
+  .painel.expandido #btn-mais{ background:var(--destaque-claro); border-color:var(--destaque); color:var(--destaque); }
+  body.modo-palco .painel{ max-height:none; }
+  body.modo-palco .painel .some-no-palco{ display:none !important; }
+  body.modo-palco.barra-oculta .painel.expandido .secundario{ display:none !important; }
+}
 @media (max-width:640px){
-  .painel{ gap:6px 8px; padding:8px; }
+  .painel{ gap:6px 6px; padding:8px; }
   .painel .rotulo{ font-size:.68rem; letter-spacing:.03em; }
   .painel .botao{ min-height:36px; padding:0 9px; font-size:.86rem; }
   .painel .botao.icone{ width:33px; padding:0; }
@@ -863,7 +879,23 @@ html[data-tema="escuro"] .recado.erro{ color:#f2837a; }
 /* com o AssistONE na tela, o último item da página não fica atrás dele */
 body.dgo-aone-on .conteudo{ padding-bottom:max(110px, 12vh); }
 body.tem-barra-baixo.dgo-aone-on .conteudo{ padding-bottom:calc(150px + env(safe-area-inset-bottom, 0px)); }
-body.modo-palco #dgo-aone{ display:none !important; }
+/* modo celular: o AssistONE fica pequeno, à ESQUERDA (o botão redondo de Play é à direita)
+   e só aparece quando a barra de baixo está recolhida; o balão dele vira o painel de comandos */
+body.modo-palco #dgo-aone{ right:auto; left:10px; bottom:calc(14px + env(safe-area-inset-bottom, 0px)); align-items:flex-start; }
+body.modo-palco .dgo-aone-bt{ width:46px; height:46px; animation:none; }
+body.modo-palco #dgo-aone.dgo-falando .dgo-aone-bt{ width:64px; height:64px; }
+body.modo-palco .dgo-aone-bolha{ border-radius:18px 18px 18px 6px; max-height:min(78vh, 640px); }
+.aone-comandos{ display:grid; gap:6px; margin:4px 0 6px; }
+.aone-comandos .aone-linha{ display:flex; align-items:center; gap:6px; flex-wrap:wrap; }
+.aone-comandos .aone-rot{ font-size:.68rem; text-transform:uppercase; letter-spacing:.05em; color:#aab4c3; width:46px; flex:none; }
+.aone-comandos button{
+  font:inherit; font-size:.9rem; font-weight:700; min-height:40px; min-width:40px; padding:0 12px;
+  border:1px solid rgba(255,255,255,.2); border-radius:12px; background:rgba(255,255,255,.06); color:#e8eef8; cursor:pointer;
+}
+.aone-comandos button.forte{ flex:1; background:var(--destaque); border-color:var(--destaque); color:#fff; font-size:1rem; min-height:46px; }
+.aone-comandos button.forte.ativo{ background:#e08a4f; }
+.aone-comandos button.ativo:not(.forte){ border-color:var(--destaque); color:#ffb98a; }
+.aone-comandos .aone-valor{ min-width:34px; text-align:center; font-family:var(--fonte-cifra); color:#ffb98a; font-size:1rem; }
 
 /* ---------- página da conta ---------- */
 .perfis{ display:grid; grid-template-columns:repeat(auto-fit, minmax(190px,1fr)); gap:10px; margin-bottom:14px; }
