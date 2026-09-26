@@ -2,6 +2,21 @@
   "comentario": "Histórico de versões do CifrasONE. A mais nova fica EM CIMA. Ao publicar, acrescente um bloco novo no topo da lista (com data e hora) e troque também o VERSAO do comum.js, o versaoApp do diretrizes-config.js e o VERSAO do sw.js.",
   "versoes": [
     {
+      "versao": "2.7.1",
+      "data": "2026-09-26",
+      "hora": "11:30:00",
+      "pt": [
+        "📱 Modo celular arrumado: o AssistONE não fica mais em cima do botão de Play/Pause — ele vai para o canto esquerdo, menor, e só aparece com a barra recolhida.",
+        "💡 No modo celular o balão do AssistONE vira o painel de comandos: Play/Pause, tom, velocidade, tamanho da letra, guia, voz, afinador e sair.",
+        "🎚 Barra da cifra no celular numa linha só (tom, Play, velocidade, letra, 📱); o ⋯ abre o resto (capo, guia, voz, ajustar)."
+      ],
+      "en": [
+        "📱 Phone mode fixed: AssistONE no longer sits on top of the Play/Pause button — it moves to the left corner, smaller, and only shows when the bar is hidden.",
+        "💡 In phone mode the AssistONE balloon becomes the command panel: Play/Pause, key, speed, font size, guide, voice, tuner and exit.",
+        "🎚 Chart toolbar on phones in a single row (key, Play, speed, text, 📱); ⋯ opens the rest (capo, guide, voice, fit)."
+      ]
+    },
+    {
       "versao": "2.7.0",
       "data": "2026-09-26",
       "hora": "12:00:00",

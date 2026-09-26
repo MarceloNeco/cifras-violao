@@ -15,7 +15,7 @@ DGO.iniciar({
                                 origem, e e isto que impede os dados de um
                                 vazarem para o outro. */
   nome: { pt: 'CifrasONE', en: 'CifrasONE' },
-  versaoApp: '2.7.0',
+  versaoApp: '2.7.1',
   cor: '#a8501e',            /* o marrom-laranja do site de cifras */
   corFundoBarra: '#1a1614',
 
@@ -95,9 +95,67 @@ DGO.iniciar({
   assistente: {
     ativo: true,
     imagem: 'ajuda-botao.png',
-    /* some quando a pessoa esta tocando (modo celular) ou com o afinador aberto */
-    esconderCom: ['body.modo-palco', '#afinador[aberta]', '.gaveta-menu.aberta', 'dialog[open]'],
+    /* no modo celular ele so aparece quando a barra de baixo esta recolhida
+       (fica pequeno, a esquerda, longe do botao de Play); some com o afinador ou o menu abertos */
+    esconderCom: ['body.modo-palco:not(.barra-oculta)', '#afinador[aberta]', '.gaveta-menu.aberta', 'dialog[open]'],
+    /* qual tela e esta: no modo celular a ajuda e outra (os comandos) */
+    tela: function () { return document.body.classList.contains('modo-palco') ? 'palco' : (document.body.getAttribute('data-pagina') || 'inicio'); },
     telas: {
+      /* modo celular: o balao vira o painel de comandos (Play, tom, velocidade, letra, guia, voz, sair) */
+      palco: {
+        titulo: { pt: 'Comandos da cifra', en: 'Chart commands' },
+        frase: { pt: 'Tudo o que você precisa enquanto toca. Toque na letra para ver a barra de baixo.',
+                 en: 'Everything you need while you play. Tap the lyrics to bring the bottom bar back.' },
+        montar: function () {
+          var en = (typeof IDIOMA !== 'undefined' && IDIOMA === 'en');
+          var $ = function (s) { return document.querySelector(s); };
+          var caixa = document.createElement('div');
+          caixa.className = 'aone-comandos';
+          function linha() { var l = document.createElement('div'); l.className = 'aone-linha'; caixa.appendChild(l); return l; }
+          function bt(l, texto, alvo, opc) {
+            var b = document.createElement('button'); b.type = 'button'; b.textContent = texto;
+            if (opc && opc.forte) b.className = 'forte';
+            b.addEventListener('click', function () {
+              var a = $(alvo); if (a) a.click();
+              setTimeout(atualizar, 60);
+            });
+            l.appendChild(b); return b;
+          }
+          function valor(l, id) { var v = document.createElement('b'); v.className = 'aone-valor'; v.dataset.de = id; l.appendChild(v); return v; }
+          var l1 = linha();
+          var play = bt(l1, '▶', '#btn-rolar', { forte: true }); play.className = 'forte play';
+          var l2 = linha();
+          var r2 = document.createElement('span'); r2.className = 'aone-rot'; r2.textContent = en ? 'Key' : 'Tom'; l2.appendChild(r2);
+          bt(l2, '−', '#tom-menos'); valor(l2, '#tom-atual'); bt(l2, '+', '#tom-mais'); bt(l2, '↺', '#tom-zero');
+          var l3 = linha();
+          var r3 = document.createElement('span'); r3.className = 'aone-rot'; r3.textContent = en ? 'Speed' : 'Veloc.'; l3.appendChild(r3);
+          var menos = document.createElement('button'); menos.type = 'button'; menos.textContent = '−';
+          var mais = document.createElement('button'); mais.type = 'button'; mais.textContent = '+';
+          function vel(passo) { if (typeof mudarVelocidade === 'function') mudarVelocidade(passo); setTimeout(atualizar, 60); }
+          menos.addEventListener('click', function () { vel(-1); }); mais.addEventListener('click', function () { vel(+1); });
+          l3.appendChild(menos); valor(l3, '#velocidade-valor'); l3.appendChild(mais);
+          var l4 = linha();
+          var r4 = document.createElement('span'); r4.className = 'aone-rot'; r4.textContent = en ? 'Text' : 'Letra'; l4.appendChild(r4);
+          bt(l4, 'A−', '#fonte-menos'); bt(l4, 'A+', '#fonte-mais'); bt(l4, '⤢', '#btn-caber');
+          var l5 = linha();
+          var guia = bt(l5, '◉ ' + (en ? 'Guide' : 'Guia'), '#btn-guia');
+          var voz = bt(l5, '🗣 ' + (en ? 'Voice' : 'Voz'), '#btn-voz');
+          bt(l5, '🎵', '#btn-afinador');
+          var l6 = linha();
+          bt(l6, '✕ ' + (en ? 'Leave phone mode' : 'Sair do modo celular'), '#sair-palco');
+          function atualizar() {
+            var rol = $('#btn-rolar'); var tocando = rol && rol.getAttribute('aria-pressed') === 'true';
+            play.textContent = tocando ? '⏸ ' + (en ? 'Pause' : 'Pausar') : '▶ Play';
+            play.classList.toggle('ativo', !!tocando);
+            Array.prototype.forEach.call(caixa.querySelectorAll('.aone-valor'), function (v) { var de = $(v.dataset.de); v.textContent = de ? de.textContent : ''; });
+            var g = $('#btn-guia'); guia.classList.toggle('ativo', !!(g && g.getAttribute('aria-pressed') === 'true'));
+            var vz = $('#btn-voz'); voz.classList.toggle('ativo', !!(vz && vz.getAttribute('aria-pressed') === 'true'));
+          }
+          document.addEventListener('cifra:estado', atualizar);
+          atualizar();
+          return caixa;
+        }
+      },
       inicio: {
         titulo: { pt: 'Minhas cifras', en: 'My chords' },
         frase: { pt: 'Busque uma música, filtre por categoria e marque as favoritas com a ★.',

@@ -21,7 +21,7 @@
 (function (raiz) {
   'use strict';
 
-  var VERSAO = '1.1.2';
+  var VERSAO = '1.1.3';
   if (raiz.DGO && raiz.DGO.__carregado) { return; }
 
   /* ------------------------------------------------------------------
@@ -5383,8 +5383,9 @@
       Assistente.sincronizar();
     },
     escondido: function () {
-      if (modalEl || telaCheiaAberta()) return true;
-      var sels = (cfg.assistente && cfg.assistente.esconderCom) || [];
+      if (modalEl) return true;
+      /* a lista propria do assistente; sem ela, vale a das telas cheias dos anuncios */
+      var sels = (cfg.assistente && cfg.assistente.esconderCom) || (cfg.anuncios && cfg.anuncios.esconderCom) || [];
       for (var i = 0; i < sels.length; i++) {
         var nos; try { nos = d.querySelectorAll(sels[i]); } catch (e) { continue; }
         for (var j = 0; j < nos.length; j++) {
@@ -5396,7 +5397,8 @@
     /* aparece so com o app livre: sem janela, menu ou tela cheia por cima */
     sincronizar: function () {
       if (!Assistente.el) return;
-      var mostrar = Assistente.ligado() && !Assistente.escondido() && !Assistente._tour;
+      /* com o balao aberto ele nao some no meio de um comando (so uma janela do modulo o esconde) */
+      var mostrar = Assistente.ligado() && !Assistente._tour && (!Assistente.escondido() || (Assistente.vista && !modalEl));
       Assistente.el.classList.toggle('dgo-oculto', !mostrar);
       d.body.classList.toggle('dgo-aone-on', mostrar);
       if (!mostrar && Assistente.vista) Assistente.fechar();
@@ -5444,6 +5446,9 @@
       var telas = (cfg.assistente && cfg.assistente.telas) || {};
       var x = telas[Assistente.tela()];
       if (!x) return null;
+      /* a tela pode desenhar o proprio bloco (ex.: os comandos da cifra no modo celular) */
+      var proprio = null;
+      if (typeof x.montar === 'function') { try { proprio = x.montar(); } catch (e) { proprio = null; } }
       var atalhos = el('div', { class: 'dgo-aone-atalhos' });
       (x.atalhos || []).forEach(function (a) {
         atalhos.appendChild(el('button', { type: 'button', class: a.principal ? 'dgo-on' : '', texto: Assistente.tx(a.rotulo),
@@ -5452,6 +5457,7 @@
       return el('div', { class: 'dgo-aone-aqui' }, [
         el('div', { class: 'dgo-aone-t', texto: '📍 ' + t('aoneVoceEsta') + ' ' + Assistente.tx(x.titulo) }),
         x.frase ? el('p', { texto: Assistente.tx(x.frase) }) : null,
+        proprio,
         (x.atalhos && x.atalhos.length) ? atalhos : null
       ]);
     },
