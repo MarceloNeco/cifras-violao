@@ -2,7 +2,7 @@
    como app no celular e no computador.
    Ao publicar uma versao nova do seu site, troque o numero de VERSAO
    abaixo (ex.: 'v2' -> 'v3') para o aparelho pegar os arquivos novos. */
-var VERSAO = 'v8';
+var VERSAO = 'v9';
 
 /* O nome da gaveta leva o nome do app. Todos os sites moram no mesmo
    endereco (marceloneco.github.io), entao um nome generico faria um app
@@ -13,7 +13,7 @@ var CACHE = PREFIXO + VERSAO;
 self.addEventListener('install', function (e) {
   self.skipWaiting();
   e.waitUntil(caches.open(CACHE).then(function (c) {
-    return c.addAll(['./', './index.html', './diretrizes.js']).catch(function () {});
+    return c.addAll(['./', './index.html', './diretrizes.js', './diretrizes-config.js', './ajuda-botao.png']).catch(function () {});
   }));
 });
 

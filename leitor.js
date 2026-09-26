@@ -514,7 +514,13 @@ function mudarFonte(passo){
   desenharCifra();   // redesenha para a linha que não cabe descer inteira, com o acorde junto
 }
 function modoPalco(ligar){
+  if (ligar === document.body.classList.contains('modo-palco')) return;
   document.body.classList.toggle('modo-palco', ligar);
+  /* o Voltar do celular sai do modo celular em vez de sair da página */
+  if (typeof Camadas !== 'undefined'){
+    if (ligar) Camadas.abrir('palco', ()=> modoPalco(false));
+    else Camadas.fechar('palco');
+  }
   if (ligar){
     tamanho = 30;
     document.documentElement.style.setProperty('--tamanho-cifra', tamanho + 'px');
@@ -556,8 +562,14 @@ function montarAfinador(){
 }
 function abrirAfinador(abrir){
   const g = $('#afinador');
+  if (abrir === g.hasAttribute('aberta')) return;
   abrir ? g.setAttribute('aberta','') : g.removeAttribute('aberta');
   g.setAttribute('aria-hidden', !abrir);
+  /* o Voltar do celular fecha o afinador em vez de sair da página */
+  if (typeof Camadas !== 'undefined'){
+    if (abrir) Camadas.abrir('afinador', ()=> abrirAfinador(false));
+    else Camadas.fechar('afinador');
+  }
 }
 
 /* ---------------- lembrar as escolhas de cada música ---------------- */

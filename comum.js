@@ -4,8 +4,8 @@
 
 /* Versão do site. Ao publicar uma mudança, altere estas duas linhas:
    o número aparece no rodapé de todas as páginas. */
-const VERSAO = '2.6.1';
-const VERSAO_DATA = '2026-09-25';
+const VERSAO = '2.7.0';
+const VERSAO_DATA = '2026-09-26';
 
 /* assinatura com a versão e o link do aviso, no rodapé de cada página */
 function montarRodape(){
@@ -121,100 +121,246 @@ function iniciarNovidades(){
 }
 
 /* ============================================================
+   Camadas: o botão Voltar do celular fecha o que está aberto
+   (menu ☰, afinador, modo celular) em vez de sair da página.
+   Cada camada que abre ganha uma entrada no histórico; no
+   Voltar, fecha só a camada de cima. Fechar pelo botão da tela
+   também tira a entrada do histórico. Um ponto só no código.
+   ============================================================ */
+const Camadas = {
+  pilha: [],
+  ignorar: 0,
+  depois: null,
+  abrir(nome, fechar){
+    if (this.pilha.some(c => c.nome === nome)) return;
+    this.pilha.push({nome, fechar});
+    try{ history.pushState({camada: nome}, ''); }catch(e){}
+  },
+  /* fecha a camada e as que estão por cima dela; 'depois' roda quando o
+     histórico já voltou (history.go é assíncrono) */
+  fechar(nome, depois){
+    const i = this.pilha.findIndex(c => c.nome === nome);
+    if (i < 0){ if (depois) depois(); return; }
+    const n = this.pilha.length - i;
+    this.pilha.splice(i);
+    this.ignorar += 1;
+    this.depois = depois || null;
+    const socorro = setTimeout(()=>{ if (this.depois){ const d = this.depois; this.depois = null; d(); } }, 400);
+    this._socorro = socorro;
+    try{ history.go(-n); }catch(e){ this.ignorar -= 1; clearTimeout(socorro); if (depois) depois(); }
+  },
+  aberta(nome){ return this.pilha.some(c => c.nome === nome); }
+};
+window.addEventListener('popstate', ()=>{
+  if (Camadas.ignorar > 0){
+    Camadas.ignorar--;
+    clearTimeout(Camadas._socorro);
+    if (Camadas.depois){ const d = Camadas.depois; Camadas.depois = null; d(); }
+    return;
+  }
+  const c = Camadas.pilha.pop();
+  if (c) c.fechar();
+});
+
+/* ============================================================
    A barra do topo, igual em todas as páginas.
    Cada página só diz quem ela é: <body data-pagina="cifra">.
-   Assim o botão de idioma e o de conta aparecem em todo lugar
-   sem precisar repetir o mesmo HTML seis vezes.
+   Padrão dos apps SolverONE: ☰ à esquerda com o nome do app;
+   à direita [PT|EN só no computador] ⚙ 🏠 ☺. O ☰ abre uma gaveta
+   lateral com todas as funções em grupos, e no celular há uma
+   barra de baixo com os atalhos principais (menos na cifra, onde
+   o rodapé é da barra de tocar).
    ============================================================ */
 const VIOLAO_SVG = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
-    stroke-width="1.8" stroke-linecap="round">
+    stroke-width="1.8" stroke-linecap="round" aria-hidden="true">
     <path d="M11.5 12.5 19 5M17 3l4 4M6.5 21a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7Z"/></svg>`;
+
+const PAGINAS = [
+  {id:'inicio',   href:'index.html',    ico:'🏠', chave:'barra.inicio'},
+  {id:'acordes',  href:'acordes.html',  ico:'🎼', chave:'barra.acordes'},
+  {id:'importar', href:'importar.html', ico:'📋', chave:'barra.importar'},
+  {id:'ocr',      href:'ocr.html',      ico:'📷', chave:'barra.foto'}
+];
+
+function trocarIdiomaGeral(novo){
+  if (window.DGO && DGO.trocarIdioma) DGO.trocarIdioma(novo);
+  else if (typeof trocarIdioma === 'function') trocarIdioma(novo);
+}
+function pintarIdioma(){
+  const atual = (typeof IDIOMA !== 'undefined') ? IDIOMA : 'pt';
+  document.querySelectorAll('[data-idioma]').forEach(b=>{
+    const ativo = b.dataset.idioma === atual;
+    b.classList.toggle('ativo', ativo);
+    b.setAttribute('aria-pressed', ativo);
+  });
+}
+function seletorIdiomaHTML(classe){
+  return `<div class="idioma-topo ${classe || ''}" role="group" data-i18n-aria="idioma.grupo" aria-label="Idioma">
+    <button type="button" data-idioma="pt" aria-pressed="false">PT</button>
+    <button type="button" data-idioma="en" aria-pressed="false">EN</button>
+  </div>`;
+}
 
 function montarTopo(){
   const barra = document.querySelector('.topo .topo-interno');
   if (!barra || barra.dataset.pronta) return;
   const pagina = document.body.dataset.pagina || 'inicio';
   const naCifra = pagina === 'cifra';
-
-  const elo = (nome, endereco, chave) =>
-    `<a class="botao${pagina === nome ? ' ativo' : ''}" href="${endereco}" data-i18n="${chave}"></a>`;
+  const noInicio = pagina === 'inicio';
 
   /* o nome do app: "Cifras" na cor do texto e "ONE" na cor de destaque,
      como nos outros apps da família (RiseONE, OmniLifeONE...).
      É nome próprio: não se traduz, por isso não leva data-i18n. */
   const nomeDoApp = `<span class="marca-nome">Cifras<span class="marca-one">ONE</span></span>`;
 
-  /* ☰ fica à esquerda, como é o padrão nos apps de celular */
   barra.innerHTML = `
-    <button class="botao icone abre-menu" data-botao-menu
-            aria-expanded="false" aria-controls="menu-topo" aria-label="Menu">☰</button>
-    <a class="marca" href="index.html">
-      ${VIOLAO_SVG}${naCifra ? '<span data-i18n="topo.voltar"></span>' : nomeDoApp}
+    <button class="botao icone abre-menu" type="button" data-botao-menu
+            aria-expanded="false" aria-controls="gaveta-menu" data-i18n-aria="menu.titulo" aria-label="Menu">☰</button>
+    <a class="marca${naCifra ? ' marca-curta' : ''}" href="index.html"${noInicio ? ' aria-current="page"' : ''}>
+      ${VIOLAO_SVG}${nomeDoApp}
     </a>
     <div class="espaco"></div>
+    ${seletorIdiomaHTML('so-pc')}
     ${naCifra ? `
-      <button class="botao icone" id="btn-favorito" aria-pressed="false"
-              data-i18n-title="cifra.favoritar">☆</button>
-      <button class="botao icone some-no-palco" id="btn-compartilhar"
-              data-i18n-title="cifra.compartilhar">⤴</button>
-      <button class="botao icone" id="btn-afinador" data-i18n-title="cifra.afinador">🎵</button>` : ''}
-    <button class="botao icone" data-abre-conta data-i18n-title="topo.conta">☺</button>
-    <nav class="menu-topo" id="menu-topo">
-      ${elo('acordes',  'acordes.html',  'topo.acordes')}
-      ${elo('importar', 'importar.html', 'topo.importar')}
-      ${elo('ocr',      'ocr.html',      'topo.foto')}
-      <button class="botao" data-abre-instalar data-i18n="topo.instalar"></button>
-      <div class="menu-icones">
-        <button class="botao icone" data-abre-config
-                data-i18n-title="topo.config" data-i18n-aria="topo.config">⚙</button>
-        <button class="botao icone" data-botao-fundo data-i18n-title="topo.fundo">▨</button>
-        <button class="botao icone" data-botao-tema data-i18n-title="topo.tema">☾</button>
-      </div>
-    </nav>`;
+      <button class="botao icone" type="button" id="btn-favorito" aria-pressed="false"
+              data-i18n-title="cifra.favoritar" data-i18n-aria="cifra.favoritar">☆</button>
+      <button class="botao icone some-no-palco" type="button" id="btn-compartilhar"
+              data-i18n-title="cifra.compartilhar" data-i18n-aria="cifra.compartilhar">⤴</button>
+      <button class="botao icone" type="button" id="btn-afinador"
+              data-i18n-title="cifra.afinador" data-i18n-aria="cifra.afinador">🎵</button>` : ''}
+    <button class="botao icone${naCifra ? ' so-pc' : ''}" type="button" data-abre-config
+            data-i18n-title="topo.config" data-i18n-aria="topo.config">⚙</button>
+    <a class="botao icone${noInicio ? ' ativo' : ''}" href="index.html" data-inicio
+       data-i18n-title="topo.inicio" data-i18n-aria="topo.inicio"${noInicio ? ' aria-current="page"' : ''}>🏠</a>
+    <button class="botao icone" type="button" data-abre-conta
+            data-i18n-title="topo.conta" data-i18n-aria="topo.conta">☺</button>`;
   barra.dataset.pronta = 'sim';
+
+  montarGaveta(pagina);
+  if (!naCifra) montarBarraBaixo(pagina);
 
   /* Conta, Configurações e Instalar são do módulo das diretrizes
      (diretrizes.js). Aqui só existe o botão; quem abre a tela é ele. */
-  barra.querySelector('[data-abre-conta]').addEventListener('click', ()=>{
+  document.querySelectorAll('[data-abre-conta]').forEach(b => b.addEventListener('click', ()=>{
     if (window.DGO) DGO.abrirLogin(); else location.href = 'index.html';
-  });
-  barra.querySelector('[data-abre-config]').addEventListener('click', ()=>{
+  }));
+  document.querySelectorAll('[data-abre-config]').forEach(b => b.addEventListener('click', ()=>{
     if (window.DGO) DGO.abrirConfiguracoes();
-  });
-  barra.querySelector('[data-abre-instalar]').addEventListener('click', ()=>{
+  }));
+  document.querySelectorAll('[data-abre-instalar]').forEach(b => b.addEventListener('click', ()=>{
     if (window.DGO && DGO.pwa) DGO.pwa.instalar();
+  }));
+  document.querySelectorAll('[data-abre-assistone]').forEach(b => b.addEventListener('click', ()=>{
+    if (window.DGO && DGO.assistente){ DGO.assistente.ligar(true); setTimeout(()=> DGO.assistente.abrir(), 250); }
+  }));
+  document.querySelectorAll('[data-idioma]').forEach(b => b.addEventListener('click', ()=> trocarIdiomaGeral(b.dataset.idioma)));
+  document.addEventListener('idioma-mudou', pintarIdioma);
+  pintarIdioma();
+}
+
+/* ---------- gaveta lateral (☰) ---------- */
+function montarGaveta(pagina){
+  if (document.getElementById('gaveta-menu')) return;
+  const item = (p, chave, ico) =>
+    `<a class="gaveta-item${pagina === p.id ? ' atual' : ''}" href="${p.href}"${pagina === p.id ? ' aria-current="page"' : ''}>
+       <span class="ico">${ico || p.ico}</span><span data-i18n="${chave}"></span></a>`;
+  const [inicio, acordes, importar, ocr] = PAGINAS;
+  const gaveta = document.createElement('div');
+  gaveta.className = 'gaveta-menu';
+  gaveta.id = 'gaveta-menu';
+  gaveta.setAttribute('aria-hidden', 'true');
+  gaveta.innerHTML = `
+    <div class="gaveta-fundo" data-fecha-menu></div>
+    <nav class="gaveta-painel" data-i18n-aria="menu.titulo" aria-label="Menu" tabindex="-1">
+      <div class="gaveta-topo">
+        <span class="marca"><span class="marca-nome">Cifras<span class="marca-one">ONE</span></span></span>
+        ${seletorIdiomaHTML('so-celular')}
+        <button class="botao icone" type="button" data-fecha-menu data-i18n-aria="menu.fechar" aria-label="Fechar">✕</button>
+      </div>
+      <div class="gaveta-grupo">
+        <h3 data-i18n="menu.tocar"></h3>
+        ${item(inicio, 'menu.cifras')}
+        ${item(acordes, 'menu.acordes')}
+        ${pagina === 'cifra' ? `<button class="gaveta-item" type="button" data-abre-afinador><span class="ico">🎵</span><span data-i18n="menu.afinador"></span></button>` : ''}
+      </div>
+      <div class="gaveta-grupo">
+        <h3 data-i18n="menu.trazer"></h3>
+        ${item(importar, 'menu.importar')}
+        ${item(ocr, 'menu.foto')}
+      </div>
+      <div class="gaveta-grupo">
+        <h3 data-i18n="menu.ajustes"></h3>
+        <button class="gaveta-item" type="button" data-abre-config><span class="ico">⚙</span><span data-i18n="topo.config"></span></button>
+        <button class="gaveta-item" type="button" data-botao-tema><span class="ico" data-ico-tema>☾</span><span data-i18n="menu.tema"></span></button>
+        <button class="gaveta-item" type="button" data-botao-fundo aria-pressed="false"><span class="ico">▨</span><span data-i18n="menu.fundo"></span><span class="marca-check" aria-hidden="true">✓</span></button>
+        <button class="gaveta-item" type="button" data-abre-instalar><span class="ico">📲</span><span data-i18n="menu.instalar"></span></button>
+      </div>
+      <div class="gaveta-grupo">
+        <h3 data-i18n="menu.ajuda"></h3>
+        <button class="gaveta-item" type="button" data-abre-assistone><span class="ico">💡</span><span data-i18n="menu.assistone"></span></button>
+        <a class="gaveta-item" href="#novidades" data-abre-novidades><span class="ico">🆕</span><span data-i18n="menu.novidades"></span></a>
+        <a class="gaveta-item${pagina === 'aviso' ? ' atual' : ''}" href="aviso.html"><span class="ico">⚖</span><span data-i18n="menu.aviso"></span></a>
+        <a class="gaveta-item" href="../" target="_blank" rel="noopener"><span class="ico">🧭</span><span data-i18n="menu.portal"></span> ↗</a>
+      </div>
+    </nav>`;
+  document.body.appendChild(gaveta);
+
+  const botaoMenu = document.querySelector('[data-botao-menu]');
+  const painel = gaveta.querySelector('.gaveta-painel');
+
+  function abrirGaveta(abrir){
+    if (abrir === gaveta.classList.contains('aberta')) return;
+    gaveta.classList.toggle('aberta', abrir);
+    gaveta.setAttribute('aria-hidden', String(!abrir));
+    if (botaoMenu) botaoMenu.setAttribute('aria-expanded', String(abrir));
+    if (abrir){
+      Camadas.abrir('menu', ()=> abrirGaveta(false));
+      setTimeout(()=>{ (gaveta.querySelector('.gaveta-item.atual') || painel).focus({preventScroll:true}); }, 60);
+    }else{
+      Camadas.fechar('menu');
+      if (botaoMenu) botaoMenu.focus({preventScroll:true});
+    }
+  }
+  if (botaoMenu) botaoMenu.addEventListener('click', ()=> abrirGaveta(!gaveta.classList.contains('aberta')));
+  gaveta.querySelectorAll('[data-fecha-menu]').forEach(el => el.addEventListener('click', ()=> abrirGaveta(false)));
+  document.addEventListener('keydown', e=>{
+    if (e.key === 'Escape' && gaveta.classList.contains('aberta')) abrirGaveta(false);
   });
 
-  const botaoMenu = barra.querySelector('[data-botao-menu]');
-  const menu = barra.querySelector('#menu-topo');
-  botaoMenu.addEventListener('click', e=>{
-    e.stopPropagation();
-    const abrir = !menu.classList.contains('aberto');
-    menu.classList.toggle('aberto', abrir);
-    botaoMenu.setAttribute('aria-expanded', abrir);
+  /* escolher algo dentro da gaveta: fecha primeiro (tirando a entrada do
+     histórico) e só depois navega, para o Voltar não voltar ao menu aberto */
+  gaveta.addEventListener('click', e=>{
+    const alvo = e.target.closest('a, button');
+    if (!alvo || alvo.hasAttribute('data-fecha-menu')) return;
+    if (alvo.matches('[data-idioma]')) return;                 // trocar idioma não fecha
+    if (alvo.matches('[data-botao-tema], [data-botao-fundo]')) return; // ajustes visuais: fica aberto para ver o efeito
+    if (alvo.tagName === 'A' && alvo.getAttribute('href') && !alvo.hasAttribute('data-abre-novidades') && alvo.target !== '_blank'){
+      e.preventDefault();
+      const href = alvo.getAttribute('href');
+      gaveta.classList.remove('aberta');
+      Camadas.fechar('menu', ()=>{ location.href = href; });
+      return;
+    }
+    setTimeout(()=> abrirGaveta(false), 120);
   });
-  /* O menu fecha sozinho: ao tocar fora dele, depois de escolher qualquer
-     coisa dentro dele (antes os botões ▨ e ☾ deixavam o menu aberto por
-     cima da letra) e ao rolar a página. */
-  const fecharMenu = ()=>{
-    if (!menu.classList.contains('aberto')) return;
-    menu.classList.remove('aberto');
-    botaoMenu.setAttribute('aria-expanded', 'false');
-  };
-  document.addEventListener('click', e=>{
-    if (!menu.contains(e.target) && !botaoMenu.contains(e.target)) fecharMenu();
+  const afinador = gaveta.querySelector('[data-abre-afinador]');
+  if (afinador) afinador.addEventListener('click', ()=>{
+    setTimeout(()=>{ const b = document.getElementById('btn-afinador'); if (b) b.click(); }, 300);
   });
-  menu.addEventListener('click', e=>{
-    if (e.target.closest('button, a')) setTimeout(fecharMenu, 150);
-  });
-  /* só fecha numa rolagem de verdade: no celular a barra de endereço
-     mexe alguns pixels sozinha e isso fechava o menu logo após abrir */
-  let rolagemAoAbrir = 0;
-  botaoMenu.addEventListener('click', ()=>{ rolagemAoAbrir = window.scrollY; });
-  window.addEventListener('scroll', ()=>{
-    if (Math.abs(window.scrollY - rolagemAoAbrir) > 40) fecharMenu();
-  }, {passive:true});
-  document.addEventListener('keydown', e=>{ if (e.key === 'Escape') fecharMenu(); });
+}
+
+/* ---------- barra de baixo (celular) ---------- */
+function montarBarraBaixo(pagina){
+  if (document.querySelector('.barra-baixo')) return;
+  const nav = document.createElement('nav');
+  nav.className = 'barra-baixo';
+  nav.setAttribute('data-i18n-aria', 'menu.atalhos');
+  nav.setAttribute('aria-label', 'Atalhos');
+  nav.innerHTML = PAGINAS.map(p =>
+    `<a href="${p.href}"${pagina === p.id ? ' class="atual" aria-current="page"' : ''}>
+       <span class="ico" aria-hidden="true">${p.ico}</span><span data-i18n="${p.chave}"></span></a>`).join('');
+  document.body.appendChild(nav);
+  document.body.classList.add('tem-barra-baixo');
 }
 
 /* ---------- tema claro / escuro ---------- */
@@ -224,7 +370,8 @@ function aplicarTema(tema){
   document.documentElement.dataset.tema = tema;
   try{ localStorage.setItem(TEMA_CHAVE, tema); }catch(e){}
   document.querySelectorAll('[data-botao-tema]').forEach(b=>{
-    b.textContent = tema === 'escuro' ? '☀' : '☾';
+    const ico = b.querySelector('[data-ico-tema]') || b;
+    ico.textContent = tema === 'escuro' ? '☀' : '☾';
     b.title = tema === 'escuro' ? 'Mudar para o modo claro' : 'Mudar para o modo escuro';
   });
 }
@@ -255,7 +402,7 @@ function aplicarFundo(ligado){
   document.querySelectorAll('[data-botao-fundo]').forEach(b=>{
     b.classList.toggle('ativo', ligado);
     b.title = ligado ? 'Tirar a imagem de fundo' : 'Colocar a imagem de fundo';
-    b.setAttribute('aria-pressed', ligado);
+    b.setAttribute('aria-pressed', String(ligado));
   });
 }
 function iniciarFundo(){
