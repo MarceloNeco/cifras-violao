@@ -21,7 +21,7 @@
 (function (raiz) {
   'use strict';
 
-  var VERSAO = '1.1.3';
+  var VERSAO = '1.1.4';
   if (raiz.DGO && raiz.DGO.__carregado) { return; }
 
   /* ------------------------------------------------------------------
@@ -276,20 +276,20 @@
       'background:rgba(255,255,255,.05);color:#cbd5e1;}',
       '.dgo-chaves-resumo.dgo-ok{background:rgba(34,197,94,.12);color:#bbf7d0;}',
       /* ---------- AssistONE ---------- */
-      '#dgo-aone{position:fixed;right:12px;bottom:calc(16px + var(--dgo-aone-sobe,0px) + env(safe-area-inset-bottom,0px));',
+      '#dgo-aone{position:fixed;right:16px;bottom:calc(16px + var(--dgo-aone-sobe,0px) + env(safe-area-inset-bottom,0px));',
       'z-index:2147483200;display:flex;flex-direction:column;align-items:flex-end;gap:8px;',
       'font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;}',
-      '@media (min-width:821px){#dgo-aone{right:22px;bottom:calc(22px + var(--dgo-aone-sobe-pc,0px));}}',
+      '@media (min-width:821px){#dgo-aone{right:16px;bottom:calc(16px + var(--dgo-aone-sobe-pc,0px));}}',
       '#dgo-aone.dgo-falando{z-index:2147483250;}',
       '.dgo-aone-bt{width:58px;height:58px;border-radius:50%;border:1px solid rgba(201,162,74,.55);padding:0;cursor:pointer;',
       'background:radial-gradient(circle at 50% 38%,#232838,#11141c 72%);display:flex;align-items:center;justify-content:center;',
-      'box-shadow:0 6px 18px rgba(0,0,0,.28),0 0 0 3px rgba(201,162,74,.16);animation:dgo-aone-flutua 4.5s ease-in-out infinite;',
+      'box-shadow:0 6px 18px rgba(0,0,0,.28),0 0 0 3px rgba(201,162,74,.16);animation:dgo-aone-flutua 3.2s ease-in-out infinite;',
       'transition:width .25s cubic-bezier(.2,.8,.2,1),height .25s cubic-bezier(.2,.8,.2,1);}',
-      '.dgo-aone-bt img{width:82%;height:82%;object-fit:contain;pointer-events:none;filter:drop-shadow(0 1px 2px rgba(0,0,0,.5));}',
+      '.dgo-aone-bt img{width:100%;height:100%;border-radius:50%;object-fit:cover;display:block;pointer-events:none;}',
       '.dgo-aone-glifo{font:800 26px/1 system-ui,sans-serif;color:#e6c168;}',
       '.dgo-aone-bt:focus-visible{outline:3px solid var(--dgo-cor);outline-offset:3px;}',
       '#dgo-aone.dgo-falando .dgo-aone-bt{width:116px;height:116px;animation:none;}',
-      '@keyframes dgo-aone-flutua{0%,100%{transform:translateY(0)}50%{transform:translateY(-4px)}}',
+      '@keyframes dgo-aone-flutua{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}',
       '@keyframes dgo-aone-pop{from{opacity:0;transform:translateY(8px) scale(.96)}to{opacity:1;transform:none}}',
       '@media (prefers-reduced-motion:reduce){.dgo-aone-bt{animation:none;transition:none}.dgo-aone-bolha{animation:none}}',
       '.dgo-aone-bolha{width:min(340px,calc(100vw - 24px));max-height:min(70vh,560px);overflow:auto;position:relative;',
@@ -5357,7 +5357,7 @@
     /* ---- monta o personagem uma vez ---- */
     montar: function () {
       if (Assistente.el || !d.body) return;
-      Assistente.botao = el('button', { type: 'button', class: 'dgo-aone-bt', 'aria-haspopup': 'dialog', title: 'AssistONE',
+      Assistente.botao = el('button', { type: 'button', class: 'dgo-aone-bt', 'aria-haspopup': 'dialog', 'aria-expanded': 'false', title: 'AssistONE',
         'aria-label': t('aoneRotulo'), onclick: function () { if (Assistente.vista) Assistente.fechar(); else Assistente.abrir(); } },
         [Assistente.img()]);
       Assistente.bolha = el('div', { class: 'dgo-aone-bolha dgo-oculto', role: 'dialog', 'aria-live': 'polite', 'aria-label': 'AssistONE' });
