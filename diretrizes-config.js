@@ -15,17 +15,18 @@ DGO.iniciar({
                                 origem, e e isto que impede os dados de um
                                 vazarem para o outro. */
   nome: { pt: 'CifrasONE', en: 'CifrasONE' },
-  versaoApp: '2.7.1',
+  versaoApp: '2.8.0',
   cor: '#a8501e',            /* o marrom-laranja do site de cifras */
   corFundoBarra: '#1a1614',
 
   /* ---------- idioma e datas ---------- */
   idiomaPadrao: 'pt',                    /* 'pt' ou 'en' */
   idiomaCompartilhado: true,             /* o idioma escolhido vale em todos os seus sites */
-  /* O botao PT|EN e desenhado pelo proprio site (comum.js): no computador
-     fica no cabecalho, no celular dentro do menu ☰ — como manda a diretriz.
-     Por isso o seletor flutuante do modulo fica desligado. */
+  /* O PT|EN nao fica mais no topo nem na faixa (diretriz de 02/Out/2026):
+     mora dentro de Configuracoes (secao Idioma, desenhada pelo modulo).
+     Por isso o seletor do modulo fica desligado. */
   seletorIdiomaVisivel: false,
+  posicaoSeletorIdioma: 'faixa',
   datasAutomaticas: true,
 
   /* ---------- faixa do topo: so anuncio ----------
@@ -205,17 +206,19 @@ DGO.iniciar({
     },
     tour: [
       { seletor: '[data-botao-menu]', titulo: { pt: 'Menu ☰', en: 'Menu ☰' },
-        texto: { pt: 'Todas as funções do app: cifras, acordes, importar, foto, ajustes e ajuda.', en: 'Every feature: charts, chords, import, photo, settings and help.' } },
+        texto: { pt: 'Todas as funções do app: cifras, acordes, importar, foto, configurações e ajuda.', en: 'Every feature: charts, chords, import, photo, settings and help.' } },
       { seletor: '#busca', titulo: { pt: 'Busca', en: 'Search' },
         texto: { pt: 'Procure pelo nome da música, pelo artista ou por um trecho da letra.', en: 'Search by song title, artist or a line of the lyrics.' } },
       { seletor: '#filtros', titulo: { pt: 'Categorias', en: 'Categories' },
         texto: { pt: 'Filtre por estilo, veja só as prontas ou só as favoritas.', en: 'Filter by style, see only ready charts or only favorites.' } },
       { seletor: '#painel', titulo: { pt: 'Barra da cifra', en: 'Chart toolbar' },
         texto: { pt: 'Tom, capotraste, Play com velocidade, guia de leitura, tamanho da letra e modo celular.', en: 'Key, capo, Play with speed, reading guide, font size and phone mode.' } },
-      { seletor: '[data-abre-config]', titulo: { pt: 'Configurações ⚙', en: 'Settings ⚙' },
-        texto: { pt: 'Idioma, conta, IA, avisos, nuvem e a versão do app.', en: 'Language, account, AI, alerts, cloud and the app version.' } },
-      { seletor: '[data-inicio]', titulo: { pt: 'Início 🏠', en: 'Home 🏠' },
-        texto: { pt: 'Volta para a lista de músicas de qualquer lugar.', en: 'Back to the song list from anywhere.' } },
+      { seletor: '[data-abre-busca]', titulo: { pt: 'Busca 🔍', en: 'Search 🔍' },
+        texto: { pt: 'Procura músicas, telas e funções do app.', en: 'Finds songs, screens and features of the app.' } },
+      { seletor: '[data-abre-inbox]', titulo: { pt: 'Inbox 📥', en: 'Inbox 📥' },
+        texto: { pt: 'Avisos da plataforma e do app, com contador de não lidas.', en: 'Platform and app notices, with an unread counter.' } },
+      { seletor: '[data-abre-perfil]', titulo: { pt: 'Perfil 👤', en: 'Profile 👤' },
+        texto: { pt: 'Quem está conectado, Configurações (com o idioma PT/EN), tema, imagem de fundo, instalar e sair. O nome do app no topo leva ao início.', en: 'Who is signed in, Settings (with the PT/EN language), theme, background image, install and sign out. The app name at the top goes Home.' } },
       { seletor: '.barra-baixo', titulo: { pt: 'Barra de baixo', en: 'Bottom bar' },
         texto: { pt: 'Os atalhos principais, sempre à mão no celular.', en: 'The main shortcuts, always at hand on the phone.' } }
     ],
@@ -237,6 +240,8 @@ DGO.iniciar({
       { termo: { pt: 'Ler a letra em voz alta', en: 'Read the lyrics aloud' }, sinonimos: ['voz', 'voice', 'falar', 'tts'], destino: '#btn-voz', icone: '🗣' },
       { termo: { pt: 'Favoritas', en: 'Favorites' }, sinonimos: ['estrela', 'star', 'favorito'], destino: 'index.html', icone: '★' },
       { termo: { pt: 'Configurações', en: 'Settings' }, sinonimos: ['ajustes', 'config', 'idioma', 'language', 'conta', 'account', 'ia', 'ai', 'chave', 'key'], destino: function () { DGO.abrirConfiguracoes(); }, icone: '⚙' },
+      { termo: { pt: 'Inbox (mensagens e avisos)', en: 'Inbox (messages and notices)' }, sinonimos: ['inbox', 'mensagens', 'messages', 'recados', 'avisos', 'notices'], destino: function () { if (typeof abrirInbox === 'function') abrirInbox(); }, icone: '📥' },
+      { termo: { pt: 'Perfil (conta, tema, sair)', en: 'Profile (account, theme, sign out)' }, sinonimos: ['perfil', 'profile', 'entrar', 'login', 'sair', 'logout', 'usuario', 'user'], destino: function () { var b = document.querySelector('[data-abre-perfil]'); if (b) b.click(); }, icone: '👤' },
       { termo: { pt: 'Chaves de IA (cofre)', en: 'AI keys (vault)' }, sinonimos: ['ia', 'ai', 'gemini', 'groq', 'chave', 'api key', 'cofre'], destino: function () { DGO.ia.chaves(); }, icone: '🔑' },
       { termo: { pt: 'Tema claro ou escuro', en: 'Light or dark theme' }, sinonimos: ['tema', 'theme', 'escuro', 'dark', 'claro', 'light'], destino: function () { var b = document.querySelector('[data-botao-tema]'); if (b) b.click(); }, icone: '☾' },
       { termo: { pt: 'Instalar o app / usar sem internet', en: 'Install the app / use offline' }, sinonimos: ['instalar', 'install', 'offline', 'atalho', 'tela inicial', 'home screen'], destino: function () { if (DGO.pwa) DGO.pwa.instalar(); }, icone: '📲' },

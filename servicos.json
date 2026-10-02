@@ -18,6 +18,6 @@
     { "id": "ia",       "nome": { "pt": "Perguntar à IA", "en": "Ask the AI" },
       "descricao": { "pt": "Com a chave da própria pessoa (cofre de IA)", "en": "With the person's own key (AI vault)" }, "nivel": "visitante" },
     { "id": "nuvem",    "nome": { "pt": "Nuvem e backup", "en": "Cloud and backup" },
-      "descricao": { "pt": "Guardar favoritos e ajustes no Drive ou OneDrive", "en": "Keep favorites and settings on Drive or OneDrive" }, "nivel": "visitante" }
+      "descricao": { "pt": "Guardar favoritos e configurações no Drive ou OneDrive", "en": "Keep favorites and settings on Drive or OneDrive" }, "nivel": "visitante" }
   ]
 }

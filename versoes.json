@@ -2,6 +2,27 @@
   "comentario": "Histórico de versões do CifrasONE. A mais nova fica EM CIMA. Ao publicar, acrescente um bloco novo no topo da lista (com data e hora) e troque também o VERSAO do comum.js, o versaoApp do diretrizes-config.js e o VERSAO do sw.js.",
   "versoes": [
     {
+      "versao": "2.8.0",
+      "data": "2026-10-02",
+      "hora": "14:00:00",
+      "pt": [
+        "🧭 Topo padronizado (diretriz de 02/Out/2026): ☰ na extrema esquerda, o nome do app leva ao início (saiu o 🏠), e à direita só 🔍 busca, 📥 inbox e 👤 perfil. O ⚙ fixo e o PT|EN saíram do topo.",
+        "👤 Menu do perfil: mostra quem está conectado (nome, apelido/e-mail, plano, desde quando) e traz Configurações, Tema (toggle), Imagem de fundo, Instalar e Sair. Visitante vê Entrar.",
+        "🌐 O idioma PT|EN agora mora dentro de Configurações (seção Idioma).",
+        "📥 Inbox: avisos da plataforma (recados.json) e do app (versão nova, lembretes), com contador de não lidas no botão e no ícone do app instalado, marcar como lida e arquivar.",
+        "💡 AssistONE igual aos outros apps: balança um pouco mais (−6 px, 3,2 s) no celular, no computador e também no modo celular; para com o balão aberto ou com “reduzir movimento”. Módulo comum 1.1.4.",
+        "✏️ “Ajustes” virou “Configurações” em todo lugar."
+      ],
+      "en": [
+        "🧭 Standard header (guideline of Oct 2, 2026): ☰ at the far left, the app name goes Home (🏠 is gone), and on the right only 🔍 search, 📥 inbox and 👤 profile. The fixed ⚙ and PT|EN left the header.",
+        "👤 Profile menu: shows who is signed in (name, alias/e-mail, plan, since when) and brings Settings, Theme (toggle), Background image, Install and Sign out. Guests see Sign in.",
+        "🌐 The PT|EN language now lives inside Settings (Language section).",
+        "📥 Inbox: platform notices (recados.json) and app notices (new version, reminders), with an unread counter on the button and on the installed app icon, mark as read and archive.",
+        "💡 AssistONE like the other apps: floats a bit more (−6 px, 3.2 s) on phones, computers and in phone mode too; stops with the balloon open or with “reduce motion”. Common module 1.1.4.",
+        "✏️ “Adjustments” became “Settings” everywhere."
+      ]
+    },
+    {
       "versao": "2.7.1",
       "data": "2026-09-26",
       "hora": "11:30:00",

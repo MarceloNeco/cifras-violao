@@ -1,0 +1,11 @@
+[
+  {
+    "id": "boas-vindas-2-8-0",
+    "inicio": "2026-10-02",
+    "fim": "2026-11-30",
+    "nivel": "todos",
+    "pt": { "titulo": "Topo novo no CifrasONE", "texto": "O nome do app leva ao início, o 👤 abre o seu perfil (com Configurações, tema e sair) e o idioma PT|EN está em Configurações." },
+    "en": { "title": "New header in CifrasONE", "text": "The app name goes Home, 👤 opens your profile (with Settings, theme and sign out) and the PT|EN language is in Settings." },
+    "link": ""
+  }
+]
