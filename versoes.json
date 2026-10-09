@@ -2,6 +2,17 @@
   "comentario": "Histórico de versões do CifrasONE. A mais nova fica EM CIMA. Ao publicar, acrescente um bloco novo no topo da lista (com data e hora) e troque também o VERSAO do comum.js, o versaoApp do diretrizes-config.js e o VERSAO do sw.js.",
   "versoes": [
     {
+      "versao": "2.8.1",
+      "data": "2026-10-09",
+      "hora": "07:55:00",
+      "pt": [
+        "📷 Foto vira cifra sem foto embaçada: em celular com várias câmeras atrás, o site agora abre a lente principal (antes podia abrir a grande-angular ou a macro, que não focam de perto). Foco automático contínuo, tocar na imagem foca naquele ponto, 🔄 Trocar de lente (a escolha fica guardada) e 🔦 Lanterna quando o aparelho tem."
+      ],
+      "en": [
+        "📷 Photo to chord sheet without blur: on phones with several back cameras the site now opens the main lens (it could open the ultra-wide or macro, which don't focus up close). Continuous autofocus, tap the image to focus there, 🔄 Switch lens (remembered) and 🔦 Torch when the device has one."
+      ]
+    },
+    {
       "versao": "2.8.0",
       "data": "2026-10-02",
       "hora": "14:00:00",

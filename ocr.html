@@ -34,10 +34,13 @@
     </div>
 
     <div id="area-camera" hidden>
-      <video id="video" playsinline muted class="video-ocr"></video>
+      <div class="palco-ocr" id="palco"><video id="video" playsinline muted class="video-ocr"></video></div>
+      <p class="dica-foco" data-i18n="ocr.dicaFoco"></p>
       <div class="linha-botoes">
         <button class="botao forte" id="tirar" data-i18n="ocr.tirar"></button>
         <button class="botao" id="trocar-camera" data-i18n="ocr.trocar"></button>
+        <button class="botao" id="trocar-lente" data-i18n="ocr.lente" hidden></button>
+        <button class="botao" id="lanterna" data-i18n="ocr.lanterna" hidden></button>
         <button class="botao" id="parar-camera" data-i18n="ocr.parar"></button>
       </div>
     </div>
