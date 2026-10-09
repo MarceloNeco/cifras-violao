@@ -77,23 +77,95 @@ function recado(texto, classe){
   el.className = 'recado ' + (classe || '');
 }
 
-/* ---------- câmera ---------- */
+/* ---------- câmera ----------
+   Celular com várias câmeras atrás às vezes abre a grande-angular ou a
+   macro, que não focam de perto: a foto sai embaçada para sempre. Por
+   isso escolhemos a lente principal pelo nome, ligamos o foco contínuo,
+   tocar na imagem foca ali, e o botão de lente troca (fica guardado). */
+const LENTE_CHAVE = 'cifras:camera-lente';
+let cameras = [];
+let lanternaLigada = false;
+
+function lerLente(){ try{ return localStorage.getItem(LENTE_CHAVE) || ''; }catch(e){ return ''; } }
+function guardarLente(id){ try{ localStorage.setItem(LENTE_CHAVE, id); }catch(e){} }
+function traseiras(){ return cameras.filter(d => !/front|frontal|user|selfie/i.test(d.label)); }
+function principal(lista){
+  const boas = lista.filter(d => !/wide|ultra|grande|tele|macro|depth|profund|infra|ir\b/i.test(d.label));
+  const n = d => { const m = /(\d+)/.exec(d.label); return m ? +m[1] : 99; };
+  return (boas.length ? boas : lista).slice().sort((a, b) => n(a) - n(b))[0] || null;
+}
+function trilha(){ return fluxoCamera && fluxoCamera.getVideoTracks()[0]; }
+function recursos(){ const tr = trilha(); try{ return (tr && tr.getCapabilities) ? tr.getCapabilities() : {}; }catch(e){ return {}; } }
+function aplicar(c){ const tr = trilha(); if (!tr) return Promise.resolve(); try{ return tr.applyConstraints({advanced:[c]}).catch(()=>{}); }catch(e){ return Promise.resolve(); } }
+
+async function pedirCamera(id){
+  const v = {width:{ideal:1920}, height:{ideal:1440}};
+  if (id) v.deviceId = {exact:id};
+  else v.facingMode = cameraTraseira ? {ideal:'environment'} : {ideal:'user'};
+  return navigator.mediaDevices.getUserMedia({video:v, audio:false});
+}
+
 async function abrirCamera(){
   try{
     pararCamera();
-    fluxoCamera = await navigator.mediaDevices.getUserMedia({
-      video: {facingMode: cameraTraseira ? {ideal:'environment'} : {ideal:'user'},
-              width:{ideal:1920}, height:{ideal:1440}},
-      audio: false
-    });
+    const guardada = cameraTraseira ? lerLente() : '';
+    try{ fluxoCamera = await pedirCamera(guardada); }
+    catch(e){ if (!guardada) throw e; guardarLente(''); fluxoCamera = await pedirCamera(''); }
+    try{
+      cameras = (await navigator.mediaDevices.enumerateDevices()).filter(d => d.kind === 'videoinput');
+      const atual = (trilha().getSettings && trilha().getSettings().deviceId) || '';
+      const p = principal(traseiras());
+      if (cameraTraseira && !guardada && traseiras().length > 1 && p && p.deviceId && atual && p.deviceId !== atual){
+        fluxoCamera.getTracks().forEach(f => f.stop());
+        try{ fluxoCamera = await pedirCamera(p.deviceId); }catch(e){ fluxoCamera = await pedirCamera(''); }
+      }
+    }catch(e){ /* sem a lista de câmeras: segue com a que abriu */ }
     const v = $('#video');
     v.srcObject = fluxoCamera;
     await v.play();
     $('#area-camera').hidden = false;
+    const cap = recursos();
+    if ((cap.focusMode || []).indexOf('continuous') >= 0) aplicar({focusMode:'continuous'});
+    lanternaLigada = false;
+    $('#lanterna').hidden = !cap.torch;
+    $('#lanterna').classList.remove('ligada');
+    $('#trocar-lente').hidden = !(cameraTraseira && traseiras().length > 1);
     recado('', '');
   }catch(e){
     recado(t('ocr.semCamera'), 'erro');
   }
+}
+
+/* toque na imagem: foco naquele ponto (onde o aparelho deixa) e depois volta ao contínuo */
+function focarEm(ev){
+  const v = $('#video');
+  if (!fluxoCamera || !v.videoWidth) return;
+  const r = v.getBoundingClientRect();
+  const k = Math.min(r.width / v.videoWidth, r.height / v.videoHeight);   /* object-fit: contain */
+  const dw = v.videoWidth * k, dh = v.videoHeight * k;
+  const x = Math.max(0, Math.min(1, (ev.clientX - r.left - (r.width - dw) / 2) / dw));
+  const y = Math.max(0, Math.min(1, (ev.clientY - r.top - (r.height - dh) / 2) / dh));
+  const anel = document.createElement('span');
+  anel.className = 'anel-foco';
+  anel.style.left = (ev.clientX - r.left) + 'px'; anel.style.top = (ev.clientY - r.top) + 'px';
+  $('#palco').appendChild(anel); setTimeout(() => anel.remove(), 900);
+  const cap = recursos(), fm = cap.focusMode || [], c = {};
+  if (cap.pointsOfInterest) c.pointsOfInterest = [{x, y}];
+  if (fm.indexOf('single-shot') >= 0) c.focusMode = 'single-shot';
+  if (!Object.keys(c).length) return;
+  aplicar(c).then(() => setTimeout(() => { if (fm.indexOf('continuous') >= 0) aplicar({focusMode:'continuous'}); }, 1500));
+}
+function trocarLente(){
+  const l = traseiras(); if (l.length < 2) return;
+  const atual = (trilha() && trilha().getSettings && trilha().getSettings().deviceId) || '';
+  const i = (l.map(d => d.deviceId).indexOf(atual) + 1) % l.length;
+  guardarLente(l[i].deviceId);
+  abrirCamera().then(() => recado(t('ocr.lenteN') + ' ' + (i + 1) + '/' + l.length, ''));
+}
+function alternarLanterna(){
+  lanternaLigada = !lanternaLigada;
+  aplicar({torch: lanternaLigada});
+  $('#lanterna').classList.toggle('ligada', lanternaLigada);
 }
 function pararCamera(){
   if (fluxoCamera){ fluxoCamera.getTracks().forEach(f => f.stop()); fluxoCamera = null; }
@@ -202,6 +274,9 @@ $('#abrir-camera').onclick = abrirCamera;
 $('#parar-camera').onclick = pararCamera;
 $('#tirar').onclick = tirarFoto;
 $('#trocar-camera').onclick = ()=>{ cameraTraseira = !cameraTraseira; abrirCamera(); };
+$('#trocar-lente').onclick = trocarLente;
+$('#lanterna').onclick = alternarLanterna;
+$('#video').addEventListener('click', focarEm);
 $('#arquivo').onchange = e => usarArquivo(e.target.files[0]);
 $('#girar').onclick = ()=>{ giro = (giro + 90) % 360; desenharPrevia(); };
 $('#contraste').oninput = e =>{ contraste = +e.target.value; desenharPrevia(); };

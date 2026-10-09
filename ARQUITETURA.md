@@ -26,7 +26,7 @@ valem para todos. **Nunca fixe endereço no código** — links entre apps são 
 | `leitor.js` | Página da cifra: tom, capo, rolagem, guia de leitura, voz, modo celular, afinador. | Sim. |
 | `acordes.js` / `dicionario.js` | Base de acordes e desenhos / página do dicionário. | Sim. |
 | `importador.js`, `zip.js`, `leitor-pdf.js`, `pdf-*.mjs` | Página Importar (texto, .txt, .pdf, fila e .zip). | Sim (os `.mjs` são biblioteca de PDF: não). |
-| `ocr.js`, `ocr-worker.js`, `tesseract-core-*.wasm.js`, `*.traineddata.gz` | Página Foto: OCR **hospedado aqui** (≈11 MB), funciona offline. Por isso o OCR do módulo fica desligado no config. | `ocr.js` sim; o motor não. |
+| `ocr.js`, `ocr-worker.js`, `tesseract-core-*.wasm.js`, `*.traineddata.gz` | Página Foto: OCR **hospedado aqui** (≈11 MB), funciona offline. A câmera abre a **lente principal** (celular com várias câmeras às vezes abre a grande-angular, que não foca de perto), com foco contínuo, tocar para focar, 🔄 trocar de lente (guardada em `cifras:camera-lente`) e 🔦 lanterna. Por isso o OCR do módulo fica desligado no config. | `ocr.js` sim; o motor não. |
 | `aviso.js`, `aviso.html` | Aviso legal e pedido de remoção (um texto só, usado na página e na janela). | Sim. |
 | `*.txt` + `indice.json` | As cifras (uma por arquivo) e o índice. | Conteúdo. |
 | `ajuda-botao.png` | Arte do AssistONE (a mesma nos apps). | Não. |
