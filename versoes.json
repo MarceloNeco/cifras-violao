@@ -2,6 +2,17 @@
   "comentario": "Histórico de versões do CifrasONE. A mais nova fica EM CIMA. Ao publicar, acrescente um bloco novo no topo da lista (com data e hora) e troque também o VERSAO do comum.js, o versaoApp do diretrizes-config.js e o VERSAO do sw.js.",
   "versoes": [
     {
+      "versao": "2.8.2",
+      "data": "2026-10-09",
+      "hora": "16:20:00",
+      "pt": [
+        "⏳ Foto vira cifra que não some (diretriz SolverONE de tarefas longas, arquivo tarefas.js): enquanto o site lê a foto, a tela fica acesa e uma pílula embaixo avisa \"não feche o app\" com a barra de progresso. Sair da página no meio pede confirmação."
+      ],
+      "en": [
+        "⏳ Photo-to-chart reading that never vanishes (SolverONE long-task guideline, tarefas.js): while the site reads the photo, the screen stays on and a pill at the bottom says \"do not close the app\" with a progress bar. Leaving the page midway asks first."
+      ]
+    },
+    {
       "versao": "2.8.1",
       "data": "2026-10-09",
       "hora": "07:55:00",

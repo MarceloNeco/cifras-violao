@@ -18,6 +18,7 @@ let giro = 0;                 // 0, 90, 180, 270
 let contraste = 40;           // 0 a 100
 let trabalhador = null;
 let lendo = false;
+let tarefaFim = null;          // tarefa longa (tarefas.js): {ok, falha} enquanto a leitura roda
 
 iniciarTema();
 
@@ -31,9 +32,11 @@ function garantirTrabalhador(){
       if (m.etapa === 'motor')  recado(t('ocr.baixando'), 'trabalhando');
       if (m.etapa === 'idioma') recado(t('ocr.baixando'), 'trabalhando');
       if (m.etapa === 'lendo')  recado(t('ocr.lendo'), 'trabalhando');
+      if (window.DGO && DGO.tarefa) DGO.tarefa.andamento('ocr', m.etapa === 'lendo' ? 0.6 : 0.2, m.etapa === 'lendo' ? t('ocr.lendo') : t('ocr.baixando'));
     }
     if (m.tipo === 'pronto'){
       lendo = false;
+      if (tarefaFim){ tarefaFim.ok(); tarefaFim = null; }
       $('#ler').disabled = false;
       const texto = limparLeitura(m.texto || '');
       if (!texto.trim()){ recado(t('ocr.nada'), 'erro'); return; }
@@ -44,6 +47,7 @@ function garantirTrabalhador(){
     }
     if (m.tipo === 'erro'){
       lendo = false;
+      if (tarefaFim){ tarefaFim.falha(new Error(t('ocr.erro'))); tarefaFim = null; }
       $('#ler').disabled = false;
       recado(m.mensagem === 'sem-motor' || m.mensagem === 'sem-idioma'
              ? t('ocr.semMotor') : t('ocr.erro'), 'erro');
@@ -251,6 +255,8 @@ async function lerAgora(){
   lendo = true;
   $('#ler').disabled = true;
   recado(t('ocr.baixando'), 'trabalhando');
+  /* diretriz de tarefas longas (tarefas.js): tela acesa, pílula "não feche o app" com progresso, aviso ao sair da página */
+  if (window.DGO && DGO.tarefa) DGO.tarefa.iniciar({id:'ocr', titulo:t('ocr.lendo').replace('…',''), executar: ()=> new Promise((ok, falha)=>{ tarefaFim = {ok, falha}; })}).catch(()=>{});
 
   const blob = await new Promise(ok => c.toBlob(ok, 'image/png'));
   const bytes = await blob.arrayBuffer();

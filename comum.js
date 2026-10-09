@@ -4,7 +4,7 @@
 
 /* Versão do site. Ao publicar uma mudança, altere estas duas linhas:
    o número aparece no rodapé de todas as páginas. */
-const VERSAO = '2.8.1';
+const VERSAO = '2.8.2';
 const VERSAO_DATA = '2026-10-09';
 
 /* assinatura com a versão e o link do aviso, no rodapé de cada página */
