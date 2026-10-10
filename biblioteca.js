@@ -82,7 +82,7 @@ function desenhar(){
 
   elLista.innerHTML = achadas.map(m => `
     <div class="cartao${m.pendente ? ' pendente' : ''}">
-      <button class="estrela" data-id="${escapar(m.id)}"
+      <button class="estrela" data-recurso="favoritos" data-id="${escapar(m.id)}"
               aria-pressed="${favoritos.has(m.id)}"
               aria-label="${t('lista.favoritar')} ${escapar(m.titulo)}">${favoritos.has(m.id) ? '★' : '☆'}</button>
       <a class="info" href="cifra.html?m=${encodeURIComponent(m.id)}">

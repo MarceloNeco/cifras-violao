@@ -16,6 +16,8 @@ function cifrasSim(id) {
   var v = window.SolverRecursos ? SolverRecursos.valor(id, true) : true;
   return !(v === false || v === 0 || /^(nao|não|no|off|false)$/i.test(String(v)));
 }
+/* Modo DEUS: atalho ou item da busca com "recurso" desligado no RootifyONE não entra na lista */
+function cifrasSo(lista) { return lista.filter(function (x) { return !x.recurso || cifrasLigado(x.recurso); }); }
 
 DGO.iniciar({
 
@@ -25,7 +27,7 @@ DGO.iniciar({
                                 origem, e e isto que impede os dados de um
                                 vazarem para o outro. */
   nome: { pt: 'CifrasONE', en: 'CifrasONE' },
-  versaoApp: '2.9.0',
+  versaoApp: '2.10.0',
   cor: '#a8501e',            /* o marrom-laranja do site de cifras */
   corFundoBarra: '#1a1614',
 
@@ -122,7 +124,7 @@ DGO.iniciar({
           var $ = function (s) { return document.querySelector(s); };
           var caixa = document.createElement('div');
           caixa.className = 'aone-comandos';
-          function linha() { var l = document.createElement('div'); l.className = 'aone-linha'; caixa.appendChild(l); return l; }
+          function linha(r) { var l = document.createElement('div'); l.className = 'aone-linha'; if (r) l.setAttribute('data-recurso', r); caixa.appendChild(l); return l; }
           function bt(l, texto, alvo, opc) {
             var b = document.createElement('button'); b.type = 'button'; b.textContent = texto;
             if (opc && opc.forte) b.className = 'forte';
@@ -133,26 +135,27 @@ DGO.iniciar({
             l.appendChild(b); return b;
           }
           function valor(l, id) { var v = document.createElement('b'); v.className = 'aone-valor'; v.dataset.de = id; l.appendChild(v); return v; }
-          var l1 = linha();
+          var l1 = linha('rolagem');
           var play = bt(l1, '▶', '#btn-rolar', { forte: true }); play.className = 'forte play';
-          var l2 = linha();
+          var l2 = linha('tom');
           var r2 = document.createElement('span'); r2.className = 'aone-rot'; r2.textContent = en ? 'Key' : 'Tom'; l2.appendChild(r2);
           bt(l2, '−', '#tom-menos'); valor(l2, '#tom-atual'); bt(l2, '+', '#tom-mais'); bt(l2, '↺', '#tom-zero');
-          var l3 = linha();
+          var l3 = linha('rolagem');
           var r3 = document.createElement('span'); r3.className = 'aone-rot'; r3.textContent = en ? 'Speed' : 'Veloc.'; l3.appendChild(r3);
           var menos = document.createElement('button'); menos.type = 'button'; menos.textContent = '−';
           var mais = document.createElement('button'); mais.type = 'button'; mais.textContent = '+';
           function vel(passo) { if (typeof mudarVelocidade === 'function') mudarVelocidade(passo); setTimeout(atualizar, 60); }
           menos.addEventListener('click', function () { vel(-1); }); mais.addEventListener('click', function () { vel(+1); });
           l3.appendChild(menos); valor(l3, '#velocidade-valor'); l3.appendChild(mais);
-          var l4 = linha();
+          var l4 = linha('letra');
           var r4 = document.createElement('span'); r4.className = 'aone-rot'; r4.textContent = en ? 'Text' : 'Letra'; l4.appendChild(r4);
           bt(l4, 'A−', '#fonte-menos'); bt(l4, 'A+', '#fonte-mais'); bt(l4, '⤢', '#btn-caber');
           var l5 = linha();
           var guia = bt(l5, '◉ ' + (en ? 'Guide' : 'Guia'), '#btn-guia');
+          guia.setAttribute('data-recurso', 'guia');
           var voz = bt(l5, '🗣 ' + (en ? 'Voice' : 'Voz'), '#btn-voz');
           voz.setAttribute('data-recurso', 'voz');
-          bt(l5, '🎵', '#btn-afinador');
+          bt(l5, '🎵', '#btn-afinador').setAttribute('data-recurso', 'afinador');
           var l6 = linha();
           bt(l6, '✕ ' + (en ? 'Leave phone mode' : 'Sair do modo celular'), '#sair-palco');
           function atualizar() {
@@ -172,39 +175,39 @@ DGO.iniciar({
         titulo: { pt: 'Minhas cifras', en: 'My chords' },
         frase: { pt: 'Busque uma música, filtre por categoria e marque as favoritas com a ★.',
                  en: 'Search a song, filter by category and star your favorites.' },
-        atalhos: [
-          { rotulo: { pt: '🔍 Buscar uma música', en: '🔍 Search a song' }, acao: '#busca', principal: true },
-          { rotulo: { pt: '🎼 Dicionário de acordes', en: '🎼 Chord dictionary' }, acao: 'acordes.html' },
-          { rotulo: { pt: '📋 Importar uma cifra', en: '📋 Import a chart' }, acao: 'importar.html' }
-        ]
+        atalhos: cifrasSo([
+          { rotulo: { pt: '🔍 Buscar uma música', en: '🔍 Search a song' }, acao: '#busca', principal: true, recurso: 'busca' },
+          { rotulo: { pt: '🎼 Dicionário de acordes', en: '🎼 Chord dictionary' }, acao: 'acordes.html', recurso: 'acordes' },
+          { rotulo: { pt: '📋 Importar uma cifra', en: '📋 Import a chart' }, acao: 'importar.html', recurso: 'importar' }
+        ])
       },
       cifra: {
         titulo: { pt: 'a cifra', en: 'the chord chart' },
         frase: { pt: 'Toque em ▶ para rolar sozinha, − e + mudam o tom, e o 📱 Modo celular deixa a tela só com a música.',
                  en: 'Tap ▶ to auto-scroll, − and + change the key, and 📱 Phone mode leaves only the song on screen.' },
-        atalhos: [
-          { rotulo: { pt: '▶ Rolar a cifra', en: '▶ Scroll the chart' }, acao: function () { var b = document.getElementById('btn-rolar'); if (b) b.click(); }, principal: true },
-          { rotulo: { pt: '📱 Modo celular', en: '📱 Phone mode' }, acao: function () { var b = document.getElementById('btn-palco'); if (b) b.click(); } },
-          { rotulo: { pt: '🎵 Afinador', en: '🎵 Tuner' }, acao: function () { var b = document.getElementById('btn-afinador'); if (b) b.click(); } }
-        ]
+        atalhos: cifrasSo([
+          { rotulo: { pt: '▶ Rolar a cifra', en: '▶ Scroll the chart' }, acao: function () { var b = document.getElementById('btn-rolar'); if (b) b.click(); }, principal: true, recurso: 'rolagem' },
+          { rotulo: { pt: '📱 Modo celular', en: '📱 Phone mode' }, acao: function () { var b = document.getElementById('btn-palco'); if (b) b.click(); }, recurso: 'palco' },
+          { rotulo: { pt: '🎵 Afinador', en: '🎵 Tuner' }, acao: function () { var b = document.getElementById('btn-afinador'); if (b) b.click(); }, recurso: 'afinador' }
+        ])
       },
       acordes: {
         titulo: { pt: 'o dicionário de acordes', en: 'the chord dictionary' },
         frase: { pt: 'Digite um acorde (ex.: Am7) ou escolha a nota e o tipo. Toque no desenho para ouvir.',
                  en: 'Type a chord (e.g. Am7) or pick the note and type. Tap the diagram to hear it.' },
-        atalhos: [
+        atalhos: cifrasSo([
           { rotulo: { pt: '⌨ Digitar um acorde', en: '⌨ Type a chord' }, acao: '#entrada', principal: true },
-          { rotulo: { pt: '🎼 Campo harmônico', en: '🎼 Harmonic field' }, acao: '#tom-campo' }
-        ]
+          { rotulo: { pt: '🎼 Campo harmônico', en: '🎼 Harmonic field' }, acao: '#tom-campo', recurso: 'campo-harmonico' }
+        ])
       },
       importar: {
         titulo: { pt: 'Importar cifra', en: 'Import chart' },
         frase: { pt: 'Cole a cifra copiada de qualquer site; o app arruma o texto e monta o arquivo pronto.',
                  en: 'Paste a chart copied from any site; the app tidies the text and builds the file.' },
-        atalhos: [
+        atalhos: cifrasSo([
           { rotulo: { pt: '📋 Colar a cifra', en: '📋 Paste the chart' }, acao: '#entrada', principal: true },
-          { rotulo: { pt: '📷 Tirar uma foto', en: '📷 Take a photo' }, acao: 'ocr.html' }
-        ]
+          { rotulo: { pt: '📷 Tirar uma foto', en: '📷 Take a photo' }, acao: 'ocr.html', recurso: 'ocr' }
+        ])
       },
       ocr: {
         titulo: { pt: 'Foto vira cifra', en: 'Photo to chart' },
@@ -240,26 +243,26 @@ DGO.iniciar({
       acordes: { pt: 'Dica: toque em qualquer desenho para ouvir o acorde.', en: 'Tip: tap any diagram to hear the chord.' },
       importar: { pt: 'Dica: a fila junta várias cifras e baixa tudo num .zip de uma vez.', en: 'Tip: the queue gathers several charts and downloads them all in one .zip.' }
     },
-    busca: [
+    busca: cifrasSo([
       { termo: { pt: 'Minhas cifras (Início)', en: 'My chords (Home)' }, sinonimos: ['musicas', 'songs', 'lista', 'inicio', 'home'], destino: 'index.html', icone: '🏠' },
-      { termo: { pt: 'Dicionário de acordes', en: 'Chord dictionary' }, sinonimos: ['acorde', 'chord', 'campo harmonico', 'harmonic field'], destino: 'acordes.html', icone: '🎼' },
-      { termo: { pt: 'Importar cifra', en: 'Import chart' }, sinonimos: ['colar', 'paste', 'arquivo', 'txt', 'pdf', 'fila', 'zip'], destino: 'importar.html', icone: '📋' },
-      { termo: { pt: 'Foto vira cifra (OCR)', en: 'Photo to chart (OCR)' }, sinonimos: ['camera', 'foto', 'photo', 'scan', 'ler foto'], destino: 'ocr.html', icone: '📷' },
-      { termo: { pt: 'Afinador', en: 'Tuner' }, sinonimos: ['afinar', 'tune', 'cordas', 'strings'], destino: function () { var b = document.getElementById('btn-afinador'); if (b) b.click(); else location.href = 'index.html'; }, icone: '🎵' },
-      { termo: { pt: 'Mudar o tom / capotraste', en: 'Change key / capo' }, sinonimos: ['tom', 'key', 'capo', 'transpor', 'transpose'], destino: '#painel', icone: '🎚' },
-      { termo: { pt: 'Rolagem automática (Play)', en: 'Auto-scroll (Play)' }, sinonimos: ['rolar', 'scroll', 'velocidade', 'speed', 'play'], destino: '#btn-rolar', icone: '▶' },
-      { termo: { pt: 'Modo celular (tela cheia)', en: 'Phone mode (full screen)' }, sinonimos: ['palco', 'stage', 'tela cheia', 'fullscreen'], destino: '#btn-palco', icone: '📱' },
-      { termo: { pt: 'Ler a letra em voz alta', en: 'Read the lyrics aloud' }, sinonimos: ['voz', 'voice', 'falar', 'tts'], destino: '#btn-voz', icone: '🗣' },
-      { termo: { pt: 'Favoritas', en: 'Favorites' }, sinonimos: ['estrela', 'star', 'favorito'], destino: 'index.html', icone: '★' },
+      { termo: { pt: 'Dicionário de acordes', en: 'Chord dictionary' }, sinonimos: ['acorde', 'chord', 'campo harmonico', 'harmonic field'], destino: 'acordes.html', icone: '🎼', recurso: 'acordes' },
+      { termo: { pt: 'Importar cifra', en: 'Import chart' }, sinonimos: ['colar', 'paste', 'arquivo', 'txt', 'pdf', 'fila', 'zip'], destino: 'importar.html', icone: '📋', recurso: 'importar' },
+      { termo: { pt: 'Foto vira cifra (OCR)', en: 'Photo to chart (OCR)' }, sinonimos: ['camera', 'foto', 'photo', 'scan', 'ler foto'], destino: 'ocr.html', icone: '📷', recurso: 'ocr' },
+      { termo: { pt: 'Afinador', en: 'Tuner' }, sinonimos: ['afinar', 'tune', 'cordas', 'strings'], destino: function () { var b = document.getElementById('btn-afinador'); if (b) b.click(); else location.href = 'index.html'; }, icone: '🎵', recurso: 'afinador' },
+      { termo: { pt: 'Mudar o tom / capotraste', en: 'Change key / capo' }, sinonimos: ['tom', 'key', 'capo', 'transpor', 'transpose'], destino: '#painel', icone: '🎚', recurso: 'tom' },
+      { termo: { pt: 'Rolagem automática (Play)', en: 'Auto-scroll (Play)' }, sinonimos: ['rolar', 'scroll', 'velocidade', 'speed', 'play'], destino: '#btn-rolar', icone: '▶', recurso: 'rolagem' },
+      { termo: { pt: 'Modo celular (tela cheia)', en: 'Phone mode (full screen)' }, sinonimos: ['palco', 'stage', 'tela cheia', 'fullscreen'], destino: '#btn-palco', icone: '📱', recurso: 'palco' },
+      { termo: { pt: 'Ler a letra em voz alta', en: 'Read the lyrics aloud' }, sinonimos: ['voz', 'voice', 'falar', 'tts'], destino: '#btn-voz', icone: '🗣', recurso: 'voz' },
+      { termo: { pt: 'Favoritas', en: 'Favorites' }, sinonimos: ['estrela', 'star', 'favorito'], destino: 'index.html', icone: '★', recurso: 'favoritos' },
       { termo: { pt: 'Configurações', en: 'Settings' }, sinonimos: ['ajustes', 'config', 'idioma', 'language', 'conta', 'account', 'ia', 'ai', 'chave', 'key'], destino: function () { DGO.abrirConfiguracoes(); }, icone: '⚙' },
-      { termo: { pt: 'Inbox (mensagens e avisos)', en: 'Inbox (messages and notices)' }, sinonimos: ['inbox', 'mensagens', 'messages', 'recados', 'avisos', 'notices'], destino: function () { if (typeof abrirInbox === 'function') abrirInbox(); }, icone: '📥' },
+      { termo: { pt: 'Inbox (mensagens e avisos)', en: 'Inbox (messages and notices)' }, sinonimos: ['inbox', 'mensagens', 'messages', 'recados', 'avisos', 'notices'], destino: function () { if (typeof abrirInbox === 'function') abrirInbox(); }, icone: '📥', recurso: 'inbox' },
       { termo: { pt: 'Perfil (conta, tema, sair)', en: 'Profile (account, theme, sign out)' }, sinonimos: ['perfil', 'profile', 'entrar', 'login', 'sair', 'logout', 'usuario', 'user'], destino: function () { var b = document.querySelector('[data-abre-perfil]'); if (b) b.click(); }, icone: '👤' },
-      { termo: { pt: 'Chaves de IA (cofre)', en: 'AI keys (vault)' }, sinonimos: ['ia', 'ai', 'gemini', 'groq', 'chave', 'api key', 'cofre'], destino: function () { if (cifrasLigado('ia')) DGO.ia.chaves(); }, icone: '🔑' },
+      { termo: { pt: 'Chaves de IA (cofre)', en: 'AI keys (vault)' }, sinonimos: ['ia', 'ai', 'gemini', 'groq', 'chave', 'api key', 'cofre'], destino: function () { if (cifrasLigado('ia')) DGO.ia.chaves(); }, icone: '🔑', recurso: 'ia' },
       { termo: { pt: 'Tema claro ou escuro', en: 'Light or dark theme' }, sinonimos: ['tema', 'theme', 'escuro', 'dark', 'claro', 'light'], destino: function () { var b = document.querySelector('[data-botao-tema]'); if (b) b.click(); }, icone: '☾' },
       { termo: { pt: 'Instalar o app / usar sem internet', en: 'Install the app / use offline' }, sinonimos: ['instalar', 'install', 'offline', 'atalho', 'tela inicial', 'home screen'], destino: function () { if (DGO.pwa) DGO.pwa.instalar(); }, icone: '📲' },
       { termo: { pt: 'Novidades de cada versão', en: 'What’s new in each version' }, sinonimos: ['versao', 'version', 'novidades', 'changelog'], destino: function () { if (typeof abrirNovidades === 'function') abrirNovidades(); }, icone: '🆕' },
       { termo: { pt: 'Aviso legal e pedido de remoção', en: 'Legal notice and removal request' }, sinonimos: ['aviso', 'legal', 'direitos', 'remover', 'notice'], destino: 'aviso.html', icone: '⚖' }
-    ]
+    ])
   },
 
   /* ---------- acesso ---------- */

@@ -4,7 +4,7 @@
 
 /* Versão do site. Ao publicar uma mudança, altere estas duas linhas:
    o número aparece no rodapé de todas as páginas. */
-const VERSAO = '2.9.0';
+const VERSAO = '2.10.0';
 const VERSAO_DATA = '2026-10-10';
 
 /* assinatura com a versão e o link do aviso, no rodapé de cada página */
@@ -190,9 +190,9 @@ const PESSOA_SVG = `<svg class="icone-svg" viewBox="0 0 24 24" fill="none" strok
 
 const PAGINAS = [
   {id:'inicio',   href:'index.html',    ico:'🏠', chave:'barra.inicio'},
-  {id:'acordes',  href:'acordes.html',  ico:'🎼', chave:'barra.acordes'},
-  {id:'importar', href:'importar.html', ico:'📋', chave:'barra.importar'},
-  {id:'ocr',      href:'ocr.html',      ico:'📷', chave:'barra.foto'}
+  {id:'acordes',  href:'acordes.html',  ico:'🎼', chave:'barra.acordes',  recurso:'acordes'},
+  {id:'importar', href:'importar.html', ico:'📋', chave:'barra.importar', recurso:'importar'},
+  {id:'ocr',      href:'ocr.html',      ico:'📷', chave:'barra.foto',     recurso:'ocr'}
 ];
 
 function montarTopo(){
@@ -216,15 +216,15 @@ function montarTopo(){
     </a>
     <div class="espaco"></div>
     ${naCifra ? `
-      <button class="botao icone" type="button" id="btn-favorito" aria-pressed="false"
+      <button class="botao icone" type="button" id="btn-favorito" data-recurso="favoritos" aria-pressed="false"
               data-i18n-title="cifra.favoritar" data-i18n-aria="cifra.favoritar">☆</button>
-      <button class="botao icone some-no-palco" type="button" id="btn-compartilhar"
+      <button class="botao icone some-no-palco" type="button" id="btn-compartilhar" data-recurso="compartilhar"
               data-i18n-title="cifra.compartilhar" data-i18n-aria="cifra.compartilhar">⤴</button>
-      <button class="botao icone" type="button" id="btn-afinador"
+      <button class="botao icone" type="button" id="btn-afinador" data-recurso="afinador"
               data-i18n-title="cifra.afinador" data-i18n-aria="cifra.afinador">🎵</button>` : ''}
-    <button class="botao icone" type="button" data-abre-busca
+    <button class="botao icone" type="button" data-abre-busca data-recurso="busca"
             data-i18n-title="topo.busca" data-i18n-aria="topo.busca" aria-label="Buscar">${LUPA_SVG}</button>
-    <button class="botao icone com-contador" type="button" data-abre-inbox aria-haspopup="dialog"
+    <button class="botao icone com-contador" type="button" data-abre-inbox data-recurso="inbox" aria-haspopup="dialog"
             data-i18n-title="topo.inbox" data-i18n-aria="topo.inbox" aria-label="Inbox">${INBOX_SVG}<span class="contador" data-inbox-contador hidden></span></button>
     <button class="botao icone perfil" type="button" data-abre-perfil aria-haspopup="menu"
             aria-expanded="false" aria-controls="menu-perfil" data-i18n-title="topo.perfil" aria-label="Perfil">
@@ -635,7 +635,7 @@ function montarInbox(){
 function montarGaveta(pagina){
   if (document.getElementById('gaveta-menu')) return;
   const item = (p, chave, ico) =>
-    `<a class="gaveta-item${pagina === p.id ? ' atual' : ''}" href="${p.href}"${pagina === p.id ? ' aria-current="page"' : ''}>
+    `<a class="gaveta-item${pagina === p.id ? ' atual' : ''}" href="${p.href}"${pagina === p.id ? ' aria-current="page"' : ''}${p.recurso ? ` data-recurso="${p.recurso}"` : ''}>
        <span class="ico">${ico || p.ico}</span><span data-i18n="${chave}"></span></a>`;
   const [inicio, acordes, importar, ocr] = PAGINAS;
   const gaveta = document.createElement('div');
@@ -653,8 +653,8 @@ function montarGaveta(pagina){
         <h3 data-i18n="menu.tocar"></h3>
         ${item(inicio, 'menu.cifras')}
         ${item(acordes, 'menu.acordes')}
-        ${pagina === 'cifra' ? `<button class="gaveta-item" type="button" data-abre-afinador><span class="ico">🎵</span><span data-i18n="menu.afinador"></span></button>
-        <button class="gaveta-item" type="button" data-abre-compartilhar><span class="ico">⤴</span><span data-i18n="menu.compartilhar"></span></button>` : ''}
+        ${pagina === 'cifra' ? `<button class="gaveta-item" type="button" data-abre-afinador data-recurso="afinador"><span class="ico">🎵</span><span data-i18n="menu.afinador"></span></button>
+        <button class="gaveta-item" type="button" data-abre-compartilhar data-recurso="compartilhar"><span class="ico">⤴</span><span data-i18n="menu.compartilhar"></span></button>` : ''}
       </div>
       <div class="gaveta-grupo">
         <h3 data-i18n="menu.trazer"></h3>
@@ -664,7 +664,7 @@ function montarGaveta(pagina){
       <div class="gaveta-grupo">
         <h3 data-i18n="menu.config"></h3>
         <button class="gaveta-item" type="button" data-abre-config><span class="ico">⚙</span><span data-i18n="topo.config"></span></button>
-        <button class="gaveta-item" type="button" data-abre-inbox-menu><span class="ico">📥</span><span data-i18n="menu.inbox"></span></button>
+        <button class="gaveta-item" type="button" data-abre-inbox-menu data-recurso="inbox"><span class="ico">📥</span><span data-i18n="menu.inbox"></span></button>
         <button class="gaveta-item" type="button" data-botao-tema><span class="ico" data-ico-tema>☾</span><span data-i18n="menu.tema"></span></button>
         <button class="gaveta-item" type="button" data-botao-fundo aria-pressed="false"><span class="ico">▨</span><span data-i18n="menu.fundo"></span><span class="marca-check" aria-hidden="true">✓</span></button>
         <button class="gaveta-item" type="button" data-abre-instalar><span class="ico">📲</span><span data-i18n="menu.instalar"></span></button>
@@ -736,7 +736,7 @@ function montarBarraBaixo(pagina){
   nav.setAttribute('data-i18n-aria', 'menu.atalhos');
   nav.setAttribute('aria-label', 'Atalhos');
   nav.innerHTML = PAGINAS.map(p =>
-    `<a href="${p.href}"${pagina === p.id ? ' class="atual" aria-current="page"' : ''}>
+    `<a href="${p.href}"${pagina === p.id ? ' class="atual" aria-current="page"' : ''}${p.recurso ? ` data-recurso="${p.recurso}"` : ''}>
        <span class="ico" aria-hidden="true">${p.ico}</span><span data-i18n="${p.chave}"></span></a>`).join('');
   document.body.appendChild(nav);
   document.body.classList.add('tem-barra-baixo');
