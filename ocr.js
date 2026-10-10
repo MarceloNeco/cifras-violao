@@ -18,7 +18,7 @@ let giro = 0;                 // 0, 90, 180, 270
 let contraste = 40;           // 0 a 100
 let trabalhador = null;
 let lendo = false;
-let tarefaFim = null;          // tarefa longa (tarefas.js): {ok, falha} enquanto a leitura roda
+let tarefaFim = null;          // trabalho em fundo (DGO.fundo): {ok, falha} enquanto a leitura roda
 
 iniciarTema();
 
@@ -32,28 +32,36 @@ function garantirTrabalhador(){
       if (m.etapa === 'motor')  recado(t('ocr.baixando'), 'trabalhando');
       if (m.etapa === 'idioma') recado(t('ocr.baixando'), 'trabalhando');
       if (m.etapa === 'lendo')  recado(t('ocr.lendo'), 'trabalhando');
-      if (window.DGO && DGO.tarefa) DGO.tarefa.andamento('ocr', m.etapa === 'lendo' ? 0.6 : 0.2, m.etapa === 'lendo' ? t('ocr.lendo') : t('ocr.baixando'));
+      if (window.DGO && DGO.fundo) DGO.fundo.andamento('ocr', m.etapa === 'lendo' ? 0.6 : 0.2, m.etapa === 'lendo' ? t('ocr.lendo') : t('ocr.baixando'));
     }
     if (m.tipo === 'pronto'){
       lendo = false;
-      if (tarefaFim){ tarefaFim.ok(); tarefaFim = null; }
-      $('#ler').disabled = false;
-      const texto = limparLeitura(m.texto || '');
-      if (!texto.trim()){ recado(t('ocr.nada'), 'erro'); return; }
-      $('#saida').value = texto;
-      $('#bloco-saida').hidden = false;
-      recado(t('ocr.pronto') + (m.confianca ? ` (${Math.round(m.confianca)}%)` : ''), 'certo');
-      $('#bloco-saida').scrollIntoView({behavior:'smooth', block:'start'});
+      const r = {texto: limparLeitura(m.texto || ''), confianca: m.confianca};
+      if (tarefaFim){ tarefaFim.ok(r); tarefaFim = null; } else mostrarLeitura(r);
     }
     if (m.tipo === 'erro'){
       lendo = false;
-      if (tarefaFim){ tarefaFim.falha(new Error(t('ocr.erro'))); tarefaFim = null; }
-      $('#ler').disabled = false;
-      recado(m.mensagem === 'sem-motor' || m.mensagem === 'sem-idioma'
-             ? t('ocr.semMotor') : t('ocr.erro'), 'erro');
+      const erro = new Error(m.mensagem === 'sem-motor' || m.mensagem === 'sem-idioma'
+                             ? t('ocr.semMotor') : t('ocr.erro'));
+      if (tarefaFim){ tarefaFim.falha(erro); tarefaFim = null; } else mostrarErro(erro);
     }
   };
   return trabalhador;
+}
+
+/* o resultado da leitura aparece na caixa (ou o aviso de erro) */
+function mostrarLeitura(r){
+  $('#ler').disabled = false;
+  if (!r.texto.trim()){ recado(t('ocr.nada'), 'erro'); return; }
+  $('#saida').value = r.texto;
+  $('#bloco-saida').hidden = false;
+  recado(t('ocr.pronto') + (r.confianca ? ` (${Math.round(r.confianca)}%)` : ''), 'certo');
+  $('#bloco-saida').scrollIntoView({behavior:'smooth', block:'start'});
+}
+function mostrarErro(e){
+  lendo = false;
+  $('#ler').disabled = false;
+  recado(e.message, 'erro');
 }
 
 /* ---------- consertos de leitura ----------
@@ -248,20 +256,33 @@ function desenharPrevia(){
 }
 
 /* ---------- ler ---------- */
-async function lerAgora(){
-  if (lendo) return;
-  const c = prepararCanvas();
-  if (!c){ recado(t('ocr.erro'), 'erro'); return; }
-  lendo = true;
-  $('#ler').disabled = true;
-  recado(t('ocr.baixando'), 'trabalhando');
-  /* diretriz de tarefas longas (tarefas.js): tela acesa, pílula "não feche o app" com progresso, aviso ao sair da página */
-  if (window.DGO && DGO.tarefa) DGO.tarefa.iniciar({id:'ocr', titulo:t('ocr.lendo').replace('…',''), executar: ()=> new Promise((ok, falha)=>{ tarefaFim = {ok, falha}; })}).catch(()=>{});
+/* manda a foto para o trabalhador; a Promise termina com {texto, confianca} */
+function lerImagem(){
+  return new Promise((ok, falha)=>{
+    const c = prepararCanvas();
+    if (!c){ falha(new Error(t('ocr.erro'))); return; }
+    lendo = true;
+    $('#ler').disabled = true;
+    recado(t('ocr.baixando'), 'trabalhando');
+    tarefaFim = {ok, falha};
+    c.toBlob(blob => blob.arrayBuffer().then(bytes =>
+      garantirTrabalhador().postMessage(
+        {tipo:'ler', imagem: bytes, idiomas: $('#idioma-ocr').value}, [bytes])), 'image/png');
+  });
+}
 
-  const blob = await new Promise(ok => c.toBlob(ok, 'image/png'));
-  const bytes = await blob.arrayBuffer();
-  garantirTrabalhador().postMessage(
-    {tipo:'ler', imagem: bytes, idiomas: $('#idioma-ocr').value}, [bytes]);
+function lerAgora(){
+  if (lendo) return;
+  if (!imagemOriginal){ recado(t('ocr.erro'), 'erro'); return; }
+  if (!(window.DGO && DGO.fundo)){ lerImagem().then(mostrarLeitura, mostrarErro); return; }
+  /* trabalho demorado (DGO.fundo): tela acesa, pílula com andamento, aviso antes de fechar;
+     terminou com a pessoa olhando, o texto aparece na hora; senão, "✅ toque para ver" */
+  DGO.fundo.iniciar({
+    id: 'ocr', tipo: 'ocr', titulo: t('ocr.lendo').replace('…', ''), podeCancelar: false,
+    executar: lerImagem,
+    aoTerminar: ()=>{ $('#ler').disabled = false; },
+    aoAbrir: mostrarLeitura
+  }).catch(mostrarErro);
 }
 
 /* ---------- mandar para a página Importar ---------- */

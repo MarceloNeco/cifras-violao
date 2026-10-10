@@ -1,7 +1,7 @@
 {
   "formato": 1,
   "app": "cifras-violao",
-  "versao": "2.10.0",
+  "versao": "2.11.0",
   "atualizado": "2026-10-10",
   "nota": {
     "pt": "CifrasONE obedece a estes interruptores (inclusive no ⚡ Modo DEUS). Desligar vale na hora, mesmo com o app aberto; os atalhos e a busca do AssistONE e religar o AssistONE ou as dicas valem na próxima tela aberta. As ⚙ Configurações nunca somem.",
@@ -31,6 +31,17 @@
       },
       "pt": "AssistONE: o personagem de ajuda some e não abre (nem pelo ☰ nem pela 🔍); em Configurações aparece \"Desligado pela administração da SolverONE.\"",
       "en": "AssistONE: the help character disappears and does not open (neither from ☰ nor 🔍); Settings shows \"Turned off by the SolverONE administration.\""
+    },
+    {
+      "id": "feedback",
+      "nome": {
+        "pt": "💬 Dar uma opinião",
+        "en": "💬 Give feedback"
+      },
+      "onde": {
+        "pt": "Balão do AssistONE, ☰ → Ajuda e mais, ⚙ → Ajuda e opinião e a pergunta do dia",
+        "en": "AssistONE bubble, ☰ → Help and more, ⚙ → Help and feedback and the question of the day"
+      }
     },
     {
       "id": "anuncios",

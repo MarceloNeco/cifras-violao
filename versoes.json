@@ -2,6 +2,23 @@
   "comentario": "Histórico de versões do CifrasONE. A mais nova fica EM CIMA. Ao publicar, acrescente um bloco novo no topo da lista (com data e hora) e troque também o VERSAO do comum.js, o versaoApp do diretrizes-config.js e o VERSAO do sw.js.",
   "versoes": [
     {
+      "versao": "2.11.0",
+      "data": "2026-10-10",
+      "hora": "18:00:00",
+      "pt": [
+        "💡 O AssistONE continua igual (personagem, tour, busca, dicas e o painel de comandos do modo celular) e agora vem num arquivo próprio, o mesmo em todos os apps da SolverONE. Quem tinha desligado o assistente continua com ele desligado.",
+        "💬 Dar uma opinião: no balão do AssistONE, no ☰ → Ajuda e mais e em ⚙ Configurações. Dá para contar o que achou ou avisar um problema da tela onde você está. De vez em quando aparece uma pergunta rápida do dia (nunca enquanto você toca).",
+        "⏳ Foto vira cifra e leitura de PDF no Importar mostram uma pílula com o andamento, mantêm a tela acesa e avisam antes de fechar no meio.",
+        "📱 Configurações → O seu aparelho: avisa quando falta algo que o app usa (câmera, microfone, som, tela acesa, ler em voz alta)."
+      ],
+      "en": [
+        "💡 AssistONE stays the same (character, tour, search, tips and the phone-mode command panel) and now lives in its own file, the same in every SolverONE app. If you had turned the assistant off, it stays off.",
+        "💬 Give feedback: in the AssistONE bubble, in ☰ → Help and more and in ⚙ Settings. Tell us what you think or report a problem on the screen you are on. Now and then a quick question of the day shows up (never while you play).",
+        "⏳ Photo to chart and PDF reading in Import show a progress pill, keep the screen on and warn you before closing midway.",
+        "📱 Settings → Your device: tells you when something the app uses is missing (camera, microphone, sound, screen on, read aloud)."
+      ]
+    },
+    {
       "versao": "2.10.0",
       "data": "2026-10-10",
       "hora": "15:00:00",
