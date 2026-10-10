@@ -1,32 +1,284 @@
 {
   "formato": 1,
   "app": "cifras-violao",
-  "versao": "2.9.0",
+  "versao": "2.10.0",
   "atualizado": "2026-10-10",
   "nota": {
-    "pt": "CifrasONE obedece a estes interruptores. Desligar vale na hora, mesmo com o app aberto; religar o AssistONE ou as dicas vale na próxima tela aberta.",
-    "en": "CifrasONE follows these switches. Turning off applies right away, even with the app open; turning AssistONE or its tips back on applies on the next screen opened."
+    "pt": "CifrasONE obedece a estes interruptores (inclusive no ⚡ Modo DEUS). Desligar vale na hora, mesmo com o app aberto; os atalhos e a busca do AssistONE e religar o AssistONE ou as dicas valem na próxima tela aberta. As ⚙ Configurações nunca somem.",
+    "en": "CifrasONE follows these switches (including ⚡ GOD mode). Turning off applies right away, even with the app open; AssistONE shortcuts and search, and turning AssistONE or its tips back on, apply on the next screen opened. ⚙ Settings never disappear."
   },
   "recursos": [
     {
+      "id": "app",
+      "nome": {
+        "pt": "App inteiro (manutenção)",
+        "en": "Whole app (maintenance)"
+      },
+      "onde": {
+        "pt": "Todas as telas: desligado mostra \"Em manutenção\" com \"Tentar de novo\"",
+        "en": "Every screen: off shows \"Under maintenance\" with \"Try again\""
+      }
+    },
+    {
       "id": "assistone",
+      "nome": {
+        "pt": "AssistONE",
+        "en": "AssistONE"
+      },
+      "onde": {
+        "pt": "Personagem no canto, ☰ → Ajuda e mais, 🔍 nas telas internas",
+        "en": "Corner character, ☰ → Help and more, 🔍 on inner screens"
+      },
       "pt": "AssistONE: o personagem de ajuda some e não abre (nem pelo ☰ nem pela 🔍); em Configurações aparece \"Desligado pela administração da SolverONE.\"",
       "en": "AssistONE: the help character disappears and does not open (neither from ☰ nor 🔍); Settings shows \"Turned off by the SolverONE administration.\""
     },
     {
       "id": "anuncios",
+      "nome": {
+        "pt": "Anúncios",
+        "en": "Ads"
+      },
+      "onde": {
+        "pt": "Faixa do topo e pop-up",
+        "en": "Top strip and pop-up"
+      },
       "pt": "Faixa de anúncios do topo e pop-up de anúncio.",
       "en": "Top ad strip and ad pop-up."
     },
     {
       "id": "ia",
+      "nome": {
+        "pt": "IA",
+        "en": "AI"
+      },
+      "onde": {
+        "pt": "⚙ Configurações → IA e 🔍 → Chaves de IA",
+        "en": "⚙ Settings → AI and 🔍 → AI keys"
+      },
       "pt": "Seção de IA em Configurações e o cofre de chaves pela busca.",
       "en": "AI section in Settings and the key vault from search."
     },
     {
+      "id": "busca",
+      "nome": {
+        "pt": "Busca",
+        "en": "Search"
+      },
+      "onde": {
+        "pt": "Início → caixa de busca e 🔍 no topo",
+        "en": "Home → search box and 🔍 at the top"
+      }
+    },
+    {
+      "id": "filtros",
+      "nome": {
+        "pt": "Categorias (filtros)",
+        "en": "Categories (filters)"
+      },
+      "onde": {
+        "pt": "Início → botões de categoria, Prontas e Favoritas",
+        "en": "Home → category, Ready and Favorites buttons"
+      }
+    },
+    {
+      "id": "favoritos",
+      "nome": {
+        "pt": "Favoritas (★)",
+        "en": "Favorites (★)"
+      },
+      "onde": {
+        "pt": "Início → ★ de cada música; Cifra → ☆ no topo",
+        "en": "Home → each song’s ★; Chart → ☆ at the top"
+      }
+    },
+    {
+      "id": "ouvir",
+      "nome": {
+        "pt": "Ouvir a música",
+        "en": "Listen to the song"
+      },
+      "onde": {
+        "pt": "Cifra → botões Spotify e YouTube",
+        "en": "Chart → Spotify and YouTube buttons"
+      }
+    },
+    {
+      "id": "tom",
+      "nome": {
+        "pt": "Mudar o tom",
+        "en": "Change key"
+      },
+      "onde": {
+        "pt": "Cifra → Tom − + ↺ (e teclas + −)",
+        "en": "Chart → Key − + ↺ (and + − keys)"
+      }
+    },
+    {
+      "id": "capo",
+      "nome": {
+        "pt": "Capotraste",
+        "en": "Capo"
+      },
+      "onde": {
+        "pt": "Cifra → Capo − +",
+        "en": "Chart → Capo − +"
+      }
+    },
+    {
+      "id": "rolagem",
+      "nome": {
+        "pt": "Rolagem automática (Play)",
+        "en": "Auto-scroll (Play)"
+      },
+      "onde": {
+        "pt": "Cifra → ▶ Play e velocidade (e barra de espaço, ↑ ↓)",
+        "en": "Chart → ▶ Play and speed (and space bar, ↑ ↓)"
+      }
+    },
+    {
+      "id": "guia",
+      "nome": {
+        "pt": "Guia de leitura",
+        "en": "Reading guide"
+      },
+      "onde": {
+        "pt": "Cifra → ◉ Guia",
+        "en": "Chart → ◉ Guide"
+      }
+    },
+    {
       "id": "voz",
+      "nome": {
+        "pt": "Ler a letra em voz alta",
+        "en": "Read lyrics aloud"
+      },
+      "onde": {
+        "pt": "Cifra → 🗣 e modo celular → Voz",
+        "en": "Chart → 🗣 and phone mode → Voice"
+      },
       "pt": "Botão 🗣 de ler a letra em voz alta (na cifra e no modo celular).",
       "en": "🗣 read-the-lyrics-aloud button (on the chart and in phone mode)."
+    },
+    {
+      "id": "letra",
+      "nome": {
+        "pt": "Tamanho da letra",
+        "en": "Font size"
+      },
+      "onde": {
+        "pt": "Cifra → A− A+ ⤢",
+        "en": "Chart → A− A+ ⤢"
+      }
+    },
+    {
+      "id": "so-cifra",
+      "nome": {
+        "pt": "Só a cifra",
+        "en": "Chart only"
+      },
+      "onde": {
+        "pt": "Cifra (computador) → ▤ Só a cifra",
+        "en": "Chart (computer) → ▤ Chart only"
+      }
+    },
+    {
+      "id": "palco",
+      "nome": {
+        "pt": "Modo celular (tela cheia)",
+        "en": "Phone mode (full screen)"
+      },
+      "onde": {
+        "pt": "Cifra → 📱 Modo celular",
+        "en": "Chart → 📱 Phone mode"
+      }
+    },
+    {
+      "id": "diagramas",
+      "nome": {
+        "pt": "Desenhos dos acordes",
+        "en": "Chord diagrams"
+      },
+      "onde": {
+        "pt": "Cifra → desenhos acima da letra",
+        "en": "Chart → diagrams above the lyrics"
+      }
+    },
+    {
+      "id": "afinador",
+      "nome": {
+        "pt": "Afinador",
+        "en": "Tuner"
+      },
+      "onde": {
+        "pt": "Cifra → 🎵 no topo e ☰ → Afinador",
+        "en": "Chart → 🎵 at the top and ☰ → Tuner"
+      }
+    },
+    {
+      "id": "compartilhar",
+      "nome": {
+        "pt": "Compartilhar a cifra",
+        "en": "Share the chart"
+      },
+      "onde": {
+        "pt": "Cifra → ⤴ no topo e ☰ → Compartilhar",
+        "en": "Chart → ⤴ at the top and ☰ → Share"
+      }
+    },
+    {
+      "id": "acordes",
+      "nome": {
+        "pt": "Dicionário de acordes",
+        "en": "Chord dictionary"
+      },
+      "onde": {
+        "pt": "☰ → Acordes, barra de baixo e a tela Acordes",
+        "en": "☰ → Chords, bottom bar and the Chords screen"
+      }
+    },
+    {
+      "id": "campo-harmonico",
+      "nome": {
+        "pt": "Campo harmônico",
+        "en": "Harmonic field"
+      },
+      "onde": {
+        "pt": "Acordes → Acordes do tom de…",
+        "en": "Chords → Chords in the key of…"
+      }
+    },
+    {
+      "id": "importar",
+      "nome": {
+        "pt": "Importar cifra",
+        "en": "Import chart"
+      },
+      "onde": {
+        "pt": "☰ → Importar, barra de baixo e a tela Importar",
+        "en": "☰ → Import, bottom bar and the Import screen"
+      }
+    },
+    {
+      "id": "ocr",
+      "nome": {
+        "pt": "Foto vira cifra (OCR)",
+        "en": "Photo to chart (OCR)"
+      },
+      "onde": {
+        "pt": "☰ → Foto, barra de baixo e a tela Foto",
+        "en": "☰ → Photo, bottom bar and the Photo screen"
+      }
+    },
+    {
+      "id": "inbox",
+      "nome": {
+        "pt": "Inbox 📥",
+        "en": "Inbox 📥"
+      },
+      "onde": {
+        "pt": "📥 no topo e ☰ → Inbox",
+        "en": "📥 at the top and ☰ → Inbox"
+      }
     }
   ],
   "comportamentos": [

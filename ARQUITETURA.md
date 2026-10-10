@@ -12,8 +12,8 @@ valem para todos. **Nunca fixe endereço no código** — links entre apps são 
 | Arquivo | O que é | Pode mexer? |
 |---|---|---|
 | `diretrizes.js` | **Módulo comum SolverONE** (global `DGO`, versão em `DGO.versao`, hoje **1.1.4**). Idioma e datas, faixa de anúncios (carrossel + pop-up), conta/login, notificações, nuvem, OCR, níveis, rede, cofre de IA, wizard, **AssistONE**. | **Não edite aqui por causa deste app.** É idêntico em todos os apps. Uma melhoria feita aqui deve ser copiada para os outros repositórios (o número de versão sobe). Ver "O que mudou no módulo" abaixo. |
-| `recursos.js` | **Interruptores do RootifyONE** (Controle dos apps), cópia avulsa do master do `rootify-one` (global `SolverRecursos`). Lê `solverone-dados/recursos/global.json` e `…/cifras-violao.json` (o app vence o global); sem arquivo/sem rede vale ligado. Quem tem `data-recurso="<id>"` some sozinho. | **Não edite** (copie de novo do master). |
-| `recursos-do-app.json` | Diz ao RootifyONE o que este app obedece ("Quem obedece"): `assistone`, `anuncios`, `ia`, `voz` e o comportamento `assistone.dicas`. Na hora de ligar o módulo: `diretrizes-config.js` (`cifrasLigado`/`cifrasSim`); com o app aberto: `aplicarInterruptores` no `comum.js`; voz: `leitor.js`. | Sim — só liste o que o código obedece de verdade. |
+| `recursos.js` | **Interruptores do RootifyONE** (Controle dos apps), cópia avulsa do master do `rootify-one` (global `SolverRecursos`; cópia de 10/Out/2026, com a manutenção). Lê `solverone-dados/recursos/global.json` e `…/cifras-violao.json` (o app vence o global); sem arquivo/sem rede vale ligado. Quem tem `data-recurso="<id>"` some sozinho. Recurso reservado `app` desligado = tela cheia "Em manutenção" (mensagem em `app.mensagem`) com "Tentar de novo". | **Não edite** (copie de novo do master). |
+| `recursos-do-app.json` | Diz ao RootifyONE o que este app obedece ("Quem obedece" e **⚡ Modo DEUS**), no formato detalhado `{id, nome{pt,en}, onde{pt,en}}`: `app` (manutenção), `assistone`, `anuncios`, `ia`, `busca`, `filtros`, `favoritos`, `ouvir`, `tom`, `capo`, `rolagem`, `guia`, `voz`, `letra`, `so-cifra`, `palco`, `diagramas`, `afinador`, `compartilhar`, `acordes`, `campo-harmonico`, `importar`, `ocr`, `inbox` e o comportamento `assistone.dicas`. Ver "Modo DEUS" abaixo. | Sim — só liste o que o código obedece de verdade. |
 | `diretrizes-config.js` | O **único** arquivo do módulo que é diferente por app: nome, cor, anúncios, IA, AssistONE (ajuda por tela, tour, dicas, busca), login, notificações. | Sim — é aqui que se configura o módulo. |
 | `anuncios.json` | Lista dos anúncios (outros apps do portfólio) lida pelo módulo. | Sim. |
 | `servicos.json` | Quem pode usar cada recurso (níveis Visitante/Membro/Premium), lido por `DGO.niveis`. | Sim. |
@@ -71,6 +71,30 @@ mexer no texto que o `idioma.js` já traduz.
 - **IA**: `DGO.ia.*`. A chave é da pessoa, fica só no navegador, vale em todos os apps. Se a IA escolhida
   falhar (cota, crédito, chave), o módulo passa sozinho para a próxima com chave e avisa (`dgo:ia-troca`).
 - **Release**: subir `versaoApp` (config), `VERSAO` (comum.js), `VERSAO` (sw.js) e uma entrada no `versoes.json` com data e hora.
+
+## ⚡ Modo DEUS (2.10.0)
+
+Cada função principal tem um id no `recursos-do-app.json` e obedece assim:
+
+- **Some da tela:** `data-recurso="<id>"` no HTML (`index.html`, `cifra.html`, `acordes.html`, `importar.html`,
+  `ocr.html`), no que o `comum.js` desenha (topo ☆ ⤴ 🎵 🔍 📥, ☰ e barra de baixo pelo campo `recurso` de
+  `PAGINAS`) e na ★ da lista (`biblioteca.js`). Telas inteiras (`acordes`, `importar`, `ocr`): somem do ☰ e da
+  barra de baixo, e o `<main>` da tela fica vazio.
+- **Painel do modo celular** (AssistONE, `diretrizes-config.js`): cada linha leva o `data-recurso` do comando.
+- **Lógica:** teclas de espaço/↑/↓ (`rolagem`) e + − (`tom`) em `leitor.js` perguntam `recursoLigado()`;
+  atalhos e itens da busca do AssistONE com `recurso` desligado saem da lista (`cifrasSo` no config, vale na
+  próxima tela aberta).
+- **Nunca somem:** ⚙ Configurações, o ✕ "Sair do modo celular", Novidades, Aviso legal e o perfil 👤.
+
+## Módulo comum 1.9.0 — ainda NÃO trocado (10/Out/2026)
+
+O `diretrizes.js` 1.9.0 (master no `rootify-one`) **não tem o AssistONE** (`DGO.assistente`): testado no
+Chromium, com ele o personagem some, o painel de comandos do modo celular, o tour, a busca 🔍 das telas
+internas e as dicas deixam de existir, e o 💬 do feedback não aparece em lugar nenhum (no RootifyONE ele mora
+no balão do AssistONE dele). Isso não se resolve no config, por isso o app continua no **1.1.4** até o dono
+decidir onde o AssistONE fica (pendência #3 do `rootify-one/PENDENCIAS.md`). Sem o 1.9.0 ficam de fora:
+`DGO.feedback` (💬, pergunta do dia), `DGO.fundo` (a Foto continua no `tarefas.js`, mesma API `DGO.tarefa`),
+`DGO.compat` e `DGO.ia.perguntar({insistir})`.
 
 ## O que mudou no módulo (`diretrizes.js`) neste repositório
 

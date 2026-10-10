@@ -486,11 +486,12 @@ function ligarBotoes(){
   document.addEventListener('keydown', e=>{
     if (/^(INPUT|TEXTAREA)$/.test(e.target.tagName)) return;
     switch(e.key){
-      case ' ': e.preventDefault(); alternarRolagem(); break;
-      case 'ArrowUp':   e.preventDefault(); mudarVelocidade(+1); break;
-      case 'ArrowDown': e.preventDefault(); mudarVelocidade(-1); break;
-      case '+': case '=': $('#tom-mais').click(); break;
-      case '-': case '_': $('#tom-menos').click(); break;
+      /* rolagem e tom desligados no RootifyONE (Modo DEUS): o teclado também não mexe */
+      case ' ': e.preventDefault(); if (recursoLigado('rolagem')) alternarRolagem(); break;
+      case 'ArrowUp':   e.preventDefault(); if (recursoLigado('rolagem')) mudarVelocidade(+1); break;
+      case 'ArrowDown': e.preventDefault(); if (recursoLigado('rolagem')) mudarVelocidade(-1); break;
+      case '+': case '=': if (recursoLigado('tom')) $('#tom-mais').click(); break;
+      case '-': case '_': if (recursoLigado('tom')) $('#tom-menos').click(); break;
       case 'Escape': if (document.body.classList.contains('modo-palco')) modoPalco(false);
                      else abrirAfinador(false); break;
     }

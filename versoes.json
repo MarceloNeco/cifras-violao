@@ -2,6 +2,19 @@
   "comentario": "Histórico de versões do CifrasONE. A mais nova fica EM CIMA. Ao publicar, acrescente um bloco novo no topo da lista (com data e hora) e troque também o VERSAO do comum.js, o versaoApp do diretrizes-config.js e o VERSAO do sw.js.",
   "versoes": [
     {
+      "versao": "2.10.0",
+      "data": "2026-10-10",
+      "hora": "15:00:00",
+      "pt": [
+        "⚡ Modo DEUS: a administração da SolverONE pode ligar e desligar, uma a uma, as funções do app (busca, categorias, favoritas, ouvir, tom, capotraste, Play, guia, voz, tamanho da letra, só a cifra, modo celular, desenhos dos acordes, afinador, compartilhar, dicionário de acordes, campo harmônico, importar, foto vira cifra e inbox). O que for desligado some na hora; as Configurações nunca somem.",
+        "🛠️ Manutenção: quando a administração põe o app em manutenção, aparece a tela \"Em manutenção\" com o botão \"Tentar de novo\"."
+      ],
+      "en": [
+        "⚡ GOD mode: the SolverONE administration can turn each app feature on or off (search, categories, favorites, listen, key, capo, Play, guide, voice, font size, chart only, phone mode, chord diagrams, tuner, share, chord dictionary, harmonic field, import, photo to chart and inbox). Whatever is turned off disappears right away; Settings never disappear.",
+        "🛠️ Maintenance: when the administration puts the app under maintenance, an \"Under maintenance\" screen appears with a \"Try again\" button."
+      ]
+    },
+    {
       "versao": "2.9.0",
       "data": "2026-10-10",
       "hora": "12:00:00",
