@@ -1,0 +1,41 @@
+{
+  "formato": 1,
+  "app": "cifras-violao",
+  "versao": "2.9.0",
+  "atualizado": "2026-10-10",
+  "nota": {
+    "pt": "CifrasONE obedece a estes interruptores. Desligar vale na hora, mesmo com o app aberto; religar o AssistONE ou as dicas vale na próxima tela aberta.",
+    "en": "CifrasONE follows these switches. Turning off applies right away, even with the app open; turning AssistONE or its tips back on applies on the next screen opened."
+  },
+  "recursos": [
+    {
+      "id": "assistone",
+      "pt": "AssistONE: o personagem de ajuda some e não abre (nem pelo ☰ nem pela 🔍); em Configurações aparece \"Desligado pela administração da SolverONE.\"",
+      "en": "AssistONE: the help character disappears and does not open (neither from ☰ nor 🔍); Settings shows \"Turned off by the SolverONE administration.\""
+    },
+    {
+      "id": "anuncios",
+      "pt": "Faixa de anúncios do topo e pop-up de anúncio.",
+      "en": "Top ad strip and ad pop-up."
+    },
+    {
+      "id": "ia",
+      "pt": "Seção de IA em Configurações e o cofre de chaves pela busca.",
+      "en": "AI section in Settings and the key vault from search."
+    },
+    {
+      "id": "voz",
+      "pt": "Botão 🗣 de ler a letra em voz alta (na cifra e no modo celular).",
+      "en": "🗣 read-the-lyrics-aloud button (on the chart and in phone mode)."
+    }
+  ],
+  "comportamentos": [
+    {
+      "id": "assistone.dicas",
+      "tipo": "sim/não",
+      "padrao": true,
+      "pt": "Dicas curtas do AssistONE em cada tela.",
+      "en": "AssistONE's short tip on each screen."
+    }
+  ]
+}

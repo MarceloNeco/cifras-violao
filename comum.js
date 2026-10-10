@@ -4,8 +4,8 @@
 
 /* Versão do site. Ao publicar uma mudança, altere estas duas linhas:
    o número aparece no rodapé de todas as páginas. */
-const VERSAO = '2.8.2';
-const VERSAO_DATA = '2026-10-09';
+const VERSAO = '2.9.0';
+const VERSAO_DATA = '2026-10-10';
 
 /* assinatura com a versão e o link do aviso, no rodapé de cada página */
 function montarRodape(){
@@ -243,15 +243,48 @@ function montarTopo(){
     if (window.DGO) DGO.abrirLogin(); else location.href = 'index.html';
   }));
   document.querySelectorAll('[data-abre-config]').forEach(b => b.addEventListener('click', ()=>{
-    if (window.DGO) DGO.abrirConfiguracoes();
+    if (window.DGO) abrirConfig();
   }));
   document.querySelectorAll('[data-abre-instalar]').forEach(b => b.addEventListener('click', ()=>{
     if (window.DGO && DGO.pwa) DGO.pwa.instalar();
   }));
   document.querySelectorAll('[data-abre-assistone]').forEach(b => b.addEventListener('click', ()=>{
-    if (window.DGO && DGO.assistente){ DGO.assistente.ligar(true); setTimeout(()=> DGO.assistente.abrir(), 250); }
+    if (window.DGO && DGO.assistente && recursoLigado('assistone')){ DGO.assistente.ligar(true); setTimeout(()=> DGO.assistente.abrir(), 250); }
   }));
   document.querySelectorAll('[data-abre-busca]').forEach(b => b.addEventListener('click', abrirBusca));
+}
+
+/* ---------- interruptores do RootifyONE (Controle dos apps) ----------
+   O recursos.js lê o que o dono ligou/desligou. Quem tem data-recurso
+   some sozinho; aqui vai o que depende do módulo (AssistONE, anúncios,
+   IA) quando chega um arquivo novo com o app aberto. */
+function recursoLigado(id){ return !window.SolverRecursos || SolverRecursos.ligado(id, true); }
+function aplicarInterruptores(){
+  if (!window.DGO || !DGO.cfg) return;
+  const c = DGO.cfg;
+  c.assistente.ativo = recursoLigado('assistone');
+  if (!c.assistente.ativo) DGO.assistente.fechar();
+  DGO.assistente.atualizar();
+  if (!cifrasSim('assistone.dicas')) c.assistente.dicas = {};
+  c.ia.ativo = recursoLigado('ia');
+  const ad = recursoLigado('anuncios');
+  if (ad !== c.anuncios.ativo){ c.anuncios.ativo = ad; DGO.anuncios.definirLista(c.anuncios.lista); }
+}
+if (window.SolverRecursos) SolverRecursos.aoMudar(aplicarInterruptores);
+
+/* Configurações (do módulo). Com o AssistONE desligado no RootifyONE o
+   cartão dele não aparece; no lugar, um aviso de quem desligou. */
+function abrirConfig(){
+  const m = DGO.abrirConfiguracoes();
+  if (!m || recursoLigado('assistone')) return;
+  const depois = m.querySelector('.dgo-mini');
+  if (depois){
+    const h = document.createElement('h3'); h.textContent = '💡 AssistONE';
+    const p = document.createElement('div'); p.className = 'dgo-mini'; const lg = document.documentElement.getAttribute('data-dgo-idioma') === 'en' ? 'en' : 'pt';   // o módulo troca antes do idioma.js
+    p.textContent = TEXTOS[lg]['recursos.adminDesligou'];
+    depois.after(h, p);
+  }
+  m._recriar = abrirConfig;   // ao trocar o idioma a tela é refeita: o aviso volta junto
 }
 
 /* ---------- 🔍 busca ----------
@@ -266,7 +299,7 @@ function abrirBusca(){
     if (campo.select) campo.select();
     return;
   }
-  if (window.DGO && DGO.assistente){
+  if (window.DGO && DGO.assistente && recursoLigado('assistone')){
     if (!DGO.assistente.ligado()) DGO.assistente.ligar(true);
     setTimeout(()=> DGO.assistente.procurar(), 80);
   }else{
@@ -638,7 +671,7 @@ function montarGaveta(pagina){
       </div>
       <div class="gaveta-grupo">
         <h3 data-i18n="menu.ajuda"></h3>
-        <button class="gaveta-item" type="button" data-abre-assistone><span class="ico">💡</span><span data-i18n="menu.assistone"></span></button>
+        <button class="gaveta-item" type="button" data-abre-assistone data-recurso="assistone"><span class="ico">💡</span><span data-i18n="menu.assistone"></span></button>
         <a class="gaveta-item" href="#novidades" data-abre-novidades><span class="ico">🆕</span><span data-i18n="menu.novidades"></span></a>
         <a class="gaveta-item${pagina === 'aviso' ? ' atual' : ''}" href="aviso.html"><span class="ico">⚖</span><span data-i18n="menu.aviso"></span></a>
         <a class="gaveta-item" href="../" target="_blank" rel="noopener"><span class="ico">🧭</span><span data-i18n="menu.portal"></span> ↗</a>

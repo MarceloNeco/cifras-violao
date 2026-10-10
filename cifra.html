@@ -63,7 +63,7 @@
               data-i18n="cifra.guia" data-i18n-title="cifra.guiaTitulo">◉ Guia</button>
       <button class="botao icone" id="btn-guia-som" aria-pressed="false" hidden
               data-i18n-title="cifra.guiaSom">🔇</button>
-      <button class="botao icone" id="btn-voz" aria-pressed="false"
+      <button class="botao icone" id="btn-voz" data-recurso="voz" aria-pressed="false"
               data-i18n-title="cifra.voz" data-i18n-aria="cifra.voz">🗣</button>
     </div>
 
@@ -111,6 +111,8 @@
 <!-- Diretrizes gerais (módulo comum SolverONE): idioma, anúncios, conta,
      avisos, nuvem, IA, AssistONE e instalação. O diretrizes.js é igual em
      todos os apps; o que muda é só o diretrizes-config.js. -->
+<!-- Interruptores do RootifyONE (Controle dos apps): carrega antes do app. -->
+<script src="recursos.js" data-app="cifras-violao"></script>
 <script src="diretrizes.js"></script>
 <script src="diretrizes-config.js"></script>
 <script src="acordes.js"></script>

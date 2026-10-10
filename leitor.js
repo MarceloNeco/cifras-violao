@@ -925,6 +925,7 @@ function falarProxima(){
 
 function lerEmVozAlta(){
   if (vozLendo){ pararVoz(); return; }
+  if (window.SolverRecursos && !SolverRecursos.ligado('voz', true)) return;   // desligada no RootifyONE
   if (!('speechSynthesis' in window)){ alert(t('cifra.semVoz')); return; }
   /* uma linha de cada vez: frase curta não trava o Chrome do Android */
   vozFila = [...document.querySelectorAll('#cifra .l-letra, #cifra .l-secao')]
@@ -947,4 +948,6 @@ function iniciarVoz(){
   document.addEventListener('idioma-mudou', pintarBotaoVoz);
   /* saiu da página ou redesenhou a cifra (tom, letra maior): para a leitura */
   window.addEventListener('pagehide', pararVoz);
+  /* desligaram a voz no RootifyONE com a leitura andando: para */
+  if (window.SolverRecursos) SolverRecursos.aoMudar(()=>{ if (vozLendo && !SolverRecursos.ligado('voz', true)) pararVoz(); });
 }

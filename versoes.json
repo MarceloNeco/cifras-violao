@@ -2,6 +2,17 @@
   "comentario": "Histórico de versões do CifrasONE. A mais nova fica EM CIMA. Ao publicar, acrescente um bloco novo no topo da lista (com data e hora) e troque também o VERSAO do comum.js, o versaoApp do diretrizes-config.js e o VERSAO do sw.js.",
   "versoes": [
     {
+      "versao": "2.9.0",
+      "data": "2026-10-10",
+      "hora": "12:00:00",
+      "pt": [
+        "🎛️ O app passa a obedecer aos interruptores do RootifyONE (Controle dos apps): quando a administração da SolverONE desliga o AssistONE, as dicas por tela do AssistONE, os anúncios, a IA ou a leitura em voz alta, eles somem do app — inclusive com o app já aberto. Sem internet vale a última escolha guardada; sem escolha nenhuma, tudo fica ligado."
+      ],
+      "en": [
+        "🎛️ The app now follows the RootifyONE switches (App control): when the SolverONE administration turns off AssistONE, AssistONE's per-screen tips, ads, AI or read-aloud, they disappear from the app — even while it is open. Offline, the last saved choice applies; with no choice at all, everything stays on."
+      ]
+    },
+    {
       "versao": "2.8.2",
       "data": "2026-10-09",
       "hora": "16:20:00",
