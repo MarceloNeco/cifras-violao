@@ -4,7 +4,7 @@
 
 /* Versão do site. Ao publicar uma mudança, altere estas duas linhas:
    o número aparece no rodapé de todas as páginas. */
-const VERSAO = '2.10.0';
+const VERSAO = '2.11.0';
 const VERSAO_DATA = '2026-10-10';
 
 /* assinatura com a versão e o link do aviso, no rodapé de cada página */
@@ -672,6 +672,7 @@ function montarGaveta(pagina){
       <div class="gaveta-grupo">
         <h3 data-i18n="menu.ajuda"></h3>
         <button class="gaveta-item" type="button" data-abre-assistone data-recurso="assistone"><span class="ico">💡</span><span data-i18n="menu.assistone"></span></button>
+        <button class="gaveta-item" type="button" data-abre-feedback data-recurso="feedback"><span class="ico">💬</span><span data-i18n="menu.feedback"></span></button>
         <a class="gaveta-item" href="#novidades" data-abre-novidades><span class="ico">🆕</span><span data-i18n="menu.novidades"></span></a>
         <a class="gaveta-item${pagina === 'aviso' ? ' atual' : ''}" href="aviso.html"><span class="ico">⚖</span><span data-i18n="menu.aviso"></span></a>
         <a class="gaveta-item" href="../" target="_blank" rel="noopener"><span class="ico">🧭</span><span data-i18n="menu.portal"></span> ↗</a>
@@ -726,6 +727,11 @@ function montarGaveta(pagina){
   });
   const inbox = gaveta.querySelector('[data-abre-inbox-menu]');
   if (inbox) inbox.addEventListener('click', ()=> setTimeout(abrirInbox, 300));
+  /* 💬 feedback (módulo 1.9.0): o formulário já sabe de qual tela veio */
+  const feedback = gaveta.querySelector('[data-abre-feedback]');
+  if (feedback) feedback.addEventListener('click', ()=> setTimeout(()=>{
+    if (window.DGO && DGO.feedback) DGO.feedback.abrir({tela: pagina, titulo: document.title});
+  }, 300));
 }
 
 /* ---------- barra de baixo (celular) ---------- */

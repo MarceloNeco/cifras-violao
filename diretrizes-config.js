@@ -27,9 +27,21 @@ DGO.iniciar({
                                 origem, e e isto que impede os dados de um
                                 vazarem para o outro. */
   nome: { pt: 'CifrasONE', en: 'CifrasONE' },
-  versaoApp: '2.10.0',
+  versaoApp: '2.11.0',
   cor: '#a8501e',            /* o marrom-laranja do site de cifras */
   corFundoBarra: '#1a1614',
+
+  /* ---------- arquivos publicados pelo RootifyONE (modulo 1.9.0) ----------
+     recursos/<app>.json (interruptores e o Modo DEUS) moram na mesma
+     origem dos apps. siteBase vazio = o endereco atual (nunca fixar). */
+  fonteCentral: '/solverone-dados/',
+  siteBase: '',
+
+  /* ---------- o que este app usa do aparelho (DGO.compat) ----------
+     O quadro "O seu aparelho" das Configuracoes so fala disto: camera
+     (Foto), microfone (afinador), som (ouvir acordes), tela acesa
+     (rolagem), ler em voz alta, preferencias e notificacoes. */
+  compat: { usa: ['camera', 'microfone', 'som', 'wakeLock', 'lerEmVoz', 'armazenamento', 'notificacoes'] },
 
   /* ---------- idioma e datas ---------- */
   idiomaPadrao: 'pt',                    /* 'pt' ou 'en' */
@@ -50,6 +62,11 @@ DGO.iniciar({
     /* enquanto uma destas telas estiver aberta a faixa some sozinha,
        e volta quando ela fecha */
     esconderCom: ['body.modo-palco', '#afinador[aberta]'],
+    /* contorno do modulo 1.9.0 (pendencia no master): ao trocar o idioma com a
+       faixa na tela, ele chama imagemPlaceholder(), que nao existe mais, e a
+       troca para no meio (o site nao muda de lingua). Este campo so e lido ali;
+       preenchido, o modulo pula essa linha. Tirar quando o master for corrigido. */
+    imagem: true,
     popup: { ativo: true, antesDoLogin: true, depoisDoLogin: true, esperaSegundos: 3 }
   },
 
@@ -68,6 +85,21 @@ DGO.iniciar({
       { pt: 'Que acordes formam o campo harmônico de G?', en: 'Which chords form the harmonic field of G?' },
       { pt: 'Como uso o capotraste para cantar mais baixo?', en: 'How do I use the capo to sing lower?' }
     ]
+  },
+
+  /* ---------- 💬 feedback dos usuarios (DGO.feedback) ----------
+     Aparece no balao do AssistONE, no ☰ → Ajuda e mais e em ⚙.
+     O banco da plataforma ainda nao existe: com url e chave VAZIAS, o
+     envio fica guardado no aparelho e a pessoa e avisada. Quando existir,
+     vai aqui so a chave PUBLICA (publishable/anon), nunca a secreta. */
+  supabase: { url: '', anonKey: '' },
+  feedback: {
+    ativo: true,
+    perguntaDiaria: true,
+    /* a pergunta do dia nao interrompe quem esta tocando */
+    naoPerguntarAgora: function () {
+      return document.body.classList.contains('modo-palco') || !!document.querySelector('#afinador[aberta]');
+    }
   },
 
   /* ---------- rede: Wi-Fi ou dados ---------- */

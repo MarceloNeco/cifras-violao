@@ -98,10 +98,12 @@
 
 </div>
 
-<!-- Interruptores do RootifyONE (Controle dos apps): carrega antes do app. -->
-<script src="recursos.js" data-app="cifras-violao"></script>
+<!-- Interruptores do RootifyONE (Controle dos apps): carrega antes do app.
+     A tela "Em manutenção" é do módulo 1.9.0 (data-manutencao="nao" evita uma segunda). -->
+<script src="recursos.js" data-app="cifras-violao" data-manutencao="nao"></script>
 <script src="diretrizes.js"></script>
 <script src="diretrizes-config.js"></script>
+<script src="assistone.js"></script>
 <script>
   DGO.adicionarTraducoes({
     'Datas':'Dates', 'Escrita como':'Written as', 'Dentro de uma frase':'Inside a sentence',

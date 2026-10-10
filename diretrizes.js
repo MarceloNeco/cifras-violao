@@ -21,7 +21,7 @@
 (function (raiz) {
   'use strict';
 
-  var VERSAO = '1.1.4';
+  var VERSAO = '1.9.0';
   if (raiz.DGO && raiz.DGO.__carregado) { return; }
 
   /* ------------------------------------------------------------------
@@ -97,6 +97,26 @@
       aoQuererPremium: null
     },
 
+    /* arquivos master publicados pelo RootifyONE (mesma origem): recursos/<app>.json
+       (feature flags e comportamentos) e conteudo/<app>.json (textos, fotos, videos).
+       O app le ao abrir e guarda copia local como reserva. '' = desligado. */
+    fonteCentral: '/solverone-dados/',
+
+    /* endereco da pagina central (Portal) e dos apps. Vazio = o endereco atual (location.origin + '/');
+       pagina aberta como arquivo usa https://solverone.com.br/. App em outra origem (RootifyONE em
+       rootify-one.pages.dev) diz aqui: siteBase: 'https://solverone.com.br/'. Nunca fixar no codigo. */
+    siteBase: '',
+
+    /* o que o aparelho e o navegador precisam ter (DGO.compat, 1.7.0)
+       usa: o que o app usa de verdade (o quadro das Configuracoes so fala disso); null = o modulo deduz
+       minimos: versao recomendada por navegador (o RootifyONE pode trocar: comportamento global compat.minimos) */
+    compat: {
+      bloqueio: true,                 // tela cheia quando falta o essencial (fetch, Promise, IndexedDB, CSS, localStorage)
+      aviso: true,                    // faixa fechavel: versao antiga ou navegador dentro de outro app
+      usa: null,                      // ex.: ['camera', 'microfone', 'localizacao', 'notificacoes']
+      minimos: {}                     // ex.: { chrome: 110 } (vale sobre o padrao; o publicado pelo RootifyONE vale sobre este)
+    },
+
     /* trechos que o tradutor e o formatador de datas nao podem tocar.
        O modulo marca sozinho, entao nao e preciso editar o index.html. */
     ignorar: [],
@@ -156,20 +176,6 @@
       tipos: []                      // [{ id, nome:{pt,en}, descricao:{pt,en}, padrao:true }]
     },
 
-    /* AssistONE: o assistente (personagem no canto). Ligado por padrao;
-       cada app declara a ajuda de cada tela, o tour, as dicas e a busca. */
-    assistente: {
-      ativo: true,
-      imagem: 'ajuda-botao.png',
-      tela: null,                     // function () -> id da tela atual (padrao: <body data-pagina>)
-      telas: {},                      // { inicio: { titulo, frase, atalhos:[{rotulo, acao, principal}] } }
-      tour: [],                       // [{ seletor, titulo, texto }]
-      dicas: {},                      // { inicio: {pt, en} }
-      busca: [],                      // [{ termo, sinonimos, destino, icone, descricao }]
-      wizard: '',                     // id de um DGO.wizard.definir(...) para o "Comecar"
-      esconderCom: []                 // seletores: visiveis, o personagem some (alem de janelas e tela cheia)
-    },
-
     empurrarConteudo: true,
     seletoresTopoFixo: [],            // ex.: ['.minha-barra-fixa']
     aoTrocarIdioma: null,
@@ -219,7 +225,7 @@
   }
 
   /* Armazenamento com nome separado por app (os sites dividem o mesmo
-     endereco marceloneco.github.io, entao os dados nao podem se misturar) */
+     endereco (solverone.com.br), entao os dados nao podem se misturar) */
   var Guardar = {
     prefixo: function () { return 'dgo:' + cfg.app + ':'; },
     _alvo: function () { return (Sessao.tipo === 'visitante') ? raiz.sessionStorage : raiz.localStorage; },
@@ -265,77 +271,34 @@
     var css = [
       ':root{--dgo-topo:0px;--dgo-cor:' + cfg.cor + ';--dgo-barra:' + cfg.corFundoBarra + ';}',
       '.dgo-oculto{display:none !important;}',
-      /* ---------- aviso rapido (toast) ---------- */
-      '.dgo-toast{position:fixed;left:50%;bottom:calc(84px + env(safe-area-inset-bottom,0px));transform:translate(-50%,12px);',
-      'z-index:2147483400;max-width:min(92vw,520px);background:#111a2e;color:#e8eef8;border:1px solid rgba(255,255,255,.16);',
-      'border-radius:14px;padding:10px 14px;font:600 13.5px/1.4 system-ui,-apple-system,Segoe UI,Roboto,sans-serif;',
-      'box-shadow:0 10px 30px rgba(0,0,0,.35);opacity:0;pointer-events:none;transition:opacity .2s,transform .2s;}',
-      '.dgo-toast.dgo-on{opacity:1;transform:translate(-50%,0);}',
-      '.dgo-selo-fraco{background:rgba(255,255,255,.08) !important;color:#aab4c3 !important;font-weight:600 !important;}',
-      '.dgo-chaves-resumo{font-size:12.5px;line-height:1.45;padding:8px 10px;border-radius:10px;margin:8px 0;',
-      'background:rgba(255,255,255,.05);color:#cbd5e1;}',
-      '.dgo-chaves-resumo.dgo-ok{background:rgba(34,197,94,.12);color:#bbf7d0;}',
-      /* ---------- AssistONE ---------- */
-      '#dgo-aone{position:fixed;right:16px;bottom:calc(16px + var(--dgo-aone-sobe,0px) + env(safe-area-inset-bottom,0px));',
-      'z-index:2147483200;display:flex;flex-direction:column;align-items:flex-end;gap:8px;',
-      'font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;}',
-      '@media (min-width:821px){#dgo-aone{right:16px;bottom:calc(16px + var(--dgo-aone-sobe-pc,0px));}}',
-      '#dgo-aone.dgo-falando{z-index:2147483250;}',
-      '.dgo-aone-bt{width:58px;height:58px;border-radius:50%;border:1px solid rgba(201,162,74,.55);padding:0;cursor:pointer;',
-      'background:radial-gradient(circle at 50% 38%,#232838,#11141c 72%);display:flex;align-items:center;justify-content:center;',
-      'box-shadow:0 6px 18px rgba(0,0,0,.28),0 0 0 3px rgba(201,162,74,.16);animation:dgo-aone-flutua 3.2s ease-in-out infinite;',
-      'transition:width .25s cubic-bezier(.2,.8,.2,1),height .25s cubic-bezier(.2,.8,.2,1);}',
-      '.dgo-aone-bt img{width:100%;height:100%;border-radius:50%;object-fit:cover;display:block;pointer-events:none;}',
-      '.dgo-aone-glifo{font:800 26px/1 system-ui,sans-serif;color:#e6c168;}',
-      '.dgo-aone-bt:focus-visible{outline:3px solid var(--dgo-cor);outline-offset:3px;}',
-      '#dgo-aone.dgo-falando .dgo-aone-bt{width:116px;height:116px;animation:none;}',
-      '@keyframes dgo-aone-flutua{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}',
-      '@keyframes dgo-aone-pop{from{opacity:0;transform:translateY(8px) scale(.96)}to{opacity:1;transform:none}}',
-      '@media (prefers-reduced-motion:reduce){.dgo-aone-bt{animation:none;transition:none}.dgo-aone-bolha{animation:none}}',
-      '.dgo-aone-bolha{width:min(340px,calc(100vw - 24px));max-height:min(70vh,560px);overflow:auto;position:relative;',
-      'background:#111a2e;color:#e8eef8;border:1px solid rgba(255,255,255,.14);border-radius:18px 18px 6px 18px;',
-      'box-shadow:0 14px 40px rgba(0,0,0,.35);padding:14px 14px 12px;font-size:14px;line-height:1.45;animation:dgo-aone-pop .2s ease;}',
-      '.dgo-aone-bolha h4,.dgo-aone-tour h4{margin:0 0 4px;font-size:15px;display:flex;align-items:center;gap:8px;padding-right:28px;}',
-      '.dgo-aone-bolha h4 img,.dgo-aone-tour h4 img{width:26px;height:26px;object-fit:contain;}',
-      '.dgo-aone-bolha p,.dgo-aone-tour p{margin:4px 0 8px;}',
-      '.dgo-aone-x{position:absolute;top:6px;right:8px;background:none;border:0;color:#94a3b8;font-size:17px;cursor:pointer;',
-      'padding:4px 8px;border-radius:8px;min-width:32px;min-height:32px;}',
-      '.dgo-aone-aqui{border:1px solid rgba(255,255,255,.14);background:rgba(255,255,255,.05);border-radius:14px;padding:10px 12px;margin:6px 0 8px;}',
-      '.dgo-aone-aqui .dgo-aone-t{font-weight:800;font-size:13.5px;margin-bottom:2px;}',
-      '.dgo-aone-aqui p{margin:0 0 8px;font-size:13px;color:#c7d0dd;}',
-      '.dgo-aone-atalhos{display:flex;flex-wrap:wrap;gap:6px;}',
-      '.dgo-aone-atalhos button{font:inherit;font-size:12.5px;font-weight:700;border:1px solid var(--dgo-cor);background:transparent;',
-      'color:#e8eef8;border-radius:999px;padding:7px 12px;cursor:pointer;min-height:36px;}',
-      '.dgo-aone-atalhos button.dgo-on{background:var(--dgo-cor);color:#04121f;}',
-      '.dgo-aone-ops{display:flex;flex-direction:column;gap:6px;margin-top:6px;}',
-      '.dgo-aone-ops button{display:flex;align-items:center;gap:10px;text-align:left;font:inherit;font-size:14px;font-weight:600;',
-      'border:1px solid rgba(255,255,255,.14);background:rgba(255,255,255,.04);color:#e8eef8;border-radius:12px;padding:10px 12px;',
-      'cursor:pointer;min-height:44px;width:100%;}',
-      '.dgo-aone-ops button:hover{border-color:var(--dgo-cor);}',
-      '.dgo-aone-ops button.dgo-on{background:var(--dgo-cor);color:#04121f;border-color:var(--dgo-cor);}',
-      '.dgo-aone-ops small{display:block;font-weight:400;font-size:12px;opacity:.75;}',
-      '.dgo-aone-linha{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px;align-items:center;}',
-      '.dgo-aone-link{font:inherit;font-size:12px;background:none;border:0;color:#94a3b8;text-decoration:underline;cursor:pointer;padding:4px 0;}',
-      '.dgo-aone-bolha input[type=search]{width:100%;box-sizing:border-box;font:inherit;font-size:15px;padding:10px 12px;border-radius:12px;',
-      'border:1px solid rgba(255,255,255,.18);background:#0b1220;color:#e8eef8;}',
-      '.dgo-aone-res{margin-top:8px;}',
-      '.dgo-aone-sug{display:flex;flex-wrap:wrap;gap:6px;}',
-      '.dgo-aone-sug button{font:inherit;font-size:12.5px;border-radius:999px;border:1px solid rgba(255,255,255,.2);background:transparent;',
-      'color:#e8eef8;padding:6px 10px;cursor:pointer;}',
-      '.dgo-aone-achado{outline:3px solid var(--dgo-cor) !important;outline-offset:3px;border-radius:8px;}',
-      '.dgo-aone-foco{position:fixed;z-index:2147483260;border-radius:12px;pointer-events:none;',
-      'box-shadow:0 0 0 9999px rgba(2,6,23,.6),0 0 0 3px var(--dgo-cor);}',
-      '.dgo-aone-tour{position:fixed;z-index:2147483270;width:min(320px,calc(100vw - 24px));background:#111a2e;color:#e8eef8;',
-      'border:1px solid rgba(255,255,255,.14);border-radius:16px;box-shadow:0 14px 40px rgba(0,0,0,.35);padding:12px 14px;font-size:14px;',
-      'font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;}',
-      '.dgo-aone-tour .dgo-aone-linha{justify-content:space-between;margin-top:0;}',
-      '.dgo-aone-tour .dgo-b{width:auto;padding:8px 14px;min-height:36px;font-size:13px;}',
-      '.dgo-aone-toggle{display:flex;align-items:center;gap:10px;width:100%;padding:10px 12px;border-radius:14px;cursor:pointer;',
-      'border:1px solid rgba(255,255,255,.14);background:rgba(255,255,255,.04);color:#e8eef8;font:800 13px/1.2 system-ui,sans-serif;letter-spacing:.04em;}',
-      '.dgo-aone-toggle img{width:34px;height:34px;object-fit:contain;}',
-      '.dgo-aone-toggle .dgo-aone-sw{margin-left:auto;width:44px;height:26px;border-radius:999px;background:rgba(255,255,255,.18);position:relative;flex:0 0 auto;}',
-      '.dgo-aone-toggle .dgo-aone-sw::after{content:"";position:absolute;top:3px;left:3px;width:20px;height:20px;border-radius:50%;background:#fff;transition:left .15s;}',
-      '.dgo-aone-toggle.dgo-on .dgo-aone-sw{background:#c9a24a;}.dgo-aone-toggle.dgo-on .dgo-aone-sw::after{left:21px;}',
+      /* campo com foco nunca escondido atras da faixa fixa do topo (WCAG 2.4.11): a rolagem deixa a altura
+         da faixa livre. :where() nao pesa nada, entao o app que tem o proprio cabecalho fixo (e o proprio
+         scroll-padding-top, como o RootifyONE) continua valendo por cima deste. */
+      ':where(html){scroll-padding-top:var(--dgo-topo,0px);}',
+      /* ---------- compatibilidade do aparelho (DGO.compat, 1.7.0) ---------- */
+      '.dgo-compat-faixa{position:fixed;left:.6rem;right:.6rem;bottom:calc(.6rem + env(safe-area-inset-bottom));z-index:2147483100;max-width:34rem;margin:0 auto;',
+      'background:#fef3c7;color:#422006;border:2px solid #b45309;border-radius:14px;padding:.7rem .8rem;box-shadow:0 10px 30px rgba(0,0,0,.35);',
+      'font:500 .92rem/1.45 system-ui,-apple-system,Segoe UI,Roboto,sans-serif;}',
+      '.dgo-compat-faixa .dgo-cf-linha{display:flex;gap:.6rem;align-items:flex-start;}',
+      '.dgo-compat-faixa .dgo-cf-tx{flex:1;min-width:0;}',
+      '.dgo-compat-faixa b{display:block;margin-bottom:.15rem;}',
+      '.dgo-compat-faixa ol{margin:.4rem 0 0;padding-left:1.3rem;}',
+      '.dgo-compat-faixa .dgo-cf-bts{display:flex;flex-wrap:wrap;gap:.4rem;margin-top:.5rem;}',
+      '.dgo-compat-faixa button,.dgo-compat-faixa a.dgo-cf-bt{min-height:44px;min-width:44px;padding:.4rem .8rem;border-radius:10px;border:2px solid #92400e;background:#fff7ed;color:#422006;',
+      'font:700 .9rem/1.2 system-ui,sans-serif;cursor:pointer;text-decoration:none;display:inline-flex;align-items:center;}',
+      '.dgo-compat-faixa button:focus-visible,.dgo-compat-faixa a:focus-visible,.dgo-compat-janela button:focus-visible{outline:3px solid #1d4ed8;outline-offset:2px;}',
+      '.dgo-compat-janela{position:fixed;inset:0;z-index:2147483300;background:rgba(2,6,23,.72);display:flex;align-items:center;justify-content:center;padding:14px;box-sizing:border-box;}',
+      '.dgo-compat-janela ol{margin:.3rem 0 .6rem;padding-left:1.3rem;font-size:14px;line-height:1.5;color:#e2e8f0;}',
+      '.dgo-compat-janela details{margin:.4rem 0;}',
+      '.dgo-compat-janela summary{cursor:pointer;padding:11px 0;font-weight:700;color:#e2e8f0;}',
+      '.dgo-compat-quadro{border:1px solid rgba(251,191,36,.5);border-radius:12px;padding:10px 12px;margin:0 0 6px;background:rgba(251,191,36,.08);}',
+      '.dgo-compat-quadro ul{list-style:none;margin:6px 0;padding:0;font-size:13.5px;line-height:1.6;color:#e2e8f0;}',
+      /* ---------- campo de senha com 👁 (padrão de todos os apps) ---------- */
+      '.dgo-senha{position:relative;display:flex;align-items:center;width:100%;min-width:0;}',
+      '.dgo-senha>input{flex:1;min-width:0;padding-right:2.9rem !important;}',
+      '.dgo-senha-olho{position:absolute;right:.15rem;top:50%;transform:translateY(-50%);width:2.6rem;height:2.6rem;border:0;background:transparent;color:inherit;cursor:pointer;font:inherit;font-size:1.15rem;line-height:1;border-radius:.5rem;opacity:.75;padding:0;}',
+      '.dgo-senha-olho:hover{opacity:1;}',
+      '.dgo-senha-olho:focus-visible{outline:2px solid currentColor;outline-offset:-2px;opacity:1;}',
       /* ---------- faixa do topo ---------- */
       '.dgo-faixa{position:fixed;top:0;left:0;right:0;z-index:2147483000;display:flex;align-items:stretch;gap:7px;',
       'background:#0e1524;border-bottom:1px solid rgba(255,255,255,.12);padding:6px 7px;',
@@ -541,6 +504,25 @@
       '.dgo-linha>*{flex:1;min-width:120px;}',
       '.dgo-fechar{position:absolute;top:10px;right:12px;}',
       '.dgo-video,.dgo-foto{width:100%;border-radius:12px;background:#000;display:block;max-height:48vh;object-fit:contain;}',
+      '.dgo-tarefas{position:fixed;left:.6rem;right:.6rem;bottom:calc(5.4rem + env(safe-area-inset-bottom));z-index:2147483000;display:flex;flex-direction:column;gap:.4rem;pointer-events:none;max-width:30rem;margin:0 auto;}',
+      '.dgo-tarefa{pointer-events:auto;display:flex;align-items:center;gap:.6rem;padding:.6rem .8rem;border-radius:14px;background:#0f172a;color:#f8fafc;border:1px solid rgba(255,255,255,.18);box-shadow:0 8px 24px rgba(0,0,0,.35);font:600 .9rem/1.3 system-ui,sans-serif;cursor:default;}',
+      '.dgo-tarefa i{font-style:normal;font-size:1.3rem;line-height:1;}',
+      '.dgo-tarefa small{display:block;font-weight:500;opacity:.85;font-size:.78rem;}',
+      '.dgo-tarefa b{display:block;}',
+      '.dgo-tarefa .dgo-tarefa-barra{height:4px;border-radius:2px;background:rgba(255,255,255,.15);margin-top:.35rem;overflow:hidden;}',
+      '.dgo-tarefa .dgo-tarefa-barra span{display:block;height:100%;width:0;background:#10b981;transition:width .3s;}',
+      '.dgo-tarefa.pronta{background:#bbf7d0;color:#052e16;border-color:#4ade80;cursor:pointer;}',
+      '.dgo-tarefa.erro{background:#fecaca;color:#450a0a;border-color:#f87171;cursor:pointer;}',
+      '.dgo-tarefa.cancelada{background:#e2e8f0;color:#0f172a;border-color:#94a3b8;}',
+      '.dgo-tarefas-conta{pointer-events:none;align-self:center;padding:.15rem .6rem;border-radius:999px;background:#0f172a;color:#f8fafc;font:600 .75rem/1.4 system-ui,sans-serif;box-shadow:0 4px 12px rgba(0,0,0,.3);}',
+      '.dgo-tarefa-acoes{display:flex;gap:.3rem;}',
+      '.dgo-tarefa-bt{min-width:44px;min-height:44px;border-radius:12px;border:1px solid currentColor;background:transparent;color:inherit;font:700 1rem/1 system-ui,sans-serif;cursor:pointer;opacity:.85;}',
+      '.dgo-tarefa-bt:focus-visible{outline:3px solid #38bdf8;outline-offset:2px;}',
+      '.dgo-tarefa .dgo-tarefa-barra.indef span{width:35%;animation:dgoFundoIndef 1.2s ease-in-out infinite;}',
+      '@keyframes dgoFundoIndef{0%{transform:translateX(-100%);}100%{transform:translateX(300%);}}',
+      '@media (prefers-reduced-motion:reduce){.dgo-tarefa .dgo-tarefa-barra span{transition:none;animation:none !important;}.dgo-tarefa .dgo-tarefa-barra.indef span{width:100%;opacity:.5;}}',
+      '.dgo-video{cursor:crosshair;}',
+      '.dgo-anel{position:fixed;width:60px;height:60px;margin:-30px 0 0 -30px;border:2px solid #fff;border-radius:50%;pointer-events:none;z-index:2147483647;box-shadow:0 0 0 2px rgba(0,0,0,.35);transition:opacity .9s,transform .9s;}',
       '.dgo-barra{height:7px;border-radius:99px;background:rgba(255,255,255,.12);overflow:hidden;margin:10px 0;}',
       '.dgo-barra i{display:block;height:100%;width:0;background:var(--dgo-cor);transition:width .18s;}',
       '.dgo-sep{height:1px;background:rgba(255,255,255,.1);margin:16px 0;}',
@@ -584,6 +566,21 @@
 
   /* Textos da propria interface deste modulo */
   var UI = {
+    tarefaNaoFeche: ['Não feche o app nem apague a tela. Pode usar outras telas.', 'Do not close the app or turn the screen off. You can use other screens.'],
+    tarefaPronta: ['Pronto · toque para ver', 'Done · tap to see'],
+    tarefaErro: ['Não deu certo · toque para fechar', 'Failed · tap to close'],
+    tarefaProcessando: ['Processando…', 'Processing…'],
+    tarefaSair: ['Uma leitura ainda está em andamento. Se sair agora, ela é perdida.', 'A reading is still in progress. If you leave now, it is lost.'],
+    fundoSair: ['Ainda estou terminando: {titulo}. Sair agora perde esse trabalho. Sair mesmo assim?', 'Still finishing: {titulo}. Leaving now loses this work. Leave anyway?'],
+    fundoTelaAberta: ['Mantenha a tela aberta até terminar.', 'Keep the screen on until it finishes.'],
+    fundoVarios: ['{n} em andamento', '{n} in progress'],
+    fundoCancelar: ['Cancelar', 'Cancel'],
+    fundoCancelado: ['Cancelado', 'Cancelled'],
+    fundoTentar: ['Tentar de novo', 'Try again'],
+    fundoInterrompido: ['Foi interrompido quando o app fechou · toque para fechar', 'Interrupted when the app closed · tap to close'],
+    fundoContinuar: ['Continuar de onde parou', 'Continue where it stopped'],
+    fundoFechar: ['Fechar', 'Close'],
+    fundoPodeNavegar: ['pode usar outras telas', 'you can use other screens'],
     entrar: ['Entrar', 'Sign in'],
     sair: ['Sair', 'Sign out'],
     visitante: ['Visitante', 'Guest'],
@@ -642,6 +639,9 @@
     fecharAnuncio: ['Fechar anúncio', 'Close ad'],
     anuncieAqui: ['<ANUNCIE AQUI>', '<ADVERTISE HERE>'],
     versao: ['Versão', 'Version'],
+    todosApps: ['Todos os apps SolverONE ↗', 'All SolverONE apps ↗'],
+    mostrarSenha: ['Mostrar senha', 'Show password'],
+    esconderSenha: ['Esconder senha', 'Hide password'],
     naoConfigurado: ['Ainda não configurado. Veja o passo a passo.', 'Not configured yet. See the step-by-step guide.'],
     senhaCurta: ['A senha precisa de pelo menos 6 caracteres.', 'The password needs at least 6 characters.'],
     senhasDiferentes: ['As duas senhas não são iguais.', 'The two passwords do not match.'],
@@ -782,54 +782,6 @@
     chaveOk: ['✓ Chave aceita. Pronto para usar.', '✓ Key accepted. Ready to use.'],
     chaveSalva: ['Chave salva.', 'Key saved.'],
     chaveRecusada: ['O provedor recusou a chave. Confira se copiou inteira, ou crie outra no site.', 'The provider rejected the key. Check you copied it whole, or create another on the site.'],
-    chaveSalvaSelo: ['chave salva', 'key saved'],
-    semChaveSelo: ['sem chave', 'no key'],
-    comChaveSalva: ['Com chave salva', 'Key saved'],
-    nenhumaChaveAinda: ['Nenhuma chave salva ainda — escolha uma IA grátis abaixo.', 'No key saved yet — pick a free AI below.'],
-    iaSemCota: ['está sem cota agora', 'is out of quota right now'],
-    iaRecusouChave: ['recusou a chave', 'rejected the key'],
-    iaNaoRespondeu: ['não respondeu', 'did not respond'],
-    iaUsando: ['usando', 'using'],
-    iaOcupada: ['A IA está ocupada, tentando de novo…', 'The AI is busy, trying again…'],
-
-    aoneRotulo: ['AssistONE: ajuda, tour e busca', 'AssistONE: help, tour and search'],
-    aoneOla: ['Olá! Eu sou o AssistONE 👋', 'Hi! I am AssistONE 👋'],
-    aoneComoAjudo: ['Em que posso ajudar?', 'How can I help?'],
-    aoneApresenta: ['Estou aqui para ajudar você a usar o {app}. Veja o que dá para fazer nesta tela, ou escolha outra ajuda.',
-                    'I am here to help you use {app}. See what you can do on this screen, or pick another kind of help.'],
-    aoneVejaTela: ['Veja o que dá para fazer nesta tela, ou escolha outra ajuda.', 'See what you can do on this screen, or pick another kind of help.'],
-    aoneVoceEsta: ['Você está em', 'You are on'],
-    aoneComecar: ['Começar: deixar o app do seu jeito', 'Start: set the app up your way'],
-    aoneRever: ['Rever o passo a passo', 'Review the walkthrough'],
-    aonePoucosMinutos: ['Passo a passo, em poucos minutos', 'Step by step, in a few minutes'],
-    aoneTour: ['Tour rápido pela tela', 'Quick tour of the screen'],
-    aoneTourSub: ['Mostro onde fica cada coisa', 'I show you where things are'],
-    aoneProcurar: ['Procurar algo', 'Find something'],
-    aoneProcurarSub: ['Funções, telas e seções do app', 'Features, screens and sections of the app'],
-    aoneExemploBusca: ['Ex.: tom, afinador, importar', 'e.g. key, tuner, import'],
-    aoneOndeProcuro: ['Procuro nas funções, telas e seções deste app.', 'I search this app’s features, screens and sections.'],
-    aoneOQueProcura: ['O que você procura?', 'What are you looking for?'],
-    aoneNadaAchado: ['Não encontrei', 'I could not find'],
-    aoneQuisDizer: ['Você quis dizer:', 'Did you mean:'],
-    aoneTenteOutra: ['Tente outra palavra.', 'Try another word.'],
-    aoneAgoraNao: ['Agora não', 'Not now'],
-    aoneDesligar: ['Desligar o AssistONE', 'Turn AssistONE off'],
-    aoneLigado: ['AssistONE ligado.', 'AssistONE on.'],
-    aoneDesligado: ['AssistONE desligado. Para religar: ⚙ → AssistONE.', 'AssistONE off. To turn it back on: ⚙ → AssistONE.'],
-    aoneAtivado: ['ATIVADO', 'ON'],
-    aoneDesativado: ['DESATIVADO', 'OFF'],
-    aoneAbrir: ['Abrir o AssistONE', 'Open AssistONE'],
-    aoneRecomecar: ['Recomeçar o passo a passo e as dicas', 'Restart the walkthrough and tips'],
-    aoneRecomecou: ['Pronto: o passo a passo e as dicas vão aparecer de novo.', 'Done: the walkthrough and tips will show again.'],
-    aoneExplica: ['O assistente no canto da tela: ajuda de cada tela, tour, busca e passo a passo.',
-                  'The assistant in the corner of the screen: help for each screen, tour, search and walkthrough.'],
-    aoneProximo: ['Próximo', 'Next'],
-    aoneConcluir: ['Concluir', 'Finish'],
-    aoneSair: ['Sair', 'Exit'],
-    aoneFimTour: ['Fim do tour. Toque no AssistONE quando quiser.', 'Tour done. Tap AssistONE anytime.'],
-    aoneSouEu: ['Sou eu! Toque quando precisar de ajuda, de um tour ou para procurar algo.', 'That is me! Tap me for help, a tour or to find something.'],
-    aoneEntendi: ['Entendi', 'Got it'],
-    aoneMaisAjuda: ['Mais ajuda', 'More help'],
     corsAviso: ['Chave salva, mas o teste não passou pelo navegador. Pode ser bloqueio do provedor: tente usar a IA normalmente.', 'Key saved, but the test could not go through the browser. It may be a provider block: try using the AI normally.'],
     usarPara: ['Usar para', 'Use for'],
     pedeCartao: ['pede cartão', 'asks for a card'],
@@ -1240,31 +1192,45 @@
 
   /* ------------------------------------------------------------------
      8-A. LISTA PADRAO DE ANUNCIOS  —  os proprios apps do hub
-     Fonte: marceloneco.github.io (nome, frase, link e cor de cada card).
+     Fonte: o Portal (nome, frase, link e cor de cada card).
      O app que esta rodando nunca anuncia a si mesmo.
      Para trocar: anuncios.lista no config, ou um anuncios.json na raiz.
+     Link = a pasta do app; o endereco vem de siteBase() (nunca fixo no codigo).
      ------------------------------------------------------------------ */
+  var DOMINIO_OFICIAL = 'https://solverone.com.br/';
+  /* Endereco da pagina central: cfg.siteBase; senao, a origem de um fonteCentral completo (app que roda
+     em outra origem); senao, o endereco atual; pagina aberta como arquivo (copia baixada) usa o dominio oficial. */
+  function siteBase() {
+    var b = String(cfg.siteBase || '');
+    if (/^https?:\/\//i.test(b)) return b.charAt(b.length - 1) === '/' ? b : b + '/';
+    var m = /^(https?:\/\/[^\/]+)/i.exec(String(cfg.fonteCentral || ''));
+    if (m) return m[1] + '/';
+    var lo = raiz.location || {};
+    if ((lo.protocol === 'http:' || lo.protocol === 'https:') && lo.origin && lo.origin !== 'null') return lo.origin + '/';
+    return DOMINIO_OFICIAL;
+  }
+  function linkApp(a) { var l = String((a && a.link) || ''); return /^[a-z]+:/i.test(l) ? l : siteBase() + l.replace(/^\//, ''); }
   var APPS_HUB = [
     { id: 'moneytrio', nome: 'MoneyTrio', cor: '#d6a076', glifo: '💰',
-      link: 'https://marceloneco.github.io/investify-me/',
+      link: 'investify-me/',
       frase: { pt: 'Finanças pessoais: BudgetONE, InvestifyONE e TaxONE',
                en: 'Personal finance: BudgetONE, InvestifyONE and TaxONE' } },
     { id: 'rise-one', nome: 'RiseONE', cor: '#beb0ec', glifo: '🏃',
-      link: 'https://marceloneco.github.io/rise-one/',
+      link: 'rise-one/',
       frase: { pt: 'Treino, corrida e dieta, com metas e evolução',
                en: 'Training, running and diet, with goals and progress' } },
     { id: 'omnilife-one', nome: 'OmniLifeONE', cor: '#e4a460', glifo: '🧩',
-      link: 'https://marceloneco.github.io/omnilife-one/', selo: { pt: 'EM BREVE', en: 'SOON' },
+      link: 'omnilife-one/', selo: { pt: 'EM BREVE', en: 'SOON' },
       frase: { pt: 'A vida organizada em um só lugar', en: 'Life organized in one place' } },
     { id: 'planos-candidatos-2026', nome: 'Eleições 2026', cor: '#a4c4a6', glifo: '🗳️',
-      link: 'https://marceloneco.github.io/planos-candidatos-2026/',
+      link: 'planos-candidatos-2026/',
       frase: { pt: 'Dados públicos transformados em informação clara',
                en: 'Public data turned into clear information' } },
     { id: 'contador-de-historias', nome: 'Contador de Histórias', cor: '#96c0e8', glifo: '📖',
-      link: 'https://marceloneco.github.io/contador-de-historias/',
+      link: 'contador-de-historias/',
       frase: { pt: 'Cria e narra histórias de dormir', en: 'Creates and narrates bedtime stories' } },
     { id: 'cifras-violao', nome: 'Cifras e Acordes', cor: '#eaa4b8', glifo: '🎸',
-      link: 'https://marceloneco.github.io/cifras-violao/',
+      link: 'cifras-violao/',
       frase: { pt: 'Cifras, troca de tom e dicionário de acordes',
                en: 'Chord charts, key change and chord dictionary' } }
   ];
@@ -1412,7 +1378,7 @@
                      texto: a.glifo || '●' });
 
     return el('a', {
-      class: 'dgo-card', href: a.link, target: '_blank', rel: 'noopener noreferrer',
+      class: 'dgo-card', href: linkApp(a), target: '_blank', rel: 'noopener noreferrer',
       'aria-label': a.nome + ' — ' + Anuncios.frase(a),
       onclick: function () { Anuncios.registrar('clique', a.id); }
     }, [
@@ -1602,7 +1568,7 @@
         ]),
         el('div', { class: 'dgo-pop-frase', texto: Anuncios.frase(a) }),
         el('a', {
-          class: 'dgo-pop-bt', href: a.link, target: '_blank', rel: 'noopener noreferrer',
+          class: 'dgo-pop-bt', href: linkApp(a), target: '_blank', rel: 'noopener noreferrer',
           onclick: function () { Anuncios.registrar('clique', a.id); }
         }, [d.createTextNode(Anuncios.botao(a)), el('span', { class: 'dgo-pop-seta', texto: '\u2192' })]),
         el('div', { class: 'dgo-pop-rot dgo-pop-rot-baixo', texto: rotuloTxt })
@@ -2537,6 +2503,54 @@
       };
     },
 
+    /* Câmera: celular com várias câmeras atrás às vezes abre a grande-angular ou a macro, que não focam
+       de perto e deixam a foto embaçada. Escolhe a lente principal pelo nome e liga o foco contínuo. */
+    abrirCamera: function () {
+      var md = navigator.mediaDevices;
+      function pedir(extra) {
+        var v = { width: { ideal: 1920 }, height: { ideal: 1080 } };
+        for (var k in extra) v[k] = extra[k];
+        return md.getUserMedia({ video: v, audio: false });
+      }
+      return pedir({ facingMode: { ideal: 'environment' } }).then(function (s) {
+        if (!md.enumerateDevices) return s;
+        return md.enumerateDevices().then(function (ds) {
+          var tras = ds.filter(function (x) { return x.kind === 'videoinput' && !/front|frontal|user|selfie/i.test(x.label); });
+          var boas = tras.filter(function (x) { return !/wide|ultra|grande|tele|macro|depth|profund|infra|ir\b/i.test(x.label); });
+          var n = function (x) { var m = /(\d+)/.exec(x.label); return m ? +m[1] : 99; };
+          var p = (boas.length ? boas : tras).slice().sort(function (a, b) { return n(a) - n(b); })[0];
+          var tr = s.getVideoTracks()[0], atual = (tr && tr.getSettings && tr.getSettings().deviceId) || '';
+          if (tras.length < 2 || !p || !p.deviceId || !atual || p.deviceId === atual) return s;
+          s.getTracks().forEach(function (f) { f.stop(); });
+          return pedir({ deviceId: { exact: p.deviceId } }).catch(function () { return pedir({ facingMode: { ideal: 'environment' } }); });
+        }, function () { return s; });
+      }).then(function (s) {
+        if ((OCR._recursos(s).focusMode || []).indexOf('continuous') >= 0) OCR._aplicar(s, { focusMode: 'continuous' });
+        return s;
+      });
+    },
+    _recursos: function (s) { var tr = s && s.getVideoTracks()[0]; try { return (tr && tr.getCapabilities) ? tr.getCapabilities() : {}; } catch (e) { return {}; } },
+    _aplicar: function (s, c) { var tr = s && s.getVideoTracks()[0]; try { return tr.applyConstraints({ advanced: [c] }).catch(function () {}); } catch (e) { return Promise.resolve(); } },
+    /* tocar na imagem: foco naquele ponto (onde o aparelho deixa), com um anel mostrando onde; depois volta ao contínuo */
+    focoNoToque: function (video) {
+      video.addEventListener('click', function (ev) {
+        var s = OCR._stream; if (!s || !video.videoWidth) return;
+        var r = video.getBoundingClientRect(), k = Math.min(r.width / video.videoWidth, r.height / video.videoHeight);
+        var dw = video.videoWidth * k, dh = video.videoHeight * k;
+        var x = Math.max(0, Math.min(1, (ev.clientX - r.left - (r.width - dw) / 2) / dw));
+        var y = Math.max(0, Math.min(1, (ev.clientY - r.top - (r.height - dh) / 2) / dh));
+        var anel = d.createElement('span'); anel.className = 'dgo-anel'; anel.setAttribute('data-dgo-ui', '1');
+        anel.style.left = ev.clientX + 'px'; anel.style.top = ev.clientY + 'px';
+        d.body.appendChild(anel);
+        setTimeout(function () { anel.style.opacity = '0'; anel.style.transform = 'scale(.7)'; }, 30);
+        setTimeout(function () { anel.remove(); }, 950);
+        var cap = OCR._recursos(s), fm = cap.focusMode || [], c = {};
+        if (cap.pointsOfInterest) c.pointsOfInterest = [{ x: x, y: y }];
+        if (fm.indexOf('single-shot') >= 0) c.focusMode = 'single-shot';
+        if (!Object.keys(c).length) return;
+        OCR._aplicar(s, c).then(function () { setTimeout(function () { if (fm.indexOf('continuous') >= 0 && OCR._stream === s) OCR._aplicar(s, { focusMode: 'continuous' }); }, 1500); });
+      });
+    },
     pararCamera: function () {
       if (OCR._stream) { OCR._stream.getTracks().forEach(function (f) { f.stop(); }); OCR._stream = null; }
     },
@@ -2826,48 +2840,61 @@
   }
   function redesenharInterfaceDGO() {
     if (modalEl && typeof modalEl._recriar === 'function') { var f = modalEl._recriar; fecharModal(); f(); }
-    /* a faixa e redesenhada inteira pelo montarFaixa() (o texto dos cartoes
-       muda com o idioma); a imagem-placeholder antiga nao existe mais */
-    if (bannerEl) montarFaixa();
+    if (bannerEl) { /* o texto do placeholder muda com o idioma */
+      var img = bannerEl.querySelector('img');
+      if (img && !cfg.anuncios.imagem) img.src = imagemPlaceholder();
+    }
   }
   function campo(rotulo, props) {
     var i = el('input', props || { type: 'text' });
     var l = el('label', { class: 'dgo-campo' }, [el('span', { texto: rotulo }), i]);
     l._input = i;
+    if (i.type === 'password') Senha.olho(i);
     return l;
   }
+
+  /* ------------------------------------------------------------------
+     15b. CAMPO DE SENHA COM 👁 — padrão de TODO campo de senha de TODO app
+     Botão dentro do campo alterna type password/text; aria-label
+     "Mostrar senha"/"Esconder senha" (PT/EN), aria-pressed, funciona por
+     teclado (é um <button>). Volta a esconder ao enviar o formulário
+     (submit do <form> ou Enter no campo) e em DGO.senha.esconder().
+     Uso: DGO.senha.olho(input) · DGO.senha.aplicar(raiz) em campos prontos.
+     ------------------------------------------------------------------ */
+  var Senha = {
+    olho: function (input) {
+      if (!input || input.tagName !== 'INPUT' || input._olho) return input;
+      var caixa = el('span', { class: 'dgo-senha', 'data-dgo-ignorar': '' });
+      var bt = el('button', { type: 'button', class: 'dgo-senha-olho', 'aria-pressed': 'false' });
+      function pintar() {
+        var visivel = input.type === 'text';
+        bt.textContent = visivel ? '🙈' : '👁';
+        bt.setAttribute('aria-label', t(visivel ? 'esconderSenha' : 'mostrarSenha'));
+        bt.title = bt.getAttribute('aria-label');
+        bt.setAttribute('aria-pressed', visivel ? 'true' : 'false');
+      }
+      function esconder() { if (input.type !== 'password') { input.type = 'password'; pintar(); } }
+      bt.addEventListener('click', function () { input.type = input.type === 'password' ? 'text' : 'password'; pintar(); });
+      if (input.parentNode) input.parentNode.insertBefore(caixa, input);
+      caixa.appendChild(input); caixa.appendChild(bt);
+      input._olho = { esconder: esconder, pintar: pintar };
+      var form = input.form || (input.closest ? input.closest('form') : null);
+      if (form) form.addEventListener('submit', esconder);
+      input.addEventListener('keydown', function (e) { if (e.key === 'Enter') esconder(); });
+      d.addEventListener('dgo:idioma', pintar);
+      pintar();
+      return input;
+    },
+    /* põe o 👁 em todo campo de senha já na tela (ou dentro de `raiz`) */
+    aplicar: function (raiz) {
+      Array.prototype.slice.call((raiz || d).querySelectorAll('input[type="password"]')).forEach(function (i) { if (!i._olho) Senha.olho(i); });
+    },
+    /* volta a esconder todas (chamar ao enviar formulários sem <form>) */
+    esconder: function (raiz) {
+      Array.prototype.slice.call((raiz || d).querySelectorAll('.dgo-senha>input')).forEach(function (i) { if (i._olho) i._olho.esconder(); });
+    }
+  };
   function aviso(txt, tipo) { return el('div', { class: 'dgo-aviso ' + (tipo || 'info'), texto: txt }); }
-
-  /* aviso curto que aparece embaixo e some sozinho (nao exige toque) */
-  var toastEl = null, toastTimer = null;
-  function avisoRapido(txt, ms) {
-    if (!d.body) return;
-    if (!toastEl || !toastEl.parentNode) {
-      toastEl = el('div', { class: 'dgo-toast', 'data-dgo-ui': '1', role: 'status', 'aria-live': 'polite' });
-      d.body.appendChild(toastEl);
-    }
-    toastEl.textContent = txt;
-    toastEl.classList.add('dgo-on');
-    clearTimeout(toastTimer);
-    toastTimer = setTimeout(function () { toastEl.classList.remove('dgo-on'); }, ms || 4000);
-  }
-
-  /* pedido com insistencia: 429/503 = "ocupado", espera e tenta de novo.
-     rapido = ha outra IA de reserva, entao so 3 s antes de desistir desta. */
-  function esperar(ms) { return new Promise(function (ok) { setTimeout(ok, ms); }); }
-  function chamarComInsistencia(fn, rapido) {
-    var esperas = rapido ? [3000] : [6000, 15000, 30000];
-    function vez(i) {
-      return fn().catch(function (e) {
-        if (e && (e.status === 429 || e.status === 503) && i < esperas.length) {
-          avisoRapido('⏳ ' + t('iaOcupada'), 2500);
-          return esperar(esperas[i]).then(function () { return vez(i + 1); });
-        }
-        throw e;
-      });
-    }
-    return vez(0);
-  }
 
   /* ------------------------------------------------------------------
      16. TELA DE ACESSO
@@ -3247,25 +3274,43 @@
 
     function lerFonte(fonte) {
       progresso(0.02, '');
-      OCR.ler(fonte, progresso).then(mostrarResultado).catch(function (e) {
+      Tarefa.iniciar({ id: 'dgo-ocr', titulo: t('lendo'),
+        executar: function (andamento) { return OCR.ler(fonte, function (m) { if (caixa.isConnected) progresso(m.progress, m.status); andamento(m.progress); }); },
+        aindaNaTela: function () { return caixa.isConnected; },
+        aoAbrir: function (r) { if (caixa.isConnected) mostrarResultado(r); else abrirOCR(Object.assign({}, opcoes, { resultadoInicial: r })); }
+      }).catch(function (e) {
+        if (!caixa.isConnected) return;
         estado.innerHTML = '';
         estado.appendChild(aviso(String(e && e.message) === 'so-wifi' ? t('redeSoWifi') : t('semCamera'), 'erro'));
         barra.style.display = 'none';
       });
     }
+    if (opcoes.resultadoInicial) setTimeout(function () { mostrarResultado(opcoes.resultadoInicial); }, 0);
 
     function usarCamera() {
       limpar();
       if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-        area.appendChild(aviso(t('semCamera'), 'erro')); return;
+        area.appendChild(aviso(t('semCamera'), 'erro'));
+        Compat.exigir('camera', { motivo: MOTIVO_OCR });
+        area.appendChild(el('button', { class: 'dgo-b dgo-b2', type: 'button', texto: t('escolherImagem'), onclick: escolher }));
+        return;
       }
-      navigator.mediaDevices.getUserMedia({
-        video: { facingMode: { ideal: 'environment' }, width: { ideal: 1920 }, height: { ideal: 1080 } }, audio: false
-      }).then(function (stream) {
+      /* câmera bloqueada: explica como liberar (sem pedir nada só para conferir) e deixa escolher uma foto */
+      Compat.exigir('camera', { motivo: MOTIVO_OCR }).then(function (pode) {
+        if (!caixa.isConnected) return;
+        if (!pode) { area.appendChild(aviso(t('semCamera'), 'erro')); area.appendChild(el('button', { class: 'dgo-b dgo-b2', type: 'button', texto: t('escolherImagem'), onclick: escolher })); return; }
+        abrirDeVerdade();
+      });
+    }
+    var MOTIVO_OCR = { pt: 'Para ler o texto de uma foto, o app usa a câmera. Você também pode escolher uma foto já tirada.',
+                       en: 'To read the text in a photo, the app uses the camera. You can also pick a photo you already took.' };
+    function abrirDeVerdade() {
+      OCR.abrirCamera().then(function (stream) {
         OCR._stream = stream;
         video = el('video', { class: 'dgo-video', autoplay: '', playsinline: '', muted: '' });
         video.srcObject = stream; video.muted = true;
         area.appendChild(video);
+        OCR.focoNoToque(video);
         area.appendChild(el('button', { class: 'dgo-b', type: 'button', texto: t('tirarFoto'), onclick: function () {
           fotoCanvas = d.createElement('canvas');
           fotoCanvas.width = video.videoWidth; fotoCanvas.height = video.videoHeight;
@@ -3282,6 +3327,7 @@
         area.appendChild(el('button', { class: 'dgo-b dgo-b2', type: 'button', texto: t('cancelar'), onclick: inicio }));
       }).catch(function () {
         area.appendChild(aviso(t('semCamera'), 'erro'));
+        Compat.exigir('camera', { motivo: MOTIVO_OCR });     /* a pessoa acabou de negar: mostra como liberar */
         area.appendChild(el('button', { class: 'dgo-b dgo-b2', type: 'button', texto: t('escolherImagem'), onclick: escolher }));
       });
     }
@@ -3315,13 +3361,16 @@
   /* ------------------------------------------------------------------
      18. CONFIGURACOES (painel central; cada app mostra so o que usa)
      ------------------------------------------------------------------ */
-  var SECOES_PADRAO = ['idioma', 'assistente', 'conta', 'notificacoes', 'ia', 'rede', 'nuvem', 'ocr', 'app'];
+  var SECOES_PADRAO = ['compat', 'idioma', 'conta', 'notificacoes', 'ia', 'rede', 'nuvem', 'ocr', 'app'];
 
   function montarConfiguracoes(opcoes) {
     opcoes = opcoes || {};
     var secoes = opcoes.secoes || SECOES_PADRAO;
     var raizEl = el('div', { 'data-dgo-ui': '1' });
     function tem(s) { return secoes.indexOf(s) !== -1; }
+
+    /* "O seu aparelho": no topo, e so quando falta algo (diretriz "Compatibilidade") */
+    if (tem('compat')) { var quadroCompat = el('div'); raizEl.appendChild(quadroCompat); Compat.quadro(quadroCompat); }
 
     if (tem('idioma')) {
       raizEl.appendChild(el('h3', { texto: t('idioma') }));
@@ -3335,11 +3384,6 @@
       raizEl.appendChild(linhaId);
       raizEl.appendChild(el('div', { class: 'dgo-mini', texto:
         (Idioma.atual === 'en' ? 'Date format: ' : 'Formato de data: ') + formatarData(new Date()) }));
-    }
-
-    if (tem('assistente') && Assistente.ativoNoApp()) {
-      raizEl.appendChild(el('h3', { texto: '💡 AssistONE' }));
-      raizEl.appendChild(Assistente.cartaoConfig(function () { abrirConfiguracoes(opcoes); }));
     }
 
     if (tem('conta')) {
@@ -3487,10 +3531,16 @@
         lApp.appendChild(el('div', { class: 'dgo-mini', texto: t('appInstalado') }));
       }
       raizEl.appendChild(lApp);
+      /* link para a pagina central, em outra aba (diretriz "Padrao comum": link para o Portal) */
+      raizEl.appendChild(el('a', { class: 'dgo-b dgo-b2', href: siteBase(), target: '_blank', rel: 'noopener', texto: t('todosApps'),
+        style: { textDecoration: 'none', boxSizing: 'border-box' } }));
       raizEl.appendChild(el('div', { class: 'dgo-mini', texto:
         t('versao') + ' ' + (cfg.versaoApp || '-') + '   |   Diretrizes ' + VERSAO +
         '   |   ' + Plataforma.qual() }));
     }
+
+    /* ⚙ → Ajuda → 💬 Feedback (bloco "Feedback", DGO.feedback) */
+    if (tem('feedback') || tem('app')) Feedback.secaoConfig(raizEl);
 
     if (opcoes.destino) {
       var dest = typeof opcoes.destino === 'string' ? $(opcoes.destino) : opcoes.destino;
@@ -4212,7 +4262,7 @@
      ------------------------------------------------------------------
      Os repositórios são publicos: nenhuma chave pode morar no codigo.
      Entao a chave e da pessoa, colada uma vez e guardada no navegador.
-     Como os apps moram todos em marceloneco.github.io, o cofre e um so
+     Como os apps moram todos no mesmo endereco (solverone.com.br), o cofre e um so
      e vale para os tres: cola no InvestifyONE, funciona no Contador.
 
      A chave NAO viaja para lugar nenhum a nao ser para o proprio
@@ -4234,9 +4284,8 @@
   function lerResposta(r) {
     return r.json().catch(function () { return {}; }).then(function (j) {
       if (!r.ok) {
-        var m = (j && (j.error && (j.error.message || j.error.type))) || (j && j.message) ||
-                (j && j.detail && (j.detail.message || j.detail.status)) || ('HTTP ' + r.status);
-        var e = new Error(m); e.status = r.status; e.corpo = j; throw e;
+        var m = (j && (j.error && (j.error.message || j.error.type))) || (j && j.message) || ('HTTP ' + r.status);
+        var e = new Error(m); e.status = r.status; throw e;
       }
       return j;
     });
@@ -4303,7 +4352,7 @@
     gemini: {
       nome: 'Google Gemini', gratis: true, ordem: 1,
       onde: 'https://aistudio.google.com/apikey',
-      modelo: 'gemini-2.0-flash',
+      modelo: 'gemini-3.8-flash',   /* o Google aposenta modelos; se este sair, o app troca sozinho pelo que a chave aceita */
       nota: { pt: 'Plano grátis com limites que o Google mostra no AI Studio. Confira o aviso de privacidade ao criar a chave.',
               en: 'Free plan with limits shown by Google in AI Studio. Check the privacy notice when creating the key.' },
       chamar: function (chave, modelo, sistema, mensagens, limite) {
@@ -4499,6 +4548,7 @@
     /* ---- uso direto, sem interface ---- */
     perguntar: function (pergunta, opcoes) {
       opcoes = opcoes || {};
+      if (opcoes.insistir) return IA.perguntarInsistindo(pergunta, opcoes);
       var prov = opcoes.provedor || IA.provedor();
       var pr = PROVEDORES[prov];
       if (!pr) return Promise.reject(new Error('provedor-desconhecido'));
@@ -4518,40 +4568,117 @@
       }
       var chave = IA.chave(prov);
       if (!chave && prov !== 'personalizado') return Promise.reject(new Error('sem-chave'));
+      /* opcoes.limite: tamanho maximo da resposta (textos longos, como termos) */
+      return pr.chamar(chave, modelo, sistema, msgs, opcoes.limite).catch(function (e) {
+        /* Modelo aposentado pelo provedor (o Google faz isso sem aviso): escolhe outro
+           entre os que a chave aceita, guarda e tenta de novo uma vez. */
+        if (opcoes._semTroca || !IA.modeloSumiu(e) || !pr.listar) throw e;
+        return IA.trocarModeloSozinho(prov, modelo, e).then(function (novo) {
+          if (!novo) throw e;
+          return IA.perguntar(pergunta, Object.assign({}, opcoes, { modelo: novo, _semTroca: true }));
+        });
+      });
+    },
 
-      /* Se a IA escolhida falhar (sem cota gratis, sem credito, chave recusada,
-         servidor fora), passa sozinho para a proxima que tem chave, na ordem da
-         lista, e avisa na tela qual esta usando. Com reserva disponivel, espera
-         so 3 s antes de desistir da atual; sem reserva, insiste mais (6, 15, 30 s).
-         opcoes.semTroca = true desliga isso para quem quer um provedor fixo. */
-      var fila = [prov];
-      if (opcoes.semTroca !== true) {
-        IA.provedoresProntos().forEach(function (p) {
-          if (p !== prov && fila.indexOf(p) === -1 && (p !== 'personalizado' || IA.baseDe(p))) fila.push(p);
+    /* ---- insistir (1.7.0; diretriz "IA": 503/429 → esperar 6, 15 e 30 s, depois outro provedor) ----
+       Só com { insistir: true }: quem não pede continua igual (o rootify-ia-termos.js tem a insistência dele).
+       Erro passageiro = 429 (limite por agora), 503/529 (sobrecarregado) ou resposta vazia.
+       opcoes.esperas: segundos de cada espera (padrão [6, 15, 30]; os testes usam frações)
+       opcoes.aoEsperar(segundos, { tentativa, de, provedor }): contagem regressiva, uma vez por segundo
+       opcoes.aoTrocar(nome, id): ainda falhou e há OUTRO provedor com chave no cofre → tenta uma vez com ele
+       opcoes.sinal: AbortSignal (o ✕ da pílula do Fundo para a espera na hora) */
+    passageiro: function (e) { return !!e && (e.vazia === true || e.status === 429 || e.status === 503 || e.status === 529); },
+    perguntarInsistindo: function (pergunta, opcoes) {
+      var esperas = Array.isArray(opcoes.esperas) ? opcoes.esperas : [6, 15, 30];
+      var prov = opcoes.provedor || IA.provedor();
+      var base = Object.assign({}, opcoes, { insistir: false });
+      function uma(o) {
+        return IA.perguntar(pergunta, o).then(function (r) {
+          var txt = typeof r === 'string' ? r : (r && (r.texto || r.resposta)) || '';
+          if (!String(txt).trim()) { var e = new Error('resposta-vazia'); e.vazia = true; throw e; }
+          return r;
         });
       }
       function tentar(i) {
-        var p = fila[i], pr2 = PROVEDORES[p], temReserva = i < fila.length - 1;
-        var mod = (p === prov) ? modelo : IA.modelo(p);
-        /* opcoes.limite: tamanho maximo da resposta (textos longos, como termos) */
-        return chamarComInsistencia(function () {
-          return pr2.chamar(IA.chave(p), mod, sistema, msgs, opcoes.limite);
-        }, temReserva).catch(function (e) {
-          if (!temReserva || !e || !e.status) throw e;
-          IA.avisarTroca(p, fila[i + 1], e.status);
-          return tentar(i + 1);
+        return uma(base).catch(function (e) {
+          if (!IA.passageiro(e) || i >= esperas.length) throw e;
+          return IA.esperar(esperas[i], opcoes, { tentativa: i + 1, de: esperas.length, provedor: prov }).then(function () { return tentar(i + 1); });
         });
       }
-      return tentar(0);
+      return tentar(0).catch(function (e) {
+        if (!IA.passageiro(e)) throw e;
+        var outro = IA.provedoresProntos().filter(function (p) { return p !== prov; })[0];
+        if (!outro) throw e;
+        if (typeof opcoes.aoTrocar === 'function') { try { opcoes.aoTrocar(nomeProv(PROVEDORES[outro]), outro); } catch (x) {} }
+        var o2 = Object.assign({}, base, { provedor: outro });
+        delete o2.modelo;                 /* o modelo pedido era do provedor anterior */
+        return uma(o2);
+      });
+    },
+    esperar: function (seg, opcoes, info) {
+      return new Promise(function (ok, falha) {
+        var fim = Date.now() + seg * 1000, sinal = opcoes.sinal, tique = null, relogio = null;
+        function avisa(n) { if (typeof opcoes.aoEsperar === 'function') { try { opcoes.aoEsperar(n, info); } catch (x) {} } }
+        function parou() { clearTimeout(relogio); clearInterval(tique); var e = new Error('cancelado'); e.cancelado = true; e.name = 'AbortError'; falha(e); }
+        if (sinal && sinal.aborted) return parou();
+        avisa(Math.max(1, Math.ceil(seg)));
+        tique = setInterval(function () { avisa(Math.max(1, Math.ceil((fim - Date.now()) / 1000))); }, 1000);
+        relogio = setTimeout(function () { clearInterval(tique); ok(); }, seg * 1000);
+        if (sinal && sinal.addEventListener) sinal.addEventListener('abort', parou);
+      });
     },
 
-    /* "🔁 Groq está sem cota agora — usando Gemini" */
-    avisarTroca: function (de, para, status) {
-      var motivo = (status === 402 || status === 429) ? t('iaSemCota')
-                 : (status === 401 || status === 403) ? t('iaRecusouChave') : t('iaNaoRespondeu');
-      var txt = '🔁 ' + nomeProv(PROVEDORES[de]) + ' ' + motivo + ' — ' + t('iaUsando') + ' ' + nomeProv(PROVEDORES[para]);
-      avisoRapido(txt, 4500);
-      d.dispatchEvent(new CustomEvent('dgo:ia-troca', { detail: { de: de, para: para, status: status, texto: txt } }));
+    /* ---- modelo que saiu do ar: detectar, escolher outro, explicar ---- */
+    modeloSumiu: function (e) {
+      var m = String(e && e.message || '');
+      return e && (e.status === 404 || /no longer available|not found|not supported|deprecated|does not exist|is not available|unsupported model|decommissioned/i.test(m));
+    },
+    /* preferido: o que o proprio provedor sugeriu na mensagem de erro (ex.: "use models/gemini-3.8-flash");
+       senao, o "flash"/"mini"/"small" mais novo da lista (gratis primeiro); senao, o primeiro da lista */
+    escolherModelo: function (lista, sugerido, atual) {
+      var ids = lista.map(function (m) { return m.id; }).filter(function (id) { return id !== atual; });
+      if (sugerido && ids.indexOf(sugerido) !== -1) return sugerido;
+      if (sugerido && !lista.length) return sugerido;
+      function nota(id) {
+        var n = 0; if (/flash|mini|small|haiku|lite/i.test(id)) n += 100; if (/preview|exp|beta/i.test(id)) n -= 30; if (/tts|image|embedding|audio|vision|thinking/i.test(id)) n -= 200;
+        var v = /(\d+)(?:\.(\d+))?/.exec(id); if (v) n += (+v[1]) * 10 + (+(v[2] || 0)); return n;
+      }
+      var gratis = lista.filter(function (m) { return m.gratis && m.id !== atual; });
+      var base = (gratis.length ? gratis : lista.filter(function (m) { return m.id !== atual; })).slice().sort(function (a, b) { return nota(b.id) - nota(a.id); });
+      return base.length ? base[0].id : '';
+    },
+    trocarModeloSozinho: function (prov, atual, e) {
+      var sug = /models\/([a-z0-9._-]+)/i.exec(String(e && e.message || ''));
+      var sugerido = sug ? sug[1] : '';
+      return IA.listarModelos(prov).catch(function () { return []; }).then(function (lista) {
+        var novo = IA.escolherModelo(lista, sugerido, atual);
+        if (!novo || novo === atual) return '';
+        IA.definirModelo(prov, novo);
+        IA._ultimaTroca = { provedor: prov, de: atual, para: novo, quando: Date.now() };
+        try { d.dispatchEvent(new CustomEvent('dgo:ia-modelo', { detail: { provedor: prov, de: atual, para: novo } })); } catch (e2) {}
+        return novo;
+      });
+    },
+    /* erro da IA em linguagem de gente, no idioma da pessoa (nunca a mensagem crua em ingles) */
+    explicarErro: function (e) {
+      var en = Idioma.atual === 'en', m = String(e && e.message || e || ''), st = e && e.status;
+      function T2(pt, en2) { return en ? en2 : pt; }
+      if (m === 'sem-chave') return T2('Falta a chave da IA. Abra o cofre de chaves e cole uma grátis.', 'The AI key is missing. Open the key vault and paste a free one.');
+      if (m === 'sem-internet') return T2('Sem internet.', 'No internet.');
+      if (m === 'so-wifi') return T2('A IA está marcada para usar só no Wi-Fi (Configurações → Rede).', 'AI is set to Wi-Fi only (Settings → Network).');
+      if (m === 'provedor-desconhecido') return T2('Provedor de IA desconhecido.', 'Unknown AI provider.');
+      if (m === 'resposta-vazia') return T2('A IA respondeu em branco. Tente de novo em instantes ou use outra IA.', 'The AI answered with nothing. Try again in a moment or use another AI.');
+      if (IA.modeloSumiu(e)) {
+        var mod = /models\/([a-z0-9._-]+)/i.exec(m) || /model\s+[“"']?([a-z0-9._-]+)/i.exec(m), qual = mod ? mod[1] : '';
+        return T2('O modelo ' + (qual ? '“' + qual + '” ' : '') + 'foi aposentado pelo provedor e não achei outro para trocar sozinho. Abra o cofre de chaves e toque em “Ver modelos que esta chave aceita”.',
+                  'The model ' + (qual ? '“' + qual + '” ' : '') + 'was retired by the provider and I could not find another to switch to on my own. Open the key vault and tap “See models this key accepts”.');
+      }
+      if (st === 401 || st === 403) return T2('A chave foi recusada pelo provedor. Confira no cofre de chaves (pode ter vencido ou sido apagada).', 'The provider rejected the key. Check the key vault (it may have expired or been deleted).');
+      if (st === 429) return T2('Limite de pedidos da IA atingido por agora. Espere um pouco ou use outra IA.', 'AI request limit reached for now. Wait a bit or use another AI.');
+      if (st === 400) return T2('O provedor recusou o pedido (' + m.slice(0, 120) + ').', 'The provider refused the request (' + m.slice(0, 120) + ').');
+      if (st >= 500) return T2('O provedor de IA está fora do ar ou sobrecarregado. Tente de novo em instantes.', 'The AI provider is down or overloaded. Try again in a moment.');
+      if (/fetch|network|failed to fetch/i.test(m)) return T2('Não deu para falar com o provedor: rede, bloqueio do navegador ou endereço errado.', 'Could not reach the provider: network, browser block or wrong address.');
+      return T2('A IA não respondeu: ', 'The AI did not answer: ') + m.slice(0, 160);
     },
 
     limparConversa: function () { IA._conversa = []; }
@@ -4690,7 +4817,7 @@
     X.groq.serve = { pt: 'Melhor opção grátis para voz → texto (Whisper) e respostas instantâneas.', en: 'Best free option for speech → text (Whisper) and instant answers.' };
     X.groq.stt = { url: 'https://api.groq.com/openai/v1/audio/transcriptions', modelo: 'whisper-large-v3-turbo' };
 
-    X.gemini.cap = ['texto', 'stt', 'tts', 'visao']; X.gemini.prefixo = 'AIza';
+    X.gemini.cap = ['texto', 'stt', 'tts', 'visao']; X.gemini.prefixo = ['AIza', 'AQ.'];   /* chaves novas do AI Studio (2026) comecam com AQ. */
     X.gemini.conta = { pt: 'conta Google', en: 'Google account' };
     X.gemini.limite = { pt: 'Grátis (AI Studio): centenas de pedidos por dia no Flash e Flash-Lite; a cota exata aparece na sua conta. Sem cartão. A voz (TTS) e a leitura de imagens também entram no grátis.',
                         en: 'Free (AI Studio): hundreds of requests per day on Flash and Flash-Lite; the exact quota shows in your account. No card. Voice (TTS) and image reading are free too.' };
@@ -4803,30 +4930,24 @@
     if (!valor) return { ok: false, pt: 'Cole a chave.', en: 'Paste the key.' };
     if (/\s/.test(valor)) return { ok: false, pt: 'A chave tem espaço ou quebra de linha no meio: copie de novo, inteira.', en: 'The key has a space or line break inside: copy it again, whole.' };
     if (valor.length < 20) return { ok: false, pt: 'Curta demais: parece que faltou um pedaço.', en: 'Too short: looks like part is missing.' };
-    if (pr && pr.prefixo && valor.indexOf(pr.prefixo) !== 0) return { ok: false, pt: 'Chave do ' + nomeProv(pr) + ' começa com “' + pr.prefixo + '”. Confira se copiou do site certo.', en: nomeProv(pr) + ' keys start with “' + pr.prefixo + '”. Check you copied from the right site.' };
+    /* Prefixo e so uma dica: os provedores mudam o formato (o Gemini passou de AIza para AQ.
+       em 2026). Se nao bater, avisa mas deixa salvar - quem decide e o teste no provedor. */
+    var prefs = prefixos(pr);
+    if (prefs.length && !prefs.some(function (x) { return valor.indexOf(x) === 0; })) {
+      return { ok: true, aviso: { pt: 'Chave do ' + nomeProv(pr) + ' costuma começar com “' + prefs.join('” ou “') + '”. Vou testar mesmo assim.',
+                                  en: nomeProv(pr) + ' keys usually start with “' + prefs.join('” or “') + '”. Testing anyway.' } };
+    }
     return { ok: true };
   }
+  function prefixos(pr) { if (!pr || !pr.prefixo) return []; return Array.isArray(pr.prefixo) ? pr.prefixo : [pr.prefixo]; }
+  function prefixoTxt(pr) { return prefixos(pr)[0] || ''; }
   function nomeProv(pr) { return typeof pr.nome === 'string' ? pr.nome : (pr.nome[Idioma.atual] || pr.nome.pt); }
-  /* "Falta permissao" nao e chave errada. O ElevenLabs, por exemplo, cria chaves
-     com permissoes escolhidas (so "Text to Speech"): o teste, que le a conta,
-     volta 401 "missing_permissions". A chave e valida - so nao pode ler a conta. */
-  function faltaPermissao(e) {
-    if (!e || (e.status !== 401 && e.status !== 403)) return false;
-    var txt = String(e.message || '');
-    try { txt += ' ' + JSON.stringify(e.corpo || ''); } catch (x) {}
-    return /missing_permission|insufficient_permission|permission|permiss/i.test(txt);
-  }
   function testarChave(prov, chave) {
     var pr = PROVEDORES[prov];
     if (pr.semChave) return Promise.resolve({ ok: true });
-    var teste = pr.testar ? pr.testar(chave).then(function () { return { ok: true }; })
-              : pr.listar ? pr.listar(chave).then(function (l) { return { ok: true, modelos: l }; })
-              : null;
-    if (!teste) return Promise.resolve({ ok: true, semTeste: true });
-    return teste.catch(function (e) {
-      if (faltaPermissao(e)) return { ok: true, semLerConta: true };
-      throw e;
-    });
+    if (pr.testar) return pr.testar(chave).then(function () { return { ok: true }; });
+    if (pr.listar) return pr.listar(chave).then(function (l) { return { ok: true, modelos: l }; });
+    return Promise.resolve({ ok: true, semTeste: true });
   }
 
   /* escolha por uso: texto continua sendo IA.provedor(); voz tem a sua */
@@ -4866,12 +4987,12 @@
         '<circle cx="204" cy="87" r="16" fill="none" stroke="#f59e0b" stroke-width="3"/>';
     } else if (tipo === 'copiar') {
       miolo = '<text x="24" y="50" font-size="11" fill="#94a3b8">' + esc(t('suaChave')) + '</text>' +
-        '<rect x="24" y="60" width="150" height="30" rx="7" fill="#0b1220" stroke="#334155"/><text x="34" y="80" font-size="12" font-family="monospace" fill="#e2e8f0">' + esc((pr.prefixo || 'sk-') + '••••••••') + '</text>' +
+        '<rect x="24" y="60" width="150" height="30" rx="7" fill="#0b1220" stroke="#334155"/><text x="34" y="80" font-size="12" font-family="monospace" fill="#e2e8f0">' + esc((prefixoTxt(pr) || 'sk-') + '••••••••') + '</text>' +
         '<rect x="182" y="60" width="34" height="30" rx="7" fill="' + cor + '"/><text x="199" y="81" font-size="15" text-anchor="middle" fill="#04121f">⎘</text>' +
         '<circle cx="199" cy="75" r="20" fill="none" stroke="#f59e0b" stroke-width="3"/><text x="120" y="120" font-size="11" text-anchor="middle" fill="#fbbf24">' + esc(t('umaVez')) + '</text>';
     } else if (tipo === 'colar') {
       miolo = '<text x="24" y="50" font-size="11" fill="#94a3b8">' + esc(nomeApp()) + ' → ' + esc(t('cofreChaves')) + '</text>' +
-        '<rect x="24" y="60" width="192" height="30" rx="7" fill="#0b1220" stroke="' + cor + '" stroke-width="2"/><text x="34" y="80" font-size="12" font-family="monospace" fill="#e2e8f0">' + esc((pr.prefixo || 'sk-') + '••••••••••••') + '</text>' +
+        '<rect x="24" y="60" width="192" height="30" rx="7" fill="#0b1220" stroke="' + cor + '" stroke-width="2"/><text x="34" y="80" font-size="12" font-family="monospace" fill="#e2e8f0">' + esc((prefixoTxt(pr) || 'sk-') + '••••••••••••') + '</text>' +
         '<rect x="24" y="100" width="192" height="28" rx="7" fill="' + cor + '"/><text x="120" y="118" font-size="12" font-weight="700" text-anchor="middle" fill="#04121f">' + esc(t('salvarTestar')) + '</text>';
     } else {
       miolo = '<text x="120" y="88" font-size="30" text-anchor="middle">⚙️</text>';
@@ -4945,22 +5066,8 @@
       }).join('   ');
       caixa.appendChild(el('p', { class: 'dgo-mini', texto: t('emUsoAgora') + ': ' + resumo }));
 
-      /* de relance: quais IAs ja tem chave salva - elas vem primeiro, com o selo */
-      function temChaveSalva(p) { return !PROVEDORES[p].semChave && !!IA.chave(p); }
-      var comChave = Object.keys(PROVEDORES).filter(temChaveSalva)
-        .sort(function (a, b) { return (PROVEDORES[a].ordem || 9) - (PROVEDORES[b].ordem || 9); });
-      var resumoChaves = el('p', { class: 'dgo-chaves-resumo' + (comChave.length ? ' dgo-ok' : '') });
-      if (comChave.length) {
-        resumoChaves.appendChild(d.createTextNode('✓ ' + t('comChaveSalva') + ' (' + comChave.length + '): '));
-        resumoChaves.appendChild(el('b', { texto: comChave.map(function (p) { return nomeProv(PROVEDORES[p]); }).join(', ') }));
-      } else resumoChaves.textContent = t('nenhumaChaveAinda');
-      caixa.appendChild(resumoChaves);
-
       var lista = Object.keys(PROVEDORES).filter(function (p) { return !filtro || (PROVEDORES[p].cap || []).indexOf(filtro) !== -1; })
-        .sort(function (a, b) {
-          var ca = temChaveSalva(a) ? 0 : 1, cb = temChaveSalva(b) ? 0 : 1;
-          return (ca - cb) || ((PROVEDORES[a].ordem || 9) - (PROVEDORES[b].ordem || 9));
-        });
+        .sort(function (a, b) { return (PROVEDORES[a].ordem || 9) - (PROVEDORES[b].ordem || 9); });
 
       lista.forEach(function (p) {
         var pr = PROVEDORES[p];
@@ -4970,9 +5077,7 @@
         var cab = el('button', { type: 'button', class: 'dgo-prov-cab' + (ehAberto ? ' dgo-on' : ''), 'aria-expanded': ehAberto ? 'true' : 'false',
           onclick: function () { aberto = ehAberto ? '' : p; reabrir(); } }, [
           el('span', { class: 'dgo-prov-nome' }, [d.createTextNode(nomeProv(pr) + ' ')].concat(selos(pr)).concat([
-            pr.semChave ? null : (tem
-              ? el('em', { class: 'dgo-selo dgo-selo-ok', texto: '✓ ' + t('chaveSalvaSelo') })
-              : el('em', { class: 'dgo-selo dgo-selo-fraco', texto: t('semChaveSelo') })),
+            tem ? el('em', { class: 'dgo-selo dgo-selo-ok', texto: '✓' }) : null,
             usos.length ? el('em', { class: 'dgo-selo', texto: t('emUso') + ' ' + usos.join(' ') }) : null
           ])),
           el('span', { class: 'dgo-mini', texto: ehAberto ? '▴' : '▾' })
@@ -5041,7 +5146,7 @@
             corpo.appendChild(cB);
           }
           var cK = campo(t('chave') + ' — ' + nomeProv(pr), { type: 'password', autocomplete: 'off', spellcheck: 'false', autocapitalize: 'none',
-            placeholder: IA.chave(p) ? '••••••••' : (pr.prefixo ? pr.prefixo + '…' : '') });
+            placeholder: IA.chave(p) ? '••••••••' : (prefixoTxt(pr) ? prefixoTxt(pr) + '…' : '') });
           cK._input.value = IA.chave(p);
           var olho = el('button', { type: 'button', class: 'dgo-olho', 'aria-label': t('mostrarChave'), texto: '👁', onclick: function () {
             cK._input.type = cK._input.type === 'password' ? 'text' : 'password'; } });
@@ -5065,6 +5170,7 @@
             var chk = chaveParece(p, valor);
             msg.innerHTML = '';
             if (!chk.ok && !(p === 'personalizado' && !valor)) { msg.appendChild(aviso(chk[Idioma.atual] || chk.pt, 'erro')); return; }
+            if (chk.aviso) msg.appendChild(aviso(chk.aviso[Idioma.atual] || chk.aviso.pt, 'info'));
             IA.definirChave(p, valor);
             if (cM) IA.definirModelo(p, cM._input.value.trim());
             if ((pr.cap || []).indexOf('texto') !== -1 && IA.temChave(p) && !IA.provedoresProntos().filter(function (x) { return x !== p; }).length) IA.definirProvedor(p);
@@ -5309,402 +5415,1462 @@
   };
 
   /* ------------------------------------------------------------------
-     19-D. ASSISTONE — o assistente de todos os apps
-     ------------------------------------------------------------------
-     Personagem redondo no canto de baixo, a direita (acima da barra de
-     baixo no celular). Ligado por padrao; liga e desliga em Configuracoes.
-     O que ele mostra vem do config de cada app (cfg.assistente):
-
-       imagem: 'ajuda-botao.png'                  // a arte do personagem
-       tela:   function () { return 'inicio'; }   // padrao: <body data-pagina="...">
-       telas:  { inicio: { titulo:{pt,en}, frase:{pt,en},
-                           atalhos:[ { rotulo:{pt,en}, acao: function|url, principal:true } ] } }
-       tour:   [ { seletor:'#busca', titulo:{pt,en}, texto:{pt,en} } ]
-       dicas:  { inicio: {pt,en} }                 // uma por tela, uma vez so
-       busca:  [ { termo:{pt,en}, sinonimos:['...'], destino: url|function, icone:'🎸' } ]
-       wizard: 'inicio'                            // id de um DGO.wizard.definir(...) do app
-       esconderCom: ['body.modo-palco']            // com isto visivel, o personagem some
-
-     O balao NAO entra no historico (o Voltar do celular continua levando
-     as telas). Some quando ha janela, menu ou tela cheia aberta.
+     19-E. O SEU APARELHO PODE USAR ISTO? (DGO.compat, 1.7.0)
+     Diretriz geral, seção "Compatibilidade do aparelho e do navegador".
+     Por que existe: a pessoa toca na câmera, nada acontece, e acha que o app quebrou.
+     Aqui o app sabe ANTES o que o aparelho tem e explica, em linguagem de gente, como liberar.
+       DGO.compat.verificar()                  -> Promise { camera, microfone, localizacao, notificacoes,
+                                                  espaco: { livreMB, usadoMB }, wakeLock, indexedDB, ... }
+                                                  cada item: 'ok' | 'bloqueado' | 'sem-suporte' | 'desconhecido'
+       DGO.compat.exigir('camera', { motivo }) -> Promise<boolean> (false = abriu o aviso "como liberar")
+       DGO.compat.navegador([ua])              -> { nome, versao, sistema, sistemaVersao, dentroDeApp, chave }
+       DGO.compat.essenciais()                 -> o que falta para o app rodar ([] = tudo certo)
+     Duas camadas: BLOQUEIO (tela cheia) só quando falta o essencial, decidido por recurso e nunca pela
+     versão; AVISO (faixa fechável) quando a versão é menor que a recomendada ou quando o site abriu
+     dentro de outro app (Instagram, Facebook, WhatsApp, LinkedIn, TikTok).
+     Regras: NUNCA pede permissão só para conferir; o nome do navegador só serve para escrever a
+     mensagem certa; escrito sem sintaxe nova, porque roda justamente no navegador velho.
      ------------------------------------------------------------------ */
-  var Assistente = {
-    el: null, bolha: null, botao: null, vista: null, _tour: null, _dicaT: null, _syncT: null, _res: [],
-
-    ativoNoApp: function () { return !!(cfg.assistente && cfg.assistente.ativo !== false); },
-    ligado: function () { return Assistente.ativoNoApp() && prefLer('aone:ligado', true) !== false; },
-    ligar: function (v) {
-      prefGravar('aone:ligado', !!v);
-      Assistente.fechar();
-      if (v) { Assistente.montar(); avisoRapido('✓ ' + t('aoneLigado'), 3000); }
-      else avisoRapido(t('aoneDesligado'), 5000);
-      Assistente.sincronizar();
-      d.dispatchEvent(new CustomEvent('dgo:assistente', { detail: { ligado: !!v } }));
-    },
-    tx: function (v) { if (!v) return ''; return typeof v === 'string' ? v : (v[Idioma.atual] || v.pt || ''); },
-    tela: function () {
-      var c = cfg.assistente || {};
-      try { if (typeof c.tela === 'function') return c.tela() || ''; } catch (e) {}
-      return (d.body && d.body.getAttribute('data-pagina')) || 'inicio';
-    },
-    imagem: function () { return (cfg.assistente && cfg.assistente.imagem) || 'ajuda-botao.png'; },
-    img: function (cls) {
-      var i = el('img', { src: Assistente.imagem(), alt: '', class: cls || '' });
-      i.onerror = function () { var s = el('span', { class: 'dgo-aone-glifo', texto: '?' }); if (i.parentNode) i.parentNode.replaceChild(s, i); };
-      return i;
-    },
-
-    /* ---- monta o personagem uma vez ---- */
-    montar: function () {
-      if (Assistente.el || !d.body) return;
-      Assistente.botao = el('button', { type: 'button', class: 'dgo-aone-bt', 'aria-haspopup': 'dialog', 'aria-expanded': 'false', title: 'AssistONE',
-        'aria-label': t('aoneRotulo'), onclick: function () { if (Assistente.vista) Assistente.fechar(); else Assistente.abrir(); } },
-        [Assistente.img()]);
-      Assistente.bolha = el('div', { class: 'dgo-aone-bolha dgo-oculto', role: 'dialog', 'aria-live': 'polite', 'aria-label': 'AssistONE' });
-      Assistente.el = el('div', { id: 'dgo-aone', 'data-dgo-ui': '1', class: 'dgo-oculto' }, [Assistente.bolha, Assistente.botao]);
-      d.body.appendChild(Assistente.el);
-      /* tocar fora fecha o balao; Esc tambem (e encerra o tour) */
-      d.addEventListener('pointerdown', function (e) {
-        if (!Assistente.vista || Assistente.el.contains(e.target)) return;
-        if (e.target.closest && e.target.closest('.dgo-aone-tour')) return;
-        Assistente.fechar();
-      }, true);
-      d.addEventListener('keydown', function (e) {
-        if (e.key !== 'Escape') return;
-        if (Assistente._tour) { e.stopPropagation(); Assistente.tourFim(); }
-        else if (Assistente.vista && !modalEl) Assistente.fechar();
-      }, true);
-      if (raiz.MutationObserver) {
-        new MutationObserver(function () {
-          if (Assistente._syncT) return;
-          Assistente._syncT = setTimeout(function () { Assistente._syncT = null; Assistente.sincronizar(); }, 150);
-        }).observe(d.body, { childList: true, subtree: true, attributes: true, attributeFilter: ['class', 'aberta', 'open', 'hidden'] });
-      }
-      Assistente.sincronizar();
-    },
-    escondido: function () {
-      if (modalEl) return true;
-      /* a lista propria do assistente; sem ela, vale a das telas cheias dos anuncios */
-      var sels = (cfg.assistente && cfg.assistente.esconderCom) || (cfg.anuncios && cfg.anuncios.esconderCom) || [];
-      for (var i = 0; i < sels.length; i++) {
-        var nos; try { nos = d.querySelectorAll(sels[i]); } catch (e) { continue; }
-        for (var j = 0; j < nos.length; j++) {
-          if (nos[j].getClientRects().length && raiz.getComputedStyle(nos[j]).visibility !== 'hidden') return true;
-        }
-      }
-      return false;
-    },
-    /* aparece so com o app livre: sem janela, menu ou tela cheia por cima */
-    sincronizar: function () {
-      if (!Assistente.el) return;
-      /* com o balao aberto ele nao some no meio de um comando (so uma janela do modulo o esconde) */
-      var mostrar = Assistente.ligado() && !Assistente._tour && (!Assistente.escondido() || (Assistente.vista && !modalEl));
-      Assistente.el.classList.toggle('dgo-oculto', !mostrar);
-      d.body.classList.toggle('dgo-aone-on', mostrar);
-      if (!mostrar && Assistente.vista) Assistente.fechar();
-    },
-    iniciar: function () {
-      if (!Assistente.ativoNoApp()) return;
-      Assistente.montar();
-      if (!Assistente.ligado()) return;
-      if (!prefLer('aone:ola', false)) {
-        setTimeout(function () {
-          if (Assistente.vista || Assistente.escondido() || !Assistente.ligado()) return;
-          prefGravar('aone:ola', true);
-          Assistente.abrir(true);
-        }, 1500);
-        return;
-      }
-      Assistente.dica();
-    },
-
-    /* ---- balao ---- */
-    mostrar: function (filhos, vista) {
-      if (!Assistente.el) Assistente.montar();
-      Assistente.vista = vista;
-      Assistente.bolha.innerHTML = '';
-      Assistente.bolha.appendChild(el('button', { type: 'button', class: 'dgo-aone-x', 'aria-label': t('fechar'), texto: '✕',
-        onclick: function () { Assistente.fechar(); } }));
-      filhos.forEach(function (f) { if (f) Assistente.bolha.appendChild(f); });
-      Assistente.bolha.classList.remove('dgo-oculto');
-      Assistente.el.classList.add('dgo-falando');
-      Assistente.botao.setAttribute('aria-expanded', 'true');
-    },
-    fechar: function () {
-      if (!Assistente.bolha) return;
-      clearTimeout(Assistente._dicaX);
-      Assistente.bolha.classList.add('dgo-oculto');
-      Assistente.bolha.innerHTML = '';
-      Assistente.vista = null;
-      Assistente.el.classList.remove('dgo-falando');
-      Assistente.botao.setAttribute('aria-expanded', 'false');
-    },
-    cabecalho: function (titulo) { return el('h4', {}, [Assistente.img(), d.createTextNode(titulo)]); },
-
-    /* o primeiro bloco e sempre a ajuda da tela onde a pessoa esta */
-    blocoTela: function () {
-      var telas = (cfg.assistente && cfg.assistente.telas) || {};
-      var x = telas[Assistente.tela()];
-      if (!x) return null;
-      /* a tela pode desenhar o proprio bloco (ex.: os comandos da cifra no modo celular) */
-      var proprio = null;
-      if (typeof x.montar === 'function') { try { proprio = x.montar(); } catch (e) { proprio = null; } }
-      var atalhos = el('div', { class: 'dgo-aone-atalhos' });
-      (x.atalhos || []).forEach(function (a) {
-        atalhos.appendChild(el('button', { type: 'button', class: a.principal ? 'dgo-on' : '', texto: Assistente.tx(a.rotulo),
-          onclick: function () { Assistente.fechar(); setTimeout(function () { Assistente.executar(a.acao); }, 60); } }));
+  var Compat = (function () {
+    var MINIMOS_PADRAO = { chrome: 100, edge: 100, firefox: 100, safari: 15.4, samsung: 18 };
+    var DENTRO = [[/Instagram/i, 'Instagram'], [/FBAN|FBAV|FB_IAB|FBIOS|FB4A/i, 'Facebook'], [/WhatsApp/i, 'WhatsApp'],
+                  [/LinkedInApp/i, 'LinkedIn'], [/musical_ly|TikTok|BytedanceWebview|trill_/i, 'TikTok']];
+    var NOMES = {   /* [pt, en, título pt, título en, ícone] */
+      camera: ['a câmera', 'the camera', 'Câmera', 'Camera', '📷'],
+      microfone: ['o microfone', 'the microphone', 'Microfone', 'Microphone', '🎤'],
+      localizacao: ['a localização', 'location', 'Localização', 'Location', '📍'],
+      notificacoes: ['as notificações', 'notifications', 'Notificações', 'Notifications', '🔔'],
+      som: ['o som', 'sound', 'Som', 'Sound', '🔊'],
+      vibracao: ['a vibração', 'vibration', 'Vibração', 'Vibration', '📳'],
+      wakeLock: ['manter a tela acesa', 'keeping the screen on', 'Tela acesa', 'Screen on', '💡'],
+      indexedDB: ['guardar dados no aparelho', 'storing data on the device', 'Guardar dados', 'Store data', '🗄️'],
+      armazenamento: ['guardar as suas preferências', 'saving your preferences', 'Preferências', 'Preferences', '💾'],
+      espaco: ['espaço livre', 'free space', 'Espaço livre', 'Free space', '📦'],
+      lerEmVoz: ['ler em voz alta', 'reading aloud', 'Ler em voz alta', 'Read aloud', '🗣️'],
+      ditado: ['falar em vez de digitar', 'speaking instead of typing', 'Ditado', 'Dictation', '🎙️']
+    };
+    var ESSENCIAIS = {
+      fetch: ['buscar informações na internet', 'fetching information from the internet'],
+      Promise: ['fazer várias coisas ao mesmo tempo', 'doing several things at once'],
+      indexedDB: ['guardar dados no aparelho', 'storing data on the device'],
+      css: ['desenhar as cores e os tamanhos da tela', 'drawing the screen colours and sizes'],
+      localStorage: ['guardar as suas preferências', 'saving your preferences']
+    };
+    function en() { return Idioma.atual === 'en'; }
+    function L(pt, en2) { return en() ? en2 : pt; }
+    function copiar(a, b) { var k; for (k in b) if (Object.prototype.hasOwnProperty.call(b, k)) a[k] = b[k]; return a; }
+    function num(s) { var m = /(\d+)(?:[._](\d+))?/.exec(String(s || '')); return m ? parseFloat(m[1] + '.' + (m[2] || '0')) : 0; }
+    function comPrazo(p, ms, padrao) {
+      return new Promise(function (ok) {
+        var feito = false, fim = function (v) { if (!feito) { feito = true; ok(v); } };
+        setTimeout(function () { fim(padrao); }, ms);
+        try { Promise.resolve(p).then(fim, function () { fim(padrao); }); } catch (e) { fim(padrao); }
       });
-      return el('div', { class: 'dgo-aone-aqui' }, [
-        el('div', { class: 'dgo-aone-t', texto: '📍 ' + t('aoneVoceEsta') + ' ' + Assistente.tx(x.titulo) }),
-        x.frase ? el('p', { texto: Assistente.tx(x.frase) }) : null,
-        proprio,
-        (x.atalhos && x.atalhos.length) ? atalhos : null
-      ]);
-    },
-    executar: function (acao) {
-      if (typeof acao === 'function') { try { acao(); } catch (e) {} return; }
-      if (typeof acao === 'string' && acao) {
-        if (acao.charAt(0) === '#') {
-          var alvo = $(acao);
-          if (alvo) { alvo.scrollIntoView({ behavior: 'smooth', block: 'center' }); Assistente.destacar(alvo); if (alvo.focus) try { alvo.focus({ preventScroll: true }); } catch (e) {} }
-          return;
-        }
-        raiz.location.href = acao;
+    }
+    function nomeDe(id, titulo) { var n = NOMES[id] || [id, id, id, id, '•']; return titulo ? (en() ? n[3] : n[2]) : (en() ? n[1] : n[0]); }
+    function texto(v) { return !v ? '' : typeof v === 'string' ? v : (v[Idioma.atual] || v.pt || v.en || ''); }
+
+    /* ---- qual navegador, sistema e se está dentro de outro app (só para escrever a mensagem certa) ---- */
+    function navegador(uaSimulado) {
+      var ua = String(uaSimulado || navigator.userAgent || ''), m;
+      var r = { nome: '', versao: 0, sistema: '', sistemaVersao: 0, dentroDeApp: '', chave: '', celular: false };
+      if ((m = /Android\s?([\d._]+)?/i.exec(ua))) { r.sistema = 'Android'; r.sistemaVersao = num(m[1]); r.celular = true; }
+      else if (/iPhone|iPad|iPod/i.test(ua)) { m = /OS (\d+[_.]\d+)/i.exec(ua); r.sistema = /iPad/i.test(ua) ? 'iPadOS' : 'iOS'; r.sistemaVersao = m ? num(m[1]) : 0; r.celular = true; }
+      else if (/Macintosh|Mac OS X/i.test(ua)) {
+        /* iPad recente se apresenta como Mac; só dá para saber pelo toque (e só no aparelho de verdade) */
+        if (!uaSimulado && navigator.maxTouchPoints > 1) { r.sistema = 'iPadOS'; r.sistemaVersao = num((/Version\/([\d.]+)/.exec(ua) || [])[1]); r.celular = true; }
+        else { r.sistema = 'macOS'; r.sistemaVersao = num((/Mac OS X ([\d_.]+)/.exec(ua) || [])[1]); }
       }
-    },
-    destacar: function (no) {
-      no.classList.add('dgo-aone-achado');
-      setTimeout(function () { no.classList.remove('dgo-aone-achado'); }, 1600);
-    },
+      else if ((m = /Windows NT ([\d.]+)/.exec(ua))) { r.sistema = 'Windows'; r.sistemaVersao = num(m[1]); }
+      else if (/CrOS/.test(ua)) r.sistema = 'ChromeOS';
+      else if (/Linux/.test(ua)) r.sistema = 'Linux';
+      var ios = r.sistema === 'iOS' || r.sistema === 'iPadOS';
+      if ((m = /SamsungBrowser\/([\d.]+)/.exec(ua))) { r.nome = 'Samsung Internet'; r.chave = 'samsung'; }
+      else if ((m = /EdgiOS\/([\d.]+)/.exec(ua)) || (m = /Edg(?:e|A)?\/([\d.]+)/.exec(ua))) { r.nome = 'Edge'; r.chave = 'edge'; }
+      else if ((m = /CriOS\/([\d.]+)/.exec(ua))) { r.nome = 'Chrome'; r.chave = 'chrome'; }
+      else if ((m = /FxiOS\/([\d.]+)/.exec(ua)) || (m = /Firefox\/([\d.]+)/.exec(ua))) { r.nome = 'Firefox'; r.chave = 'firefox'; }
+      else if (/OPR\//.test(ua) && (m = /Chrome\/([\d.]+)/.exec(ua))) { r.nome = 'Opera'; r.chave = 'chrome'; }
+      else if ((m = /Chrome\/([\d.]+)/.exec(ua))) { r.nome = /; wv\)/.test(ua) ? 'WebView' : 'Chrome'; r.chave = 'chrome'; }
+      else if ((m = /Version\/([\d.]+).*Safari/.exec(ua))) { r.nome = 'Safari'; r.chave = 'safari'; }
+      else if (ios) { r.nome = 'Safari'; r.chave = 'safari'; }
+      r.versao = m ? num(m[1]) : 0;
+      /* no iPhone e no iPad todo navegador usa o motor do Safari: o mínimo que vale é o do Safari, pela versão do sistema */
+      if (ios) { r.chave = 'safari'; r.motorVersao = r.sistemaVersao || r.versao; if (r.nome === 'Safari') r.versao = r.motorVersao; }
+      else r.motorVersao = r.versao;
+      for (var i = 0; i < DENTRO.length; i++) if (DENTRO[i][0].test(ua)) { r.dentroDeApp = DENTRO[i][1]; break; }
+      return r;
+    }
+    function ambiente(nav) { nav = nav || navegador(); return nav.sistema === 'Android' ? 'android' : (nav.sistema === 'iOS' || nav.sistema === 'iPadOS') ? 'iphone' : 'computador'; }
 
-    abrir: function (primeira) {
-      var c = cfg.assistente || {};
-      var wid = c.wizard && Wizard.def(c.wizard) ? c.wizard : '';
-      var aqui = Assistente.blocoTela();
-      var ops = el('div', { class: 'dgo-aone-ops' });
-      function op(icone, titulo, sub, acao, principal) {
-        ops.appendChild(el('button', { type: 'button', class: principal ? 'dgo-on' : '', onclick: acao }, [
-          el('span', { texto: icone }),
-          el('span', {}, [d.createTextNode(titulo), sub ? el('small', { texto: sub }) : null])
-        ]));
+    /* mínimos recomendados: padrão do módulo < cfg.compat.minimos do app < comportamento global
+       "compat.minimos" publicado pelo RootifyONE (o Controle dos apps manda em todos) */
+    function minimos() {
+      var m = copiar({}, MINIMOS_PADRAO), pub = null;
+      copiar(m, (cfg.compat && cfg.compat.minimos) || {});
+      try { pub = Central.valor('compat.minimos', null); } catch (e) {}
+      if (typeof pub === 'string') { try { pub = JSON.parse(pub); } catch (e) { pub = null; } }
+      if (pub && typeof pub === 'object') for (var k in pub) { var n = parseFloat(pub[k]); if (n > 0) m[k] = n; }
+      return m;
+    }
+    function desatualizado(nav) {
+      nav = nav || navegador();
+      var min = minimos()[nav.chave];
+      return (min && nav.motorVersao && nav.motorVersao < min) ? { minimo: min, nav: nav } : null;
+    }
+    function rotuloNav(nav) { return (nav.nome || L('navegador', 'browser')) + (nav.versao ? ' ' + nav.versao : '') + (nav.sistema ? ' · ' + nav.sistema + (nav.sistemaVersao ? ' ' + nav.sistemaVersao : '') : ''); }
+
+    /* ---- camada 1: sem isto o app não roda (decidido por recurso, nunca pela versão) ---- */
+    /* só o que impede o app de rodar bloqueia a tela. Guardar dados (IndexedDB/localStorage) NÃO bloqueia:
+       some na aba anônima de alguns navegadores e com cookies bloqueados, e o app ainda abre (só não guarda) */
+    function essenciais() {
+      var falta = [], css = false;
+      if (typeof raiz.fetch !== 'function') falta.push('fetch');
+      if (typeof raiz.Promise !== 'function') falta.push('Promise');
+      try { css = !!(raiz.CSS && raiz.CSS.supports && raiz.CSS.supports('--dgo-teste', '0')); } catch (e) {}
+      if (!css) falta.push('css');
+      return falta;
+    }
+    function semGuardar() {
+      var falta = [], idb = null;
+      try { idb = raiz.indexedDB; } catch (e) {}
+      if (!idb) falta.push('indexedDB');
+      try { raiz.localStorage.setItem('dgo:compat:teste', '1'); raiz.localStorage.removeItem('dgo:compat:teste'); } catch (e) { falta.push('localStorage'); }
+      return falta;
+    }
+
+    /* ---- passo a passo para leigo, por ambiente ---- */
+    function passosAtualizar(amb, nav) {
+      if (amb === 'android') return nav && nav.chave === 'samsung'
+        ? [L('Abra a Galaxy Store (ou a Play Store).', 'Open the Galaxy Store (or the Play Store).'), L('Procure "Samsung Internet" e toque em Atualizar.', 'Search for "Samsung Internet" and tap Update.'), L('Se não der, instale o Google Chrome pela Play Store e abra este endereço nele.', 'If that does not work, install Google Chrome from the Play Store and open this address in it.')]
+        : [L('Abra a Play Store.', 'Open the Play Store.'), L('Procure "Chrome" e toque em Atualizar (ou Instalar).', 'Search for "Chrome" and tap Update (or Install).'), L('Abra este endereço no Chrome.', 'Open this address in Chrome.')];
+      if (amb === 'iphone') return [L('Abra Ajustes → Geral → Atualização de Software e instale a mais nova.', 'Open Settings → General → Software Update and install the newest one.'),
+        L('Depois, abra este endereço no Safari.', 'Then open this address in Safari.'), L('iPhone que não atualiza mais: use outro aparelho ou um computador.', 'iPhone that no longer updates: use another device or a computer.')];
+      return [L('Chrome: ⋮ (três pontinhos) → Ajuda → Sobre o Google Chrome. Ele atualiza sozinho; depois toque em Reiniciar.', 'Chrome: ⋮ (three dots) → Help → About Google Chrome. It updates by itself; then click Relaunch.'),
+        L('Edge: ··· → Ajuda e comentários → Sobre o Microsoft Edge. Firefox: ☰ → Ajuda → Sobre o Firefox.', 'Edge: ··· → Help and feedback → About Microsoft Edge. Firefox: ☰ → Help → About Firefox.'),
+        L('Sem nenhum desses? Instale o Chrome (google.com/chrome), o Edge ou o Firefox e abra este endereço nele.', 'None of these? Install Chrome (google.com/chrome), Edge or Firefox and open this address in it.')];
+    }
+    function passosSairDoApp(appNome, amb) {
+      var p = [L('Toque nos ⋯ (três pontinhos) ou no ícone de compartilhar, no canto de cima ou de baixo.', 'Tap the ⋯ (three dots) or the share icon, in the top or bottom corner.'),
+        amb === 'iphone' ? L('Escolha "Abrir no Safari" (ou "Abrir no navegador").', 'Choose "Open in Safari" (or "Open in browser").')
+                         : L('Escolha "Abrir no Chrome" (ou "Abrir no navegador").', 'Choose "Open in Chrome" (or "Open in browser").'),
+        L('Não achou? Toque em "Copiar endereço" aqui embaixo e cole no Chrome ou no Safari.', 'Cannot find it? Tap "Copy address" below and paste it in Chrome or Safari.')];
+      if (appNome === 'WhatsApp') p[0] = L('No WhatsApp, toque nos ⋯ (ou no ícone da bússola), no canto da tela.', 'In WhatsApp, tap the ⋯ (or the compass icon) in the corner of the screen.');
+      return p;
+    }
+    function passosLiberar(id, amb) {
+      var R = nomeDe(id, true);
+      if (amb === 'android') return [L('Toque no ícone à esquerda do endereço, lá em cima (cadeado 🔒 ou ajustes).', 'Tap the icon to the left of the address at the top (padlock 🔒 or settings).'),
+        L('Toque em Permissões (ou "Configurações do site").', 'Tap Permissions (or "Site settings").'), L('Em ' + R + ', escolha Permitir.', 'Under ' + R + ', choose Allow.'),
+        L('Volte e toque de novo no botão. Ainda bloqueado? Configurações do celular → Apps → Chrome → Permissões → ' + R + ' → Permitir.', 'Go back and tap the button again. Still blocked? Phone Settings → Apps → Chrome → Permissions → ' + R + ' → Allow.')];
+      if (amb === 'iphone') {
+        if (id === 'notificacoes') return [L('No iPhone, os avisos só chegam com o app na Tela de Início: Safari → Compartilhar ⬆ → Adicionar à Tela de Início.', 'On iPhone, notifications only arrive with the app on the Home Screen: Safari → Share ⬆ → Add to Home Screen.'),
+          L('Abra o app pelo ícone novo e toque de novo em ativar os avisos.', 'Open the app from the new icon and tap to turn on notifications again.'), L('Se continuar bloqueado: Ajustes → Notificações → o app → Permitir.', 'If still blocked: Settings → Notifications → the app → Allow.')];
+        if (id === 'localizacao') return [L('Abra Ajustes → Privacidade e Segurança → Serviços de Localização e deixe ligado.', 'Open Settings → Privacy & Security → Location Services and keep it on.'),
+          L('Na mesma tela, toque em Safari (Sites do Safari) → "Ao Usar o App".', 'On the same screen, tap Safari (Safari Websites) → "While Using the App".'), L('Volte e recarregue a página.', 'Go back and reload the page.')];
+        return [L('Toque em aA (ou no ícone à esquerda do endereço).', 'Tap aA (or the icon to the left of the address).'), L('Toque em Ajustes do Site.', 'Tap Website Settings.'),
+          L('Em ' + R + ', escolha Permitir.', 'Under ' + R + ', choose Allow.'),
+          L('Não resolveu? Ajustes do iPhone → Apps → Safari → ' + R + ' → Permitir. Depois recarregue a página.', 'Did not work? iPhone Settings → Apps → Safari → ' + R + ' → Allow. Then reload the page.')];
       }
-      if (wid) op('🚀', Wizard.feito(wid) ? t('aoneRever') : t('aoneComecar'), t('aonePoucosMinutos'), function () {
-        Assistente.fechar(); Wizard.abrir(wid, Wizard.feito(wid) ? 0 : undefined);
-      }, !aqui);
-      if (c.tour && c.tour.length) op('🧭', t('aoneTour'), t('aoneTourSub'), function () { Assistente.fechar(); Assistente.tour(0); });
-      op('🔎', t('aoneProcurar'), t('aoneProcurarSub'), function () { Assistente.procurar(); });
-      op('💤', t('aoneAgoraNao'), '', function () { Assistente.fechar(); });
-      Assistente.mostrar([
-        Assistente.cabecalho(primeira ? t('aoneOla') : t('aoneComoAjudo')),
-        el('p', { texto: primeira ? t('aoneApresenta').replace('{app}', nomeApp()) : t('aoneVejaTela') }),
-        aqui, ops,
-        el('div', { class: 'dgo-aone-linha' }, [el('button', { type: 'button', class: 'dgo-aone-link', texto: t('aoneDesligar'),
-          onclick: function () { Assistente.ligar(false); } })])
-      ], 'menu');
-      setTimeout(function () { var f = $('.dgo-aone-aqui button, .dgo-aone-ops button', Assistente.bolha); if (f && !Plataforma.ehCelular()) try { f.focus(); } catch (e) {} }, 50);
-    },
-
-    /* ---- busca dentro do balao: o indice do config + os titulos da pagina ---- */
-    normal: function (s) {
-      s = String(s || '');
-      try { s = s.normalize('NFD').replace(/[̀-ͯ]/g, ''); } catch (e) {}
-      return s.toLowerCase();
-    },
-    indice: function () {
-      var lista = [];
-      ((cfg.assistente && cfg.assistente.busca) || cfg.busca || []).forEach(function (b) {
-        var termo = Assistente.tx(b.termo);
-        var sin = (b.sinonimos || []).map(function (s) { return Assistente.tx(s); }).join(' ');
-        lista.push({ titulo: termo, icone: b.icone || '›', sub: Assistente.tx(b.descricao), chave: Assistente.normal(termo + ' ' + sin + ' ' + (b.termo && b.termo.pt || '') + ' ' + (b.termo && b.termo.en || '')), acao: b.destino });
-      });
-      Array.prototype.forEach.call(d.querySelectorAll('main h1, main h2, main h3, [data-busca]'), function (h) {
-        if (h.closest && h.closest('[data-dgo-ui]')) return;
-        var txt = (h.getAttribute('data-busca') || h.textContent || '').trim();
-        if (!txt || txt.length > 80) return;
-        lista.push({ titulo: txt, icone: '§', sub: '', chave: Assistente.normal(txt), acao: function () {
-          h.scrollIntoView({ behavior: 'smooth', block: 'start' }); Assistente.destacar(h); } });
-      });
-      return lista;
-    },
-    achar: function (q) {
-      var partes = Assistente.normal(q).split(/\s+/).filter(Boolean);
-      if (!partes.length) return [];
-      return Assistente.indice().filter(function (i) {
-        return partes.every(function (p) { return i.chave.indexOf(p) !== -1; });
-      }).slice(0, 8);
-    },
-    parecidos: function (q) {
-      var palavras = {}, saida = [];
-      Assistente.indice().forEach(function (i) {
-        (i.titulo + ' ' + i.sub).split(/[^A-Za-z0-9À-ɏ]+/).forEach(function (w) { if (w.length >= 3) palavras[Assistente.normal(w)] = w; });
-      });
-      Assistente.normal(q).split(/\s+/).filter(Boolean).forEach(function (p) {
-        var lim = p.length <= 4 ? 1 : p.length <= 7 ? 2 : 3;
-        Object.keys(palavras).map(function (w) { return [w, distancia(p, w.slice(0, Math.max(p.length, Math.min(w.length, p.length + 2))))]; })
-          .filter(function (x) { return x[1] <= lim; }).sort(function (a, b) { return a[1] - b[1]; }).slice(0, 3)
-          .forEach(function (x) { if (saida.indexOf(palavras[x[0]]) === -1) saida.push(palavras[x[0]]); });
-      });
-      return saida.slice(0, 4);
-    },
-    procurar: function (pre) {
-      var caixa = el('input', { type: 'search', autocomplete: 'off', placeholder: t('aoneExemploBusca'), 'aria-label': t('aoneProcurar') });
-      if (pre) caixa.value = pre;
-      var res = el('div', { class: 'dgo-aone-res', 'aria-live': 'polite' });
-      var temporizador = null;
-      function desenhar() {
-        var q = caixa.value.trim();
-        res.innerHTML = '';
-        if (!q) { res.appendChild(el('p', { class: 'dgo-mini', texto: t('aoneOndeProcuro') })); return; }
-        Assistente._res = Assistente.achar(q);
-        if (Assistente._res.length) {
-          var ops = el('div', { class: 'dgo-aone-ops' });
-          Assistente._res.forEach(function (r) {
-            ops.appendChild(el('button', { type: 'button', onclick: function () { Assistente.fechar(); Assistente.executar(r.acao); } }, [
-              el('span', { texto: r.icone }), el('span', {}, [d.createTextNode(r.titulo), r.sub ? el('small', { texto: r.sub }) : null])
-            ]));
-          });
-          res.appendChild(ops);
-        } else {
-          var sug = Assistente.parecidos(q);
-          res.appendChild(el('p', { texto: t('aoneNadaAchado') + ' “' + q + '”. ' + (sug.length ? t('aoneQuisDizer') : t('aoneTenteOutra')) }));
-          if (sug.length) {
-            var s = el('div', { class: 'dgo-aone-sug' });
-            sug.forEach(function (w) { s.appendChild(el('button', { type: 'button', texto: w, onclick: function () { caixa.value = w; desenhar(); caixa.focus(); } })); });
-            res.appendChild(s);
-          }
-        }
-      }
-      caixa.addEventListener('input', function () { clearTimeout(temporizador); temporizador = setTimeout(desenhar, 120); });
-      caixa.addEventListener('keydown', function (e) {
-        if (e.key === 'Enter' && Assistente._res[0]) { e.preventDefault(); var r = Assistente._res[0]; Assistente.fechar(); Assistente.executar(r.acao); }
-      });
-      Assistente.mostrar([Assistente.cabecalho(t('aoneOQueProcura')), caixa, res], 'busca');
-      desenhar();
-      setTimeout(function () { try { caixa.focus(); } catch (e) {} }, 60);
-    },
-
-    /* ---- tour rapido: destaca cada parte da tela, com Proximo e Sair ---- */
-    passosTour: function () {
-      var c = cfg.assistente || {};
-      return (c.tour || []).concat([{ seletor: '#dgo-aone .dgo-aone-bt', titulo: 'AssistONE', texto: { pt: t('aoneSouEu'), en: t('aoneSouEu') } }]);
-    },
-    visivel: function (sel) {
-      var e2 = null; try { e2 = $(sel); } catch (x) {}
-      if (!e2) return null;
-      var r = e2.getBoundingClientRect();
-      return (r.width > 0 && r.height > 0 && raiz.getComputedStyle(e2).visibility !== 'hidden') ? e2 : null;
-    },
-    tour: function (i) {
-      var T = Assistente.passosTour();
-      i = i || 0;
-      Assistente.tourFim(true);
-      Assistente._tour = true; Assistente.sincronizar();
-      /* o proprio personagem precisa estar visivel para ser o ultimo passo */
-      if (Assistente.el) Assistente.el.classList.remove('dgo-oculto');
-      while (i < T.length && !Assistente.visivel(T[i].seletor)) i++;
-      if (i >= T.length) { prefGravar('aone:tour', true); Assistente.tourFim(); avisoRapido('✓ ' + t('aoneFimTour'), 3500); return; }
-      var alvo = Assistente.visivel(T[i].seletor);
-      alvo.scrollIntoView({ block: 'nearest' });
-      var r = alvo.getBoundingClientRect(), pad = 6;
-      var foco = el('div', { class: 'dgo-aone-foco', 'data-dgo-ui': '1', style: {
-        left: (r.left - pad) + 'px', top: (r.top - pad) + 'px', width: (r.width + pad * 2) + 'px', height: (r.height + pad * 2) + 'px' } });
-      var ultimo = i === T.length - 1;
-      var caixa = el('div', { class: 'dgo-aone-tour', 'data-dgo-ui': '1', role: 'dialog', 'aria-label': Assistente.tx(T[i].titulo) }, [
-        Assistente.cabecalho(Assistente.tx(T[i].titulo)),
-        el('p', { texto: Assistente.tx(T[i].texto) }),
-        el('div', { class: 'dgo-aone-linha' }, [
-          el('span', { class: 'dgo-mini', texto: (i + 1) + ' / ' + T.length }),
-          el('span', { style: { display: 'flex', gap: '6px' } }, [
-            el('button', { type: 'button', class: 'dgo-b dgo-b2', texto: t('aoneSair'), onclick: function () { Assistente.tourFim(); } }),
-            el('button', { type: 'button', class: 'dgo-b', texto: ultimo ? t('aoneConcluir') : (t('aoneProximo') + ' ›'), onclick: function () { Assistente.tour(i + 1); } })
-          ])
-        ])
-      ]);
-      d.body.appendChild(foco); d.body.appendChild(caixa);
-      var W = caixa.offsetWidth, H = caixa.offsetHeight, vw = raiz.innerWidth, vh = raiz.innerHeight;
-      var topo = r.bottom + 14; if (topo + H > vh - 8) topo = Math.max(8, r.top - H - 14);
-      var esq = Math.min(Math.max(8, r.left + r.width / 2 - W / 2), vw - W - 8);
-      caixa.style.top = topo + 'px'; caixa.style.left = esq + 'px';
-      Assistente._tourEls = [foco, caixa];
-      setTimeout(function () { var b = caixa.querySelector('.dgo-b:not(.dgo-b2)'); if (b) try { b.focus(); } catch (e) {} }, 40);
-    },
-    tourFim: function (soLimpar) {
-      (Assistente._tourEls || []).forEach(function (x) { if (x.parentNode) x.parentNode.removeChild(x); });
-      Assistente._tourEls = null;
-      if (soLimpar) return;
-      Assistente._tour = false;
-      Assistente.sincronizar();
-    },
-
-    /* ---- dica curta da tela, uma vez so, alguns segundos depois de entrar ---- */
-    dica: function () {
-      var c = cfg.assistente || {}, tela = Assistente.tela();
-      var txt = c.dicas && Assistente.tx(c.dicas[tela]);
-      var vistas = prefLer('aone:dicas', {}) || {};
-      if (!txt || vistas[tela] || Assistente.vista) return;
-      clearTimeout(Assistente._dicaT);
-      Assistente._dicaT = setTimeout(function () {
-        if (Assistente.vista || Assistente.escondido() || !Assistente.ligado()) return;
-        vistas[tela] = 1; prefGravar('aone:dicas', vistas);
-        Assistente.mostrar([
-          Assistente.cabecalho('AssistONE'),
-          el('p', { texto: txt }),
-          el('div', { class: 'dgo-aone-linha' }, [
-            el('button', { type: 'button', class: 'dgo-b dgo-b2', style: { width: 'auto', minHeight: '36px', padding: '8px 14px' }, texto: t('aoneEntendi'), onclick: function () { Assistente.fechar(); } }),
-            el('button', { type: 'button', class: 'dgo-b dgo-b2', style: { width: 'auto', minHeight: '36px', padding: '8px 14px' }, texto: t('aoneMaisAjuda'), onclick: function () { Assistente.abrir(); } })
-          ])
-        ], 'dica');
-        Assistente._dicaX = setTimeout(function () { if (Assistente.vista === 'dica') Assistente.fechar(); }, 12000);
-      }, 2200);
-    },
-    recomecar: function () {
-      prefGravar('aone:ola', false); prefGravar('aone:dicas', {}); prefGravar('aone:tour', false);
-      var c = cfg.assistente || {};
-      if (c.wizard) Wizard.reiniciar(c.wizard);
-      avisoRapido('✓ ' + t('aoneRecomecou'), 3500);
-    },
-
-    /* ---- cartao em Configuracoes ---- */
-    cartaoConfig: function (reabrir) {
-      var on = Assistente.ligado();
+      return [L('Clique no ícone à esquerda do endereço (cadeado 🔒 ou ajustes).', 'Click the icon to the left of the address (padlock 🔒 or settings).'),
+        L('Em ' + R + ', escolha Permitir.', 'Under ' + R + ', choose Allow.'), L('Recarregue a página (tecla F5).', 'Reload the page (F5 key).'),
+        L('Ainda bloqueado? Windows: Configurações → Privacidade e segurança → ' + R + ' → ligado para o navegador. Mac: Ajustes do Sistema → Privacidade e Segurança → ' + R + ' → ligue o navegador.',
+          'Still blocked? Windows: Settings → Privacy & security → ' + R + ' → on for the browser. Mac: System Settings → Privacy & Security → ' + R + ' → turn the browser on.')];
+    }
+    var AMBIENTES = [['android', ['Android (Chrome, Samsung)', 'Android (Chrome, Samsung)']], ['iphone', ['iPhone e iPad (Safari)', 'iPhone and iPad (Safari)']], ['computador', ['Computador (Chrome, Edge, Firefox)', 'Computer (Chrome, Edge, Firefox)']]];
+    /* o ambiente desta pessoa aberto primeiro; os outros recolhidos (alguém pode estar ajudando por telefone) */
+    function blocoPassos(fn, amb, estilo) {
       var caixa = el('div');
-      var toggle = el('button', { type: 'button', class: 'dgo-aone-toggle' + (on ? ' dgo-on' : ''), role: 'switch', 'aria-checked': on ? 'true' : 'false',
-        onclick: function () { Assistente.ligar(!Assistente.ligado()); if (reabrir) reabrir(); } }, [
-        Assistente.img(), el('span', { texto: 'ASSIST ONE ' + (on ? t('aoneAtivado') : t('aoneDesativado')) }),
-        el('span', { class: 'dgo-aone-sw', 'aria-hidden': 'true' })
-      ]);
-      caixa.appendChild(toggle);
-      caixa.appendChild(el('div', { class: 'dgo-mini', texto: t('aoneExplica') }));
-      var linha = el('div', { class: 'dgo-linha' });
-      linha.appendChild(el('button', { class: 'dgo-b dgo-b2', type: 'button', texto: '💬 ' + t('aoneAbrir'), onclick: function () {
-        if (!Assistente.ligado()) Assistente.ligar(true);
-        fecharModal(); setTimeout(function () { Assistente.abrir(); }, 200);
-      } }));
-      linha.appendChild(el('button', { class: 'dgo-b dgo-b2', type: 'button', texto: '🔄 ' + t('aoneRecomecar'), onclick: function () { Assistente.recomecar(); } }));
-      caixa.appendChild(linha);
+      var ordem = AMBIENTES.slice().sort(function (a, b) { return (a[0] === amb ? 0 : 1) - (b[0] === amb ? 0 : 1); });
+      ordem.forEach(function (a) {
+        var ol = el('ol', estilo ? { style: estilo } : null, fn(a[0]).map(function (p) { return el('li', { texto: p }); }));
+        var det = el('details', a[0] === amb ? { open: '' } : null, [el('summary', { texto: (a[0] === amb ? '👉 ' : '') + (en() ? a[1][1] : a[1][0]) }), ol]);
+        caixa.appendChild(det);
+      });
       return caixa;
     }
-  };
-
-  /* distancia de letras entre duas palavras (para o "voce quis dizer") */
-  function distancia(a, b) {
-    if (a === b) return 0; if (!a.length) return b.length; if (!b.length) return a.length;
-    var p = [], i, j; for (j = 0; j <= b.length; j++) p[j] = j;
-    for (i = 1; i <= a.length; i++) {
-      var c = [i];
-      for (j = 1; j <= b.length; j++) c[j] = Math.min(p[j] + 1, c[j - 1] + 1, p[j - 1] + (a[i - 1] === b[j - 1] ? 0 : 1));
-      p = c;
+    function botaoCopiar(estilo) {
+      var b = el('button', { type: 'button', class: estilo || '', texto: L('Copiar endereço', 'Copy address') });
+      b.addEventListener('click', function () {
+        var u = raiz.location.href, feito = function () { b.textContent = L('✓ Copiado', '✓ Copied'); };
+        try { if (navigator.clipboard && navigator.clipboard.writeText) { navigator.clipboard.writeText(u).then(feito, function () { raiz.prompt(L('Copie o endereço:', 'Copy the address:'), u); }); return; } } catch (e) {}
+        raiz.prompt(L('Copie o endereço:', 'Copy the address:'), u);
+      });
+      return b;
     }
-    return p[b.length];
-  }
+
+    /* ---- tela cheia: "Este navegador é antigo demais" (só DOM, sem Promise nem fetch) ---- */
+    function mostrarBloqueio(falta) {
+      if (d.getElementById('dgo-compat-bloqueio')) return;
+      var nav = navegador(), amb = ambiente(nav), soDados = falta.length === 1 && falta[0] === 'localStorage';
+      var cx = 'max-width:40rem;margin:0 auto;padding:1.4rem 1.1rem 3rem;font:16px/1.55 system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;color:#0f172a;';
+      var t1 = soDados ? L('O navegador está bloqueando este site', 'The browser is blocking this site') : L('Este navegador é antigo demais', 'This browser is too old');
+      var corpo = el('div', { style: { cssText: cx } }, [
+        el('h1', { style: { cssText: 'font-size:1.6rem;margin:0 0 .6rem;line-height:1.25;' }, texto: '⚠️ ' + t1 }),
+        el('p', { texto: soDados
+          ? L('O ' + nomeApp() + ' precisa guardar as suas preferências neste aparelho, e o navegador não está deixando (cookies e dados de sites bloqueados, ou janela anônima).',
+              nomeApp() + ' needs to save your preferences on this device, and the browser is not allowing it (cookies and site data blocked, or a private window).')
+          : L('O ' + nomeApp() + ' precisa de recursos que este navegador não tem. Nada foi perdido: é só abrir num navegador atualizado.',
+              nomeApp() + ' needs features this browser does not have. Nothing was lost: just open it in an up-to-date browser.') }),
+        el('p', { style: { cssText: 'background:#f1f5f9;border-radius:10px;padding:.6rem .8rem;' }, texto: L('Detectado: ', 'Detected: ') + rotuloNav(nav) + (nav.dentroDeApp ? L(' (dentro do ', ' (inside ') + nav.dentroDeApp + ')' : '') }),
+        el('p', { texto: L('O que falta:', 'What is missing:') }),
+        el('ul', {}, falta.map(function (f) { var n = ESSENCIAIS[f] || [f, f]; return el('li', { texto: (en() ? n[1] : n[0]) + ' (' + f + ')' }); })),
+        el('h2', { style: { cssText: 'font-size:1.15rem;margin:1.2rem 0 .3rem;' }, texto: L('Como resolver', 'How to fix it') })
+      ]);
+      if (nav.dentroDeApp) corpo.appendChild(el('p', { style: { cssText: 'font-weight:700;' }, texto: L('Primeiro: você abriu pelo ' + nav.dentroDeApp + '. Abra no navegador (Chrome ou Safari):', 'First: you opened it from ' + nav.dentroDeApp + '. Open it in the browser (Chrome or Safari):') }));
+      if (nav.dentroDeApp) corpo.appendChild(el('ol', {}, passosSairDoApp(nav.dentroDeApp, amb).map(function (p) { return el('li', { texto: p }); })));
+      if (soDados) corpo.appendChild(el('ol', {}, [
+        el('li', { texto: L('Se for janela anônima, abra numa janela normal.', 'If this is a private window, open a normal one.') }),
+        el('li', { texto: L('Chrome: ⋮ → Configurações → Privacidade e segurança → Cookies e dados de sites → permitir para este site.', 'Chrome: ⋮ → Settings → Privacy and security → Cookies and site data → allow for this site.') }),
+        el('li', { texto: L('iPhone: Ajustes → Apps → Safari → desligue "Bloquear Todos os Cookies".', 'iPhone: Settings → Apps → Safari → turn off "Block All Cookies".') }),
+        el('li', { texto: L('Depois, recarregue a página.', 'Then reload the page.') })]));
+      else corpo.appendChild(blocoPassos(function (a) { return passosAtualizar(a, nav); }, amb));
+      var mn = minimos();
+      corpo.appendChild(el('p', { style: { cssText: 'margin-top:1rem;color:#334155;' }, texto: L('Funciona em: Chrome, Edge ou Firefox ' + mn.chrome + ' ou mais novo; Safari ' + mn.safari + ' ou mais novo (iPhone com iOS ' + mn.safari + '+); Samsung Internet ' + mn.samsung + ' ou mais novo.',
+        'Works on: Chrome, Edge or Firefox ' + mn.chrome + ' or newer; Safari ' + mn.safari + ' or newer (iPhone with iOS ' + mn.safari + '+); Samsung Internet ' + mn.samsung + ' or newer.') }));
+      corpo.appendChild(el('p', { style: { cssText: 'word-break:break-all;color:#334155;' }, texto: L('Endereço: ', 'Address: ') + raiz.location.href }));
+      var tela = el('div', { id: 'dgo-compat-bloqueio', role: 'alertdialog', 'aria-modal': 'true', 'aria-label': t1, 'data-dgo-ui': '1',
+        style: { cssText: 'position:fixed;top:0;left:0;right:0;bottom:0;z-index:2147483647;background:#ffffff;overflow:auto;-webkit-overflow-scrolling:touch;' } }, [corpo]);
+      (d.body || d.documentElement).appendChild(tela);
+      try { d.documentElement.style.overflow = 'hidden'; } catch (e) {}
+    }
+
+    /* ---- camada 2: faixa fechável (versão antiga ou dentro de outro app) ---- */
+    function fechadaRecente(chave) {
+      var f = Guardar.ler('compat:faixa-fechada', {}, true) || {};
+      return f[chave] && (Date.now() - f[chave]) < 7 * 864e5;      /* fechou: volta depois de 7 dias */
+    }
+    function marcarFechada(chave) { var f = Guardar.ler('compat:faixa-fechada', {}, true) || {}; f[chave] = Date.now(); Guardar.gravar('compat:faixa-fechada', f, true); }
+    function mostrarFaixa() {
+      var velha = d.getElementById('dgo-compat-faixa'); if (velha) velha.parentNode.removeChild(velha);
+      if (cfg.compat && cfg.compat.aviso === false) return null;
+      var nav = navegador(), amb = ambiente(nav), tipo, chave, titulo, frase, passos;
+      var dz = desatualizado(nav), sg = semGuardar();
+      if (sg.length) {
+        tipo = 'guardar'; chave = 'guardar:' + sg.join(',');
+        titulo = L('Este navegador não deixa guardar dados', 'This browser does not let the app save data');
+        frase = L('Parece aba anônima ou cookies bloqueados. O ' + nomeApp() + ' abre, mas nada do que você fizer fica guardado neste aparelho.', 'It looks like a private tab or blocked cookies. ' + nomeApp() + ' opens, but nothing you do is kept on this device.');
+        passos = [L('Abra em uma aba normal (não anônima).', 'Open it in a normal (not private) tab.'), L('Nas configurações do navegador, permita cookies e dados de sites para este endereço.', 'In the browser settings, allow cookies and site data for this address.')];
+      } else if (nav.dentroDeApp) {
+        tipo = 'dentro'; chave = 'dentro:' + nav.dentroDeApp;
+        titulo = L('Abra no navegador (Chrome/Safari) para tudo funcionar', 'Open in the browser (Chrome/Safari) so everything works');
+        frase = L('Você abriu o ' + nomeApp() + ' por dentro do ' + nav.dentroDeApp + '. Por ali, entrar, guardar dados e instalar o app podem falhar.', 'You opened ' + nomeApp() + ' inside ' + nav.dentroDeApp + '. In there, signing in, saving data and installing the app may fail.');
+        passos = passosSairDoApp(nav.dentroDeApp, amb);
+      } else if (dz) {
+        tipo = 'versao'; chave = 'versao:' + nav.chave + ':' + nav.motorVersao;
+        titulo = L('Seu navegador está desatualizado', 'Your browser is out of date');
+        frase = L('Detectado: ' + rotuloNav(nav) + '. O recomendado é ' + (nav.chave === 'safari' && (amb === 'iphone') ? 'iOS ' : nav.nome + ' ') + dz.minimo + ' ou mais novo. Algumas partes podem falhar até atualizar.',
+                  'Detected: ' + rotuloNav(nav) + '. Recommended: ' + (nav.chave === 'safari' && (amb === 'iphone') ? 'iOS ' : nav.nome + ' ') + dz.minimo + ' or newer. Some parts may fail until you update.');
+        passos = passosAtualizar(amb, nav);
+      } else return null;
+      if (fechadaRecente(chave)) return null;
+      var lista = el('ol', { hidden: '' }, passos.map(function (p) { return el('li', { texto: p }); }));
+      var bts = el('div', { class: 'dgo-cf-bts' });
+      var como = el('button', { type: 'button', 'aria-expanded': 'false', texto: L('Como fazer', 'How to') });
+      como.addEventListener('click', function () { var ab = lista.hasAttribute('hidden'); if (ab) lista.removeAttribute('hidden'); else lista.setAttribute('hidden', ''); como.setAttribute('aria-expanded', ab ? 'true' : 'false'); });
+      bts.appendChild(como);
+      if (tipo === 'dentro') {
+        if (amb === 'android') {
+          /* no Android, este link pede ao sistema para abrir o mesmo endereço no Chrome */
+          var u = raiz.location.href.replace(/^https?:\/\//, '');
+          bts.appendChild(el('a', { class: 'dgo-cf-bt', href: 'intent://' + u + '#Intent;scheme=' + (raiz.location.protocol === 'http:' ? 'http' : 'https') + ';package=com.android.chrome;end', texto: L('Abrir no Chrome', 'Open in Chrome') }));
+        }
+        bts.appendChild(botaoCopiar());
+      }
+      var fechar = el('button', { type: 'button', 'aria-label': L('Fechar aviso', 'Close notice'), title: L('Fechar aviso', 'Close notice'), texto: '×' });
+      var faixa = el('div', { id: 'dgo-compat-faixa', class: 'dgo-compat-faixa', role: 'region', 'aria-label': titulo, 'data-dgo-ui': '1', 'data-tipo': tipo }, [
+        el('div', { class: 'dgo-cf-linha' }, [el('span', { 'aria-hidden': 'true', texto: tipo === 'dentro' ? '🌐' : '⚠️' }),
+          el('div', { class: 'dgo-cf-tx' }, [el('b', { texto: titulo }), el('span', { texto: frase }), lista, bts]), fechar])]);
+      fechar.addEventListener('click', function () { marcarFechada(chave); if (faixa.parentNode) faixa.parentNode.removeChild(faixa); });
+      d.body.appendChild(faixa);
+      return faixa;
+    }
+
+    /* ---- verificar: o que o aparelho tem, sem pedir permissão nenhuma ---- */
+    function permissao(nome) {
+      var P = navigator.permissions, p;
+      if (!P || !P.query) return Promise.resolve(null);
+      try { p = P.query({ name: nome }); } catch (e) { return Promise.resolve(null); }   /* nome que o navegador não conhece */
+      return comPrazo(p.then(function (s) { return s && s.state; }), 1500, null);
+    }
+    function midia(nome, tipo) {
+      var md = navigator.mediaDevices;
+      if (!md || !md.getUserMedia) return Promise.resolve('sem-suporte');
+      var lista = md.enumerateDevices ? comPrazo(md.enumerateDevices(), 1500, null) : Promise.resolve(null);
+      return Promise.all([permissao(nome), lista]).then(function (x) {
+        var st = x[0], ap = x[1] || [];
+        if (st === 'denied') return 'bloqueado';
+        /* lista sem nenhum aparelho desse tipo (mas com outros) = o aparelho não tem */
+        if (ap.length && !ap.some(function (a) { return a.kind === tipo; })) return 'sem-suporte';
+        return (st === 'granted' || st === 'prompt') ? 'ok' : 'desconhecido';
+      });
+    }
+    function verificar() {
+      var sg = semGuardar();
+      var r = { navegador: navegador(), essenciais: essenciais(), semGuardar: sg };
+      r.desatualizado = !!desatualizado(r.navegador);
+      var lsOk = sg.indexOf('localStorage') === -1;
+      r.indexedDB = sg.indexOf('indexedDB') === -1 ? 'ok' : 'sem-suporte';
+      r.armazenamento = lsOk ? 'ok' : 'bloqueado';
+      r.wakeLock = ('wakeLock' in navigator) ? 'ok' : 'sem-suporte';
+      r.som = (raiz.AudioContext || raiz.webkitAudioContext || raiz.Audio) ? 'ok' : 'sem-suporte';
+      r.vibracao = typeof navigator.vibrate === 'function' ? 'ok' : 'sem-suporte';
+      r.lerEmVoz = ('speechSynthesis' in raiz) ? 'ok' : 'sem-suporte';
+      r.ditado = (raiz.SpeechRecognition || raiz.webkitSpeechRecognition) ? 'ok' : 'sem-suporte';
+      var np = Notif.permissao();
+      r.notificacoes = np === 'denied' ? 'bloqueado' : (np === 'sem-suporte' || Notif.precisaInstalar()) ? 'sem-suporte' : 'ok';
+      if (typeof raiz.Promise !== 'function') return null;
+      var est = (navigator.storage && navigator.storage.estimate) ? comPrazo(navigator.storage.estimate(), 1500, null) : Promise.resolve(null);
+      var geo = ('geolocation' in navigator) ? permissao('geolocation').then(function (s) { return s === 'denied' ? 'bloqueado' : (s === 'granted' || s === 'prompt') ? 'ok' : 'desconhecido'; }) : Promise.resolve('sem-suporte');
+      return Promise.all([midia('camera', 'videoinput'), midia('microphone', 'audioinput'), geo, est]).then(function (x) {
+        r.camera = x[0]; r.microfone = x[1]; r.localizacao = x[2];
+        var e = x[3], MB = 1048576;
+        r.espaco = e && e.quota ? { usadoMB: Math.round((e.usage || 0) / MB), livreMB: Math.max(0, Math.round((e.quota - (e.usage || 0)) / MB)), estado: 'ok' } : { usadoMB: null, livreMB: null, estado: 'desconhecido' };
+        r.espaco.pouco = r.espaco.livreMB !== null && r.espaco.livreMB < 100;   /* menos de 100 MB: foto, voz e cópia offline podem falhar */
+        return r;
+      });
+    }
+    /* o que o app usa: o que o config disser; senão, o que o módulo sabe que este app liga */
+    function usa() {
+      if (cfg.compat && Array.isArray(cfg.compat.usa)) return cfg.compat.usa.slice();
+      var l = ['indexedDB', 'armazenamento', 'espaco'];
+      if (cfg.ocr && cfg.ocr.ativo) l.unshift('camera');
+      if (cfg.notificacoes && cfg.notificacoes.ativo) l.push('notificacoes');
+      return l;
+    }
+    function falta(id, r) { return id === 'espaco' ? !!(r.espaco && r.espaco.pouco) : (r[id] === 'bloqueado' || r[id] === 'sem-suporte'); }
+    function faltando(r) { return r ? usa().filter(function (id) { return falta(id, r); }) : []; }
+
+    /* ---- exigir: antes de usar, e só se faltar abre o aviso curto com o motivo e como liberar ---- */
+    function exigir(id, opcoes) {
+      opcoes = opcoes || {};
+      var v = verificar();
+      if (!v) return Promise.resolve(true);
+      return v.then(function (r) {
+        if (!falta(id, r)) return true;
+        return explicar(id, opcoes, r).then(function () { return false; });
+      }, function () { return true; });    /* sem como conferir: deixa tentar (o próprio navegador pergunta) */
+    }
+    function explicar(id, opcoes, r) {
+      opcoes = opcoes || {};
+      return new Promise(function (ok) {
+        var antes = d.getElementById('dgo-compat-janela'); if (antes) antes.parentNode.removeChild(antes);
+        var st = r ? (id === 'espaco' ? 'pouco' : r[id]) : 'bloqueado', nav = (r && r.navegador) || navegador(), amb = ambiente(nav);
+        var nome = nomeDe(id), icone = (NOMES[id] || [])[4] || '⚠️';
+        var titulo = st === 'bloqueado' ? L('O acesso a ' + nome + ' está bloqueado', 'Access to ' + nome + ' is blocked')
+          : st === 'pouco' ? L('Pouco espaço livre neste aparelho', 'Little free space on this device')
+          : st === 'sem-suporte' ? L('Este aparelho ou navegador não oferece ' + nome, 'This device or browser does not offer ' + nome)
+          : L('Como liberar ' + nome, 'How to allow ' + nome);      /* chamado por fora (ex.: o app viu um erro): mostra o caminho */
+        if (st !== 'sem-suporte' && st !== 'pouco') st = 'bloqueado';
+        var caixa = el('div', { class: 'dgo-caixa' }, [el('h2', { texto: icone + ' ' + titulo })]);
+        if (opcoes.motivo) caixa.appendChild(el('p', { texto: texto(opcoes.motivo) }));
+        if (st === 'bloqueado') { caixa.appendChild(el('h3', { texto: L('Como liberar', 'How to allow it') })); caixa.appendChild(blocoPassos(function (a) { return passosLiberar(id, a); }, amb)); }
+        else if (st === 'pouco') caixa.appendChild(el('p', { texto: L('Restam ' + r.espaco.livreMB + ' MB. Apague fotos, vídeos ou apps que não usa e tente de novo.', r.espaco.livreMB + ' MB left. Delete photos, videos or apps you do not use and try again.') }));
+        else if (id === 'notificacoes' && amb === 'iphone') caixa.appendChild(blocoPassos(function (a) { return passosLiberar(id, a); }, amb));
+        else caixa.appendChild(el('p', { texto: nav.dentroDeApp
+          ? L('Você abriu por dentro do ' + nav.dentroDeApp + ', que não deixa usar isto. Abra no Chrome ou no Safari.', 'You opened it inside ' + nav.dentroDeApp + ', which does not allow this. Open it in Chrome or Safari.')
+          : L('Use outro aparelho, ou abra este endereço no Chrome ou no Safari atualizado.', 'Use another device, or open this address in an up-to-date Chrome or Safari.') }));
+        var ent = el('button', { class: 'dgo-b', type: 'button', texto: L('Entendi', 'Got it') });
+        caixa.appendChild(ent);
+        var jan = el('div', { id: 'dgo-compat-janela', class: 'dgo-compat-janela', role: 'alertdialog', 'aria-modal': 'true', 'aria-label': titulo, 'data-dgo-ui': '1', 'data-recurso-faltando': id }, [caixa]);
+        function fechar() { d.removeEventListener('keydown', esc, true); if (jan.parentNode) jan.parentNode.removeChild(jan); ok(); }
+        function esc(e) { if (e.key === 'Escape') { e.stopPropagation(); fechar(); } }
+        ent.addEventListener('click', fechar);
+        jan.addEventListener('click', function (e) { if (e.target === jan) fechar(); });
+        d.addEventListener('keydown', esc, true);
+        d.body.appendChild(jan);
+        try { ent.focus(); } catch (e) {}
+      });
+    }
+
+    /* ---- quadro "O seu aparelho" (Configurações do módulo): só aparece quando falta algo ---- */
+    function quadro(dest) {
+      var v = verificar(); if (!v) return;
+      v.then(function (r) {
+        var f = faltando(r), dz = desatualizado(r.navegador);
+        if (!f.length && !dz && !r.navegador.dentroDeApp) return;
+        var ul = el('ul');
+        usa().forEach(function (id) {
+          var ruim = falta(id, r), st = id === 'espaco' ? (r.espaco.pouco ? 'pouco' : r.espaco.estado) : r[id];
+          var li = el('li', { texto: (ruim ? (st === 'bloqueado' ? '⚠️ ' : '❌ ') : '✅ ') + nomeDe(id, true) + ' — ' +
+            (st === 'ok' ? 'ok' : st === 'bloqueado' ? L('bloqueado', 'blocked') : st === 'sem-suporte' ? L('não disponível', 'not available') : st === 'pouco' ? L('pouco espaço', 'low space') : L('não deu para saber', 'unknown')) });
+          if (ruim) { var b = el('button', { type: 'button', class: 'dgo-b dgo-b2', style: { width: 'auto', minHeight: '36px', marginLeft: '8px', padding: '4px 10px' }, texto: L('Como resolver', 'How to fix') });
+            b.addEventListener('click', function () { explicar(id, {}, r); }); li.appendChild(b); }
+          ul.appendChild(li);
+        });
+        var caixa = el('div', { class: 'dgo-compat-quadro', 'data-dgo-ui': '1' }, [el('h3', { style: { marginTop: '0' }, texto: L('O seu aparelho', 'Your device') }), ul,
+          el('div', { class: 'dgo-mini', texto: L('Programas: ', 'Software: ') + rotuloNav(r.navegador) + (dz ? L(' · recomendado ', ' · recommended ') + dz.minimo + L(' ou mais novo', ' or newer') : '') +
+            (r.navegador.dentroDeApp ? L(' · aberto dentro do ', ' · opened inside ') + r.navegador.dentroDeApp : '') })]);
+        if (dz || r.navegador.dentroDeApp) caixa.appendChild(blocoPassos(function (a) { return r.navegador.dentroDeApp ? passosSairDoApp(r.navegador.dentroDeApp, a) : passosAtualizar(a, r.navegador); }, ambiente(r.navegador)));
+        dest.appendChild(caixa);
+      });
+    }
+
+    return { navegador: navegador, ambiente: ambiente, minimos: minimos, desatualizado: desatualizado, essenciais: essenciais, semGuardar: semGuardar, verificar: verificar,
+      usa: usa, faltando: faltando, exigir: exigir, explicar: explicar, quadro: quadro, mostrarBloqueio: mostrarBloqueio, mostrarFaixa: mostrarFaixa,
+      MINIMOS_PADRAO: MINIMOS_PADRAO };
+  })();
 
   /* ------------------------------------------------------------------
      21. API PUBLICA
      ------------------------------------------------------------------ */
+
+  /* ------------------------------------------------------------------
+     CENTRAL: arquivos master do RootifyONE (recursos e conteudo por app)
+     O RootifyONE publica recursos/<app>.json e conteudo/<app>.json no
+     repositorio solverone-dados (mesma origem). Aqui o app le com rede
+     primeiro (no-cache, 4 s) e cai para a copia guardada; global e app
+     sao juntados (o app vence). Nada disso trava o app: sem arquivo,
+     valem os padroes do codigo.
+       DGO.recursos.ligado('videos-youtube', true)
+       DGO.recursos.valor('descanso.padraoSeg', 60)
+       DGO.conteudo.colecao('equipamentos')  -> { campos, itens } | null
+       DGO.conteudo.item('equipamentos', 'leg-press')
+       evento 'dgo:central' quando algo novo chegou da rede
+     ------------------------------------------------------------------ */
+  var Central = {
+    _mem: {},
+    base: function () { var b = cfg.fonteCentral; return b ? (b.charAt(b.length - 1) === '/' ? b : b + '/') : ''; },
+    ativo: function () { return !!Central.base(); },
+    _chave: function (nome) { return 'central:' + nome; },
+    guardado: function (nome) { return Central._mem[nome] || Guardar.ler(Central._chave(nome), null, true); },
+    ler: function (nome) {
+      if (!Central.ativo()) return Promise.resolve(Central.guardado(nome));
+      var ctrl = raiz.AbortController ? new AbortController() : null, prazo = setTimeout(function () { if (ctrl) ctrl.abort(); }, 4000);
+      return fetch(Central.base() + nome, { cache: 'no-cache', signal: ctrl ? ctrl.signal : undefined }).then(function (r) {
+        clearTimeout(prazo);
+        if (r.status === 404) { return null; }
+        if (!r.ok) throw new Error('http-' + r.status);
+        return r.json();
+      }).then(function (j) {
+        var antes = JSON.stringify(Central.guardado(nome) || null);
+        if (j) { Central._mem[nome] = j; Guardar.gravar(Central._chave(nome), j, true); }
+        if (j && antes !== JSON.stringify(j)) { try { d.dispatchEvent(new CustomEvent('dgo:central', { detail: { arquivo: nome } })); } catch (e) {} }
+        return j || Central.guardado(nome);
+      }).catch(function () { clearTimeout(prazo); return Central.guardado(nome); });
+    },
+    /* baixa os quatro arquivos do app (global + proprio) uma vez ao abrir */
+    atualizar: function () {
+      if (!Central.ativo()) return Promise.resolve();
+      var nomes = ['recursos/global.json', 'recursos/' + cfg.app + '.json', 'conteudo/global.json', 'conteudo/' + cfg.app + '.json'];
+      return Promise.all(nomes.map(function (n) { return Central.ler(n); }));
+    },
+    recursos: function () {
+      var g = Central.guardado('recursos/global.json') || {}, a = Central.guardado('recursos/' + cfg.app + '.json') || {};
+      return { recursos: Object.assign({}, g.recursos || {}, a.recursos || {}), comportamentos: Object.assign({}, g.comportamentos || {}, a.comportamentos || {}) };
+    },
+    ligado: function (id, padrao) { var r = Central.recursos().recursos[id]; return r && typeof r.ligado === 'boolean' ? r.ligado : (padrao !== false); },
+    valor: function (id, padrao) { var c = Central.recursos().comportamentos; return c[id] === undefined ? padrao : c[id]; },
+    colecao: function (id) {
+      var a = Central.guardado('conteudo/' + cfg.app + '.json'), g = Central.guardado('conteudo/global.json');
+      return (a && a.colecoes && a.colecoes[id]) || (g && g.colecoes && g.colecoes[id]) || null;
+    },
+    item: function (colecao, id) { var c = Central.colecao(colecao); return c ? (c.itens || []).filter(function (i) { return i.id === id; })[0] || null : null; },
+    /* texto PT/EN de um item no idioma atual */
+    texto: function (v) { if (!v) return ''; if (typeof v === 'string') return v; return v[Idioma.atual] || v.pt || v.en || ''; }
+  };
+
+  /* ------------------------------------------------------------------
+     Interruptores (Controle dos apps no RootifyONE): vale para QUALQUER recurso publicado.
+     Por que existe: o dono desliga uma coisa no RootifyONE e ela tem que sumir do app sem
+     ninguém mexer no código. O app só precisa marcar o elemento:
+       <button data-recurso="assistone">…</button>        (vários: data-recurso="ia voz")
+     Desligado no RootifyONE → o elemento some (regra de CSS, vale para o que aparecer depois).
+     No código: DGO.recursos.ligado('id', padrao) e DGO.recursos.valor('id', padrao);
+     DGO.recursos.aoMudar(fn) avisa quando chegou arquivo novo (o app relê e redesenha).
+     O app declara o que obedece em recursos-do-app.json (na raiz do site) para o RootifyONE
+     mostrar "quem obedece". Sem rede, vale a última cópia guardada; sem cópia, o padrão do código.
+     Id reservado "app": desligado = o app inteiro em manutenção (ver Manutencao, logo abaixo).
+     ------------------------------------------------------------------ */
+  var Interruptores = {
+    _estilo: null, _ouvintes: [], _ultima: 0,
+    desligados: function () {
+      var r = Central.recursos().recursos;
+      return Object.keys(r).filter(function (k) { return /^[a-z0-9._-]+$/i.test(k) && r[k] && r[k].ligado === false; });
+    },
+    aplicar: function () {
+      var off = Interruptores.desligados();
+      try {
+        if (!Interruptores._estilo || !Interruptores._estilo.parentNode) {
+          Interruptores._estilo = d.createElement('style'); Interruptores._estilo.id = 'dgo-interruptores';
+          (d.head || d.documentElement).appendChild(Interruptores._estilo);
+        }
+        Interruptores._estilo.textContent = off.length ? off.map(function (id) { return '[data-recurso~="' + id + '"]'; }).join(',') + '{display:none !important}' : '';
+        d.documentElement.setAttribute('data-dgo-desligados', off.join(' '));
+      } catch (e) {}
+      try { Manutencao.conferir(off); } catch (e2) {}
+      return off;
+    },
+    avisar: function () { var off = Interruptores.aplicar(); Interruptores._ouvintes.slice().forEach(function (fn) { try { fn(off); } catch (e) {} }); },
+    /* relê os arquivos ao voltar para o app (no máximo a cada 5 min), para mudança publicada chegar sem fechar */
+    vigiar: function () {
+      Interruptores._ultima = Date.now();
+      d.addEventListener('dgo:central', function () { Interruptores.avisar(); });
+      d.addEventListener('visibilitychange', function () {
+        if (d.visibilityState !== 'visible' || Date.now() - Interruptores._ultima < 300000) return;
+        Interruptores._ultima = Date.now();
+        Central.atualizar();
+      });
+      Interruptores.aplicar();
+    }
+  };
+
+  /* ------------------------------------------------------------------
+     Manutenção — "Desligar o app inteiro" (Modo DEUS do RootifyONE, 10/Out/2026).
+     Id reservado "app": recurso "app" com ligado:false (no recursos/<app>.json ou no global)
+     → tela cheia "Em manutenção" com a mensagem do comportamento opcional "app.mensagem"
+     ({pt,en} ou texto) e o botão "Tentar de novo" (relê os arquivos na hora).
+     O RootifyONE nunca se bloqueia: cfg.app === 'rootify-one' ou cfg.manutencao === false.
+     ------------------------------------------------------------------ */
+  var Manutencao = {
+    _tela: null,
+    vale: function () { return cfg.app !== 'rootify-one' && cfg.manutencao !== false; },
+    ativa: function (off) { return Manutencao.vale() && (off || Interruptores.desligados()).indexOf('app') !== -1; },
+    conferir: function (off) {
+      if (!Manutencao.ativa(off)) { Manutencao.esconder(); return false; }
+      if (!d.body) { d.addEventListener('DOMContentLoaded', function () { Manutencao.conferir(); }); return true; }
+      Manutencao.mostrar(); return true;
+    },
+    mensagem: function () {
+      var en = Idioma.atual === 'en', v = Central.valor('app.mensagem', null);
+      if (v && typeof v === 'object') v = (en ? v.en : v.pt) || v.pt || v.en || '';
+      return v ? String(v) : (en ? 'We are tuning the app. Please come back in a little while.' : 'Estamos ajustando o app. Volte daqui a pouco.');
+    },
+    mostrar: function () {
+      var en = Idioma.atual === 'en', L = function (pt, e) { return en ? e : pt; };
+      if (Manutencao._tela && Manutencao._tela.parentNode) {          /* já aberta: só atualiza a mensagem */
+        var mx = d.getElementById('dgo-manutencao-msg'); if (mx) mx.textContent = Manutencao.mensagem(); return;
+      }
+      var nome = typeof cfg.nome === 'object' ? ((en ? cfg.nome.en : cfg.nome.pt) || cfg.nome.pt || '') : (cfg.nome || '');
+      var aviso = el('p', { 'aria-live': 'polite', style: { cssText: 'min-height:1.4em;color:#475569;margin:.8rem 0 0;' } });
+      var bt = el('button', { type: 'button', id: 'dgo-manutencao-tentar', style: { cssText: 'margin-top:1.2rem;min-height:48px;padding:.6rem 1.4rem;font:inherit;font-weight:700;border:0;border-radius:12px;background:' + (cfg.cor || '#0ea5e9') + ';color:#fff;cursor:pointer;' },
+        texto: L('Tentar de novo', 'Try again') });
+      bt.addEventListener('click', function () {
+        bt.disabled = true; bt.textContent = L('Conferindo…', 'Checking…'); aviso.textContent = '';
+        Central.atualizar().then(function () {
+          Interruptores.avisar();
+          if (Manutencao.ativa()) { bt.disabled = false; bt.textContent = L('Tentar de novo', 'Try again'); aviso.textContent = L('Ainda em manutenção. Tente mais tarde.', 'Still under maintenance. Please try later.'); }
+        });
+      });
+      var tela = el('div', { id: 'dgo-manutencao', role: 'alertdialog', 'aria-modal': 'true', 'aria-labelledby': 'dgo-manutencao-tit', 'data-dgo-ui': '1',
+        style: { cssText: 'position:fixed;top:0;left:0;right:0;bottom:0;z-index:2147483646;background:#f8fafc;color:#0f172a;overflow:auto;display:flex;align-items:center;justify-content:center;padding:1.5rem 1rem;font:17px/1.55 system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;text-align:center;' } }, [
+        el('div', { style: { cssText: 'max-width:32rem;' } }, [
+          el('div', { 'aria-hidden': 'true', style: { cssText: 'font-size:3rem;line-height:1;' }, texto: '🛠️' }),
+          el('h1', { id: 'dgo-manutencao-tit', style: { cssText: 'font-size:1.6rem;margin:.6rem 0;' }, texto: L('Em manutenção', 'Under maintenance') }),
+          nome ? el('p', { style: { cssText: 'font-weight:700;margin:0 0 .4rem;' }, texto: nome }) : null,
+          el('p', { id: 'dgo-manutencao-msg', style: { cssText: 'margin:0;' }, texto: Manutencao.mensagem() }),
+          bt, aviso])]);
+      (d.body || d.documentElement).appendChild(tela);
+      Manutencao._tela = tela;
+      try { d.documentElement.setAttribute('data-dgo-manutencao', '1'); d.documentElement.style.overflow = 'hidden'; } catch (e) {}
+      setTimeout(function () { try { bt.focus(); } catch (e) {} }, 30);
+    },
+    esconder: function () {
+      if (!Manutencao._tela) return;
+      if (Manutencao._tela.parentNode) Manutencao._tela.remove();
+      Manutencao._tela = null;
+      try { d.documentElement.removeAttribute('data-dgo-manutencao'); d.documentElement.style.overflow = ''; } catch (e) {}
+    }
+  };
+
+  /* ------------------------------------------------------------------
+     Fundo — trabalho demorado em segundo plano (diretriz geral, seção "Trabalho demorado em segundo
+     plano (`Fundo`)"): foto/OCR, IA, importação, exportação, áudio, envio, backup, publicação.
+     Por que existe: a pessoa sai da tela no meio de uma leitura de 20 s e acha que "não funcionou".
+     Aqui o trabalho roda solto da tela e o resultado chega onde ela estiver.
+
+     Uso:
+       DGO.fundo.iniciar({
+         tipo: 'ocr',                         // ocr | foto | ia | importar | exportar | audio | envio | backup | publicar
+         titulo: 'Lendo o comprovante',       // para leigo, já no idioma atual
+         executar: function (andamento, ctrl) { return Promise },  // andamento(0..1 ou 0..100, 'texto'); ctrl.sinal = AbortSignal
+         aoTerminar: function (resultado) {}, // sempre: grava o resultado (a pessoa pode estar em outra tela)
+         aoAbrir: function (resultado) {},    // quando a pessoa toca em "ver" (ou ainda está na tela de origem)
+         aindaNaTela: function () { return true },  // true = abre o resultado no lugar, sem esperar toque
+         rota: '#/tela/de/origem',            // padrão: o endereço de agora; o toque na pílula volta para cá
+         podeCancelar: true
+       })  → devolve a Promise do resultado (cancelar rejeita com e.cancelado = true)
+     Sem `executar`, o trabalho é tocado por fora: DGO.fundo.andamento(id, …), concluir(id, r), falhar(id, erro).
+     Também: cancelar(id), lista(), aoMudar(fn), interrompidos(), aoRetomar(tipo, fn).
+
+     O que o módulo faz sozinho:
+     - segura a tela acesa (Wake Lock) enquanto houver trabalho e solta no fim; sem suporte, a pílula avisa
+     - avisa antes de fechar/recarregar a aba (beforeunload)
+     - pílula com andamento, ✕ para cancelar, "N em andamento" quando há mais de um; toque volta à tela de origem
+     - ao terminar: "✅ … toque para ver"; com o app escondido, notificação (só se a pessoa já permitiu)
+     - se o app declarar cfg.fundo.inbox(trabalho), o que não foi visto em 6 s vai para a Inbox dele
+     - guarda só o resumo (id, tipo, título, rota, horas; nunca o conteúdo) no IndexedDB `dgo:<app>:fundo`:
+       se a aba fechar no meio, na próxima abertura aparece "foi interrompido" (e "Continuar" se o app
+       registrou DGO.fundo.aoRetomar(tipo, fn))
+     - app de loja (Capacitor/TWA): se existir Plataforma.adaptadores.fundo { iniciar(t), parar(t) }, vira
+       serviço em primeiro plano com a notificação fixa do sistema; o resto do código não muda.
+     DGO.tarefa (nome da 1.4.0) continua valendo: é o mesmo Fundo, sem botão de cancelar por padrão.
+     ------------------------------------------------------------------ */
+  var Fundo = (function () {
+    var trabalhos = {}, ordem = [], ouvintes = [], retomar = {};
+    var wake = null, caixa = null, contador = null, batidaRelogio = null, arrancado = false;
+    var ABA = Math.random().toString(36).slice(2), SESSAO = 'dgo:tarefa:ativa', interrompidaAntes = null, daMesmaAba = [];
+    var ICONES = { ocr: '📷', foto: '📷', ia: '✨', importar: '📥', exportar: '📤', envio: '📤', audio: '🎙️', backup: '💾', publicar: '🚀' };
+    var VELHO = 150000;   // 2,5 min sem sinal de vida = aba fechada (aba escondida bate só 1x/min)
+
+    /* compatível com DGO.tarefa.interrompida() da 1.4.0 (vale para recarregar a mesma aba) */
+    try { var m = raiz.sessionStorage.getItem(SESSAO); if (m) { interrompidaAntes = JSON.parse(m); raiz.sessionStorage.removeItem(SESSAO); } } catch (e) {}
+
+    function rodando() { return ordem.filter(function (id) { return trabalhos[id] && trabalhos[id].estado === 'rodando'; }); }
+    function copia(tb) {
+      return { id: tb.id, tipo: tb.tipo, titulo: tb.titulo, estado: tb.estado, andamento: tb.andamento, texto: tb.texto,
+        inicio: tb.inicio, fim: tb.fim, rota: tb.rota, podeCancelar: tb.podeCancelar, resultado: tb.resultado, erro: tb.erro };
+    }
+    function avisar(evento, tb) { var c = copia(tb); ouvintes.slice().forEach(function (fn) { try { fn(evento, c); } catch (e) {} }); }
+
+    /* ---- IndexedDB: só o resumo, para dizer "foi interrompido" depois ---- */
+    var banco = null;
+    function abrirBanco() {
+      if (banco) return banco;
+      banco = new Promise(function (ok) {
+        try {
+          if (!raiz.indexedDB) return ok(null);
+          var r = raiz.indexedDB.open('dgo:' + cfg.app + ':fundo', 1);
+          r.onupgradeneeded = function () { r.result.createObjectStore('trabalhos', { keyPath: 'id' }); };
+          r.onsuccess = function () { ok(r.result); };
+          r.onerror = function () { ok(null); };
+          r.onblocked = function () { ok(null); };
+        } catch (e) { ok(null); }
+      });
+      return banco;
+    }
+    function comLoja(modo, fn) {
+      return abrirBanco().then(function (db) {
+        if (!db) return null;
+        return new Promise(function (ok) {
+          try { var tx = db.transaction('trabalhos', modo); var q = fn(tx.objectStore('trabalhos')); tx.oncomplete = function () { ok(q && q.result); }; tx.onerror = function () { ok(null); }; } catch (e) { ok(null); }
+        });
+      });
+    }
+    function resumo(tb) { return { id: tb.id, tipo: tb.tipo, titulo: tb.titulo, rota: tb.rota, inicio: tb.inicio, aba: ABA, batida: Date.now(), estado: 'rodando' }; }
+    function guardar(tb) { comLoja('readwrite', function (s) { return s.put(resumo(tb)); }); }
+    function esquecer(id) { comLoja('readwrite', function (s) { return s.delete(id); }); }
+    function bater() { rodando().forEach(function (id) { guardar(trabalhos[id]); }); }
+    function chaveAba() { return 'dgo:' + cfg.app + ':fundo:aba'; }
+    function marcarSessao() {
+      try { raiz.sessionStorage.setItem(chaveAba(), JSON.stringify(rodando())); } catch (e) {}
+      try { var r = rodando(); if (r.length) raiz.sessionStorage.setItem(SESSAO, JSON.stringify({ id: r[0], titulo: trabalhos[r[0]].titulo, quando: Date.now() })); else raiz.sessionStorage.removeItem(SESSAO); } catch (e) {}
+    }
+
+    /* ---- tela acesa e aviso ao sair ---- */
+    function aoSair(e) { var r = rodando(); var msg = t('fundoSair').replace('{titulo}', r.length ? trabalhos[r[0]].titulo : ''); e.preventDefault(); e.returnValue = msg; return msg; }
+    function acordar() {
+      if (!('wakeLock' in navigator) || wake || d.visibilityState !== 'visible') return;
+      try { navigator.wakeLock.request('screen').then(function (w) { wake = w; w.addEventListener('release', function () { wake = null; }); }).catch(function () {}); } catch (e) {}
+    }
+    function soltar() { if (wake) { try { wake.release(); } catch (e) {} wake = null; } }
+    d.addEventListener('visibilitychange', function () {
+      if (d.visibilityState !== 'visible') return;
+      if (rodando().length) acordar();
+      ordem.forEach(function (id) { var tb = trabalhos[id]; if (tb && tb.estado === 'feito' && tb.esperandoVer) vigiarVisto(tb); });
+    });
+    function nativo() { return (Plataforma.adaptadores && Plataforma.adaptadores.fundo) || null; }
+    function ligar(tb) {
+      if (rodando().length === 1) {
+        raiz.addEventListener('beforeunload', aoSair); acordar();
+        batidaRelogio = raiz.setInterval(bater, 20000);
+      }
+      var n = nativo(); if (n && n.iniciar) { try { n.iniciar(copia(tb)); } catch (e) {} }
+      marcarSessao(); guardar(tb); contar();
+    }
+    function desligar(tb) {
+      tb.fim = Date.now(); marcarSessao(); esquecer(tb.id);
+      var n = nativo(); if (n && n.parar) { try { n.parar(copia(tb)); } catch (e) {} }
+      if (!rodando().length) { raiz.removeEventListener('beforeunload', aoSair); soltar(); if (batidaRelogio) { raiz.clearInterval(batidaRelogio); batidaRelogio = null; } }
+      contar();
+    }
+
+    /* ---- pílula ---- */
+    function container() {
+      if (!caixa || !caixa.parentNode) {
+        caixa = el('div', { class: 'dgo-tarefas' }); caixa.setAttribute('data-dgo-ui', '1'); caixa.setAttribute('aria-live', 'polite');
+        contador = el('div', { class: 'dgo-tarefas-conta' }); contador.style.display = 'none'; caixa.appendChild(contador);
+        d.body.appendChild(caixa);
+      }
+      return caixa;
+    }
+    function contar() { if (!contador) return; var n = rodando().length; contador.style.display = n > 1 ? '' : 'none'; contador.textContent = t('fundoVarios').replace('{n}', n); }
+    function tirar(tb) { if (tb.ui && tb.ui.el.parentNode) tb.ui.el.remove(); if (tb.estado !== 'rodando') { delete trabalhos[tb.id]; ordem = ordem.filter(function (i) { return i !== tb.id; }); } contar(); }
+    function irPara(rota) { try { if (rota && rota.charAt(0) === '#' && raiz.location.hash !== rota) raiz.location.hash = rota; } catch (e) {} }
+    function pilula(tb) {
+      var p = el('div', { class: 'dgo-tarefa', role: 'status' });
+      p.appendChild(el('i', { texto: ICONES[tb.tipo] || '⏳' }));
+      var txt = el('div', { style: { flex: '1', minWidth: '0' } });
+      txt.appendChild(el('b', { texto: tb.titulo }));
+      txt.appendChild(el('small', { texto: 'wakeLock' in navigator ? t('tarefaNaoFeche') : t('fundoTelaAberta') }));
+      var barra = el('div', { class: 'dgo-tarefa-barra' + (tb.andamento == null ? ' indef' : '') }, [el('span')]);
+      txt.appendChild(barra);
+      p.appendChild(txt);
+      var acoes = el('div', { class: 'dgo-tarefa-acoes' });
+      p.appendChild(acoes);
+      var ui = { el: p, icone: p.firstChild, titulo: txt.firstChild, sub: txt.children[1], barraCaixa: barra, barra: barra.firstChild, acoes: acoes };
+      if (tb.podeCancelar) acoes.appendChild(botaoPilula('✕', t('fundoCancelar'), function () { Fundo.cancelar(tb.id); }));
+      /* tocar na pílula enquanto roda: volta para a tela de onde o trabalho saiu */
+      p.addEventListener('click', function (e) { if (tb.estado === 'rodando' && !acoes.contains(e.target)) irPara(tb.rota); });
+      container().appendChild(p);
+      return ui;
+    }
+    function botaoPilula(texto, rotulo, fn) {
+      var b = el('button', { type: 'button', class: 'dgo-tarefa-bt', texto: texto });
+      b.setAttribute('aria-label', rotulo); b.title = rotulo;
+      b.addEventListener('click', function (e) { e.stopPropagation(); fn(); });
+      return b;
+    }
+    function pintarAndamento(tb) {
+      if (!tb.ui) return;
+      if (tb.andamento != null) { tb.ui.barraCaixa.classList.remove('indef'); tb.ui.barra.style.width = Math.round(tb.andamento * 100) + '%'; }
+      if (tb.texto) tb.ui.sub.textContent = tb.texto + ' · ' + t('fundoPodeNavegar');
+    }
+    function fracao(v) { if (v == null || isNaN(v)) return null; v = Number(v); if (v > 1) v = v / 100; return Math.max(0, Math.min(1, v)); }
+
+    /* "não foi visto em 6 s" (com a tela à vista) → Inbox do app, se ele tiver */
+    function vigiarVisto(tb) {
+      if (tb.relogioVisto || typeof (cfg.fundo && cfg.fundo.inbox) !== 'function') return;
+      if (d.visibilityState !== 'visible') return;
+      tb.relogioVisto = raiz.setTimeout(function () {
+        if (!tb.esperandoVer) return;
+        tb.esperandoVer = false;
+        try { cfg.fundo.inbox(copia(tb)); } catch (e) {}
+        avisar('nao-visto', tb); tirar(tb);
+      }, 6000);
+    }
+
+    function terminou(tb, r) {
+      if (tb.estado !== 'rodando') return;
+      tb.estado = 'feito'; tb.resultado = r; tb.andamento = 1; desligar(tb);
+      if (typeof tb.o.aoTerminar === 'function') { try { tb.o.aoTerminar(r); } catch (e) {} }
+      avisar('feito', tb);
+      tb.ok(r);
+      var ui = tb.ui; ui.barra.style.width = '100%'; ui.barraCaixa.classList.remove('indef'); ui.el.classList.add('pronta');
+      ui.icone.textContent = '✅'; ui.sub.textContent = tb.o.textoPronto || t('tarefaPronta'); ui.acoes.innerHTML = '';
+      if (tb.o.tituloPronto) ui.titulo.textContent = tb.o.tituloPronto;
+      ui.acoes.appendChild(botaoPilula('✕', t('fundoFechar'), function () { tb.esperandoVer = false; if (tb.relogioVisto) raiz.clearTimeout(tb.relogioVisto); tirar(tb); avisar('visto', tb); }));
+      ui.el.setAttribute('role', 'button'); ui.el.tabIndex = 0;
+      try { if (navigator.vibrate) navigator.vibrate([40, 60, 40]); } catch (e) {}
+      var abrir = function () {
+        tb.esperandoVer = false; if (tb.relogioVisto) raiz.clearTimeout(tb.relogioVisto);
+        tirar(tb);
+        if (typeof tb.o.aoAbrir === 'function') tb.o.aoAbrir(r); else irPara(tb.rota);
+        avisar('visto', tb);
+      };
+      ui.el.addEventListener('click', abrir);
+      ui.el.addEventListener('keydown', function (e) { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); abrir(); } });
+      if (tb.o.abrirSozinho !== false && !d.hidden && (typeof tb.o.aindaNaTela !== 'function' || tb.o.aindaNaTela())) { abrir(); return; }
+      tb.esperandoVer = true;
+      if (d.hidden) {
+        /* app em outra aba ou minimizado: notificação só se a pessoa já permitiu (nunca pede só para isso) */
+        try { if (Notif.permissao() === 'granted') Notif.mostrar({ titulo: '✅ ' + tb.titulo, texto: t('tarefaPronta'), tag: 'dgo-fundo-' + tb.id, url: raiz.location.href }); } catch (e) {}
+      } else vigiarVisto(tb);
+    }
+    function deuErro(tb, e) {
+      if (tb.estado !== 'rodando') return;
+      tb.estado = 'erro'; tb.erro = (e && e.message) || String(e || ''); desligar(tb);
+      avisar('erro', tb);
+      tb.falha(e);
+      var ui = tb.ui; ui.el.classList.add('erro'); ui.icone.textContent = '⚠️';
+      ui.sub.textContent = (tb.erro && tb.erro.length < 80 ? tb.erro + ' · ' : '') + t('tarefaErro');
+      ui.el.setAttribute('role', 'button'); ui.el.tabIndex = 0; ui.acoes.innerHTML = '';
+      if (typeof tb.o.executar === 'function' && tb.o.tentarDeNovo !== false) {
+        ui.acoes.appendChild(botaoPilula('↻', t('fundoTentar'), function () { tirar(tb); Fundo.iniciar(tb.o, { podeCancelar: tb.podeCancelar }); }));
+      }
+      ui.acoes.appendChild(botaoPilula('✕', t('fundoFechar'), function () { tirar(tb); }));
+      ui.el.addEventListener('click', function () { tirar(tb); });
+    }
+
+    var Fundo = {
+      iniciar: function (o, padroes) {
+        o = o || {}; padroes = padroes || {};
+        var id = o.id || ((o.tipo || 't') + '-' + Date.now().toString(36) + Math.random().toString(36).slice(2, 5));
+        if (trabalhos[id] && trabalhos[id].estado === 'rodando') return trabalhos[id].promessa;
+        if (trabalhos[id]) tirar(trabalhos[id]);
+        var ctrl = null; try { ctrl = new AbortController(); } catch (e) {}
+        var tb = { id: id, o: o, tipo: o.tipo || 'tarefa', titulo: o.titulo || t('tarefaProcessando'), estado: 'rodando',
+          andamento: null, texto: '', inicio: Date.now(), fim: null, resultado: null, erro: null, ctrl: ctrl,
+          rota: o.rota || (raiz.location.hash || raiz.location.pathname),
+          podeCancelar: o.podeCancelar != null ? !!o.podeCancelar : padroes.podeCancelar !== false };
+        tb.promessa = new Promise(function (ok, falha) { tb.ok = ok; tb.falha = falha; });
+        tb.promessa.catch(function () {});   // quem chamou decide se trata o erro; aqui não vira "erro não tratado"
+        trabalhos[id] = tb; ordem.push(id);
+        tb.ui = pilula(tb);
+        ligar(tb);
+        avisar('inicio', tb);
+        if (typeof o.executar === 'function') {
+          var andamento = function (v, texto) { Fundo.andamento(id, v, texto); };
+          var c = { id: id, sinal: ctrl ? ctrl.signal : null, cancelado: function () { return tb.estado === 'cancelado'; },
+            aoCancelar: function (fn) { tb.aoCancelar = fn; } };
+          try { Promise.resolve(o.executar(andamento, c)).then(function (r) { terminou(tb, r); }, function (e) { deuErro(tb, e); }); }
+          catch (e) { deuErro(tb, e); }
+        }
+        return tb.promessa;
+      },
+      andamento: function (id, v, texto) {
+        var tb = trabalhos[id]; if (!tb || tb.estado !== 'rodando') return;
+        var f = fracao(v); if (f != null) tb.andamento = f; if (texto) tb.texto = String(texto);
+        pintarAndamento(tb); avisar('andamento', tb);
+      },
+      concluir: function (id, r) { var tb = trabalhos[id]; if (tb) terminou(tb, r); },
+      falhar: function (id, e) { var tb = trabalhos[id]; if (tb) deuErro(tb, e instanceof Error ? e : new Error(String(e || ''))); },
+      cancelar: function (id) {
+        var tb = trabalhos[id]; if (!tb || tb.estado !== 'rodando') return false;
+        tb.estado = 'cancelado'; desligar(tb);
+        try { if (tb.ctrl) tb.ctrl.abort(); } catch (e) {}
+        try { if (typeof tb.aoCancelar === 'function') tb.aoCancelar(); } catch (e) {}
+        var erro = new Error(t('fundoCancelado')); erro.cancelado = true; erro.name = 'AbortError';
+        avisar('cancelado', tb);
+        tb.falha(erro);
+        var ui = tb.ui; ui.el.classList.add('cancelada'); ui.icone.textContent = '⏹'; ui.sub.textContent = t('fundoCancelado'); ui.acoes.innerHTML = '';
+        raiz.setTimeout(function () { tirar(tb); }, 2500);
+        return true;
+      },
+      lista: function () { return ordem.map(function (id) { return copia(trabalhos[id]); }); },
+      ativas: function () { return rodando(); },
+      aoMudar: function (fn) { if (typeof fn === 'function') ouvintes.push(fn); return function () { ouvintes = ouvintes.filter(function (f) { return f !== fn; }); }; },
+      aoRetomar: function (tipo, fn) { if (tipo && typeof fn === 'function') retomar[tipo] = fn; },
+      interrompida: function () { var r = interrompidaAntes; interrompidaAntes = null; return r; },
+      /* trabalhos que estavam rodando quando a aba fechou (e não são de outra aba aberta) */
+      interrompidos: function () {
+        return comLoja('readonly', function (s) { return s.getAll(); }).then(function (lista) {
+          var agora = Date.now();
+          /* recarregou esta mesma aba no meio = interrompido na hora; de outra aba, só se ela parou de dar sinal */
+          return (lista || []).filter(function (x) { return x && x.aba !== ABA && !trabalhos[x.id] && (daMesmaAba.indexOf(x.id) > -1 || (agora - (x.batida || 0)) > VELHO); });
+        });
+      },
+      /* chamado uma vez pelo DGO.iniciar: mostra "foi interrompido" do que ficou pela metade */
+      _arrancar: function () {
+        if (arrancado) return; arrancado = true;
+        try { daMesmaAba = JSON.parse(raiz.sessionStorage.getItem(chaveAba()) || '[]') || []; raiz.sessionStorage.removeItem(chaveAba()); } catch (e) {}
+        raiz.setTimeout(function () {
+          Fundo.interrompidos().then(function (lista) {
+            lista.forEach(function (x) {
+              esquecer(x.id);
+              var tb = { id: x.id, tipo: x.tipo, titulo: x.titulo, rota: x.rota, inicio: x.inicio, fim: null, estado: 'interrompido', andamento: null, texto: '', podeCancelar: false, resultado: null, erro: null, o: {} };
+              trabalhos[x.id] = tb; ordem.push(x.id);
+              var ui = tb.ui = pilula(tb);
+              ui.el.classList.add('erro'); ui.icone.textContent = '⚠️'; ui.sub.textContent = t('fundoInterrompido'); ui.barraCaixa.style.display = 'none';
+              ui.el.setAttribute('role', 'button'); ui.el.tabIndex = 0;
+              if (retomar[x.tipo]) ui.acoes.appendChild(botaoPilula('↻', t('fundoContinuar'), function () { tirar(tb); try { retomar[x.tipo](copia(tb)); } catch (e) {} }));
+              ui.el.addEventListener('click', function () { tirar(tb); });
+              avisar('interrompido', tb);
+            });
+          });
+        }, 1500);   // dá tempo de o app registrar aoRetomar antes
+      }
+    };
+    return Fundo;
+  })();
+  /* DGO.tarefa = nome da 1.4.0; mesmo motor, sem ✕ por padrão (quem já usava não esperava "cancelado") */
+  var Tarefa = {
+    iniciar: function (o) { return Fundo.iniciar(o, { podeCancelar: false }); },
+    andamento: Fundo.andamento, ativas: Fundo.ativas, interrompida: Fundo.interrompida
+  };
+
+  /* ------------------------------------------------------------------
+     Feedback dos usuários (diretriz geral, seção "Feedback dos usuários (prioridade — beta restrito)")
+     Por que existe: no beta, o que as pessoas dizem é o que guia a melhoria dos apps. Todo app ouve do
+     mesmo jeito e tudo chega estruturado no banco da plataforma (tabela sol_feedback), lido pelo
+     RootifyONE → Central de feedback. SQL: entrega/solverone-app/supabase/2026-10-10-feedback-usuarios.sql.
+
+     Uso:
+       DGO.feedback.abrir({ categoria: 'erro', tela: 'compras', titulo: 'Compras', funcao: 'adicionar falando', erro: e })
+       DGO.feedback.botao()                → <button data-recurso="feedback">💬 Dar uma opinião…</button> (para o ☰, o ⚙ e o AssistONE)
+       DGO.feedback.registrarAcao('compras:adicionar')   → trilha das últimas 20 ações (só nomes, nunca conteúdo)
+       DGO.feedback.perguntaDoDia({ forcar: true })      → mostra a pergunta do dia agora (se houver uma publicada)
+       DGO.feedback.meus()                 → janela "Meus envios" (ver a resposta e apagar)
+       DGO.feedback.sincronizar()          → manda o que ficou guardado sem internet
+       DGO.feedback.pendentes()            → Promise do número de envios guardados no aparelho
+
+     Onde o app diz qual é o banco (diretrizes-config.js do app; a chave é a PÚBLICA, nunca a secreta):
+       supabase: { url: 'https://<projeto>.supabase.co', anonKey: '<publishable key>' }
+       feedback: { ativo: true, perguntaDiaria: true, categoriasApp: [{ id, icone, pt, en, tipo }],
+                   tela: function () { return { tela, titulo, funcao } },   // opcional: o mapa por tela do app
+                   naoPerguntarAgora: function () { return true },        // opcional: login, wizard, leitor, gravação…
+                   conexao: function () { return { url, chave, token } }, // opcional: o app já tem o Supabase (RootifyONE)
+                   formspree: '', privacidade: 'privacidade.html', esperaMs: 120000 }
+     Sem banco configurado: plano B (formspree), senão guarda no aparelho e avisa com calma.
+     Sem internet: fila no IndexedDB `dgo:<app>:feedback` (com os anexos) e sobe sozinha quando a rede volta.
+     O envio roda no Fundo (pílula, Wake Lock, aviso ao fechar). Nunca trava o app: falhou, vai para a fila.
+     ------------------------------------------------------------------ */
+  var Feedback = (function () {
+    var AVISO = 'fb-1', MB = 1048576;
+    var CATS = [
+      ['erro', '🐞', 'Deu erro', 'Something broke', 'problema'], ['sugestao', '💡', 'Sugestão', 'Suggestion', 'ideia'],
+      ['nao-entendi', '❓', 'Não entendi', 'I didn\'t get it', 'opiniao'], ['gostei', '👍', 'Gostei', 'I liked it', 'opiniao'],
+      ['aparencia', '🎨', 'Aparência ou texto', 'Look or wording', 'opiniao'], ['lento', '🐢', 'Lento ou travou', 'Slow or froze', 'problema'],
+      ['privacidade', '🔒', 'Privacidade', 'Privacy', 'opiniao'], ['outro', '📝', 'Outro', 'Other', 'opiniao']
+    ];
+    var trilha = [], erros = [], arrancado = false, sincronizando = null, balao = null, perguntaCache = null;
+    var usoMs = 0, ultimaInteracao = Date.now(), relogio = null, filaMemoria = [];
+
+    function L(pt, en) { return Idioma.atual === 'en' ? en : pt; }
+    function conf() {
+      var c = cfg.feedback || {};
+      return { ativo: c.ativo !== false, perguntaDiaria: c.perguntaDiaria !== false, esperaMs: c.esperaMs != null ? Number(c.esperaMs) : 120000,
+        someEmMs: c.someEmMs || 20000, categoriasApp: c.categoriasApp || [], tela: c.tela, conexao: c.conexao,
+        naoPerguntarAgora: c.naoPerguntarAgora, formspree: c.formspree || '', privacidade: c.privacidade || '',
+        maxMB: Math.min(Number(c.maxMB) || 10, 10), gravarSegundos: c.gravarSegundos || 60 };
+    }
+    function hojeBrasilia(ms) {
+      try { return new Date(ms || Date.now()).toLocaleDateString('en-CA', { timeZone: 'America/Sao_Paulo' }); } catch (e) { return new Date(ms || Date.now()).toISOString().slice(0, 10); }
+    }
+    /* estado por app neste aparelho (vale também para visitante: localStorage, nunca dado pessoal) */
+    function chaveEstado() { return 'dgo:' + cfg.app + ':feedback'; }
+    function estado() { try { return JSON.parse(raiz.localStorage.getItem(chaveEstado()) || '{}') || {}; } catch (e) { return {}; } }
+    function gravarEstado(e) { try { raiz.localStorage.setItem(chaveEstado(), JSON.stringify(e)); } catch (x) {} }
+    function anonId() {
+      var id = Guardar.ler('feedback:anon', null, true);
+      if (!id || !/^[A-Za-z0-9-]{16,64}$/.test(id)) {
+        try { id = raiz.crypto && raiz.crypto.randomUUID ? raiz.crypto.randomUUID() : null; } catch (e) { id = null; }
+        if (!id) { id = ''; for (var i = 0; i < 32; i++) id += Math.floor(Math.random() * 16).toString(16); }
+        Guardar.gravar('feedback:anon', id, true);
+      }
+      return id;
+    }
+    function novoId() { return 'fb-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 10); }
+
+    /* ---- de onde vem o banco: conexao() do app → cfg.supabase → nada ---- */
+    function chaveProibida(k) { k = String(k || '').toLowerCase(); return k.indexOf('sb' + '_secret' + '_') === 0 || k.indexOf('service' + '_role') !== -1; }
+    function tokenSupabaseJs(url) {
+      try {
+        var ref = (/^https:\/\/([a-z0-9-]+)\.supabase\.co/i.exec(url) || [])[1]; if (!ref) return null;
+        var s = JSON.parse(raiz.localStorage.getItem('sb-' + ref + '-auth-token') || 'null');
+        if (s && s.access_token && (!s.expires_at || s.expires_at * 1000 > Date.now() + 30000)) return s.access_token;
+      } catch (e) {}
+      return null;
+    }
+    function conexao() {
+      var c = null, fc = conf();
+      try { if (typeof fc.conexao === 'function') c = fc.conexao(); } catch (e) { c = null; }
+      if (!c || !c.url) {
+        var s = cfg.supabase || {};
+        c = s.url && (s.anonKey || s.chave) ? { url: s.url, chave: s.anonKey || s.chave, token: typeof s.token === 'function' ? s.token() : null } : null;
+      }
+      if (!c || !c.url || !c.chave || chaveProibida(c.chave) || !/^https:\/\//i.test(c.url)) return null;
+      c.url = String(c.url).replace(/\/+$/, '');
+      if (!c.token) c.token = tokenSupabaseJs(c.url);
+      return c;
+    }
+    function cabecalhos(c, extra) {
+      var h = { apikey: c.chave };
+      if (c.token) h.Authorization = 'Bearer ' + c.token;
+      for (var k in (extra || {})) h[k] = extra[k];
+      return h;
+    }
+    function pedir(c, caminho, corpo, extra, metodo) {
+      return fetch(c.url + caminho, { method: metodo || 'POST', headers: cabecalhos(c, extra || { 'Content-Type': 'application/json' }),
+        body: corpo instanceof Blob ? corpo : JSON.stringify(corpo || {}) }).then(function (r) {
+        return r.text().then(function (txt) {
+          var j = null; try { j = txt ? JSON.parse(txt) : null; } catch (e) {}
+          if (!r.ok) { var er = new Error((j && (j.message || j.error)) || ('HTTP ' + r.status)); er.status = r.status; er.codigo = (j && j.code) || ''; throw er; }
+          return j;
+        });
+      });
+    }
+    function rpc(c, nome, corpo) { return pedir(c, '/rest/v1/rpc/' + nome, corpo); }
+    function deRede(e) { return !e || !e.status || e.status >= 500 || e.status === 408 || e.status === 429; }
+    function faltaSql(e) { return e && (e.status === 404 || e.codigo === 'PGRST202'); }
+
+    /* ---- fila no IndexedDB (com os anexos); sem IndexedDB, só na memória desta aba ---- */
+    var banco = null;
+    function abrirBanco() {
+      if (banco) return banco;
+      banco = new Promise(function (ok) {
+        try {
+          if (!raiz.indexedDB) return ok(null);
+          var r = raiz.indexedDB.open('dgo:' + cfg.app + ':feedback', 1);
+          r.onupgradeneeded = function () { r.result.createObjectStore('fila', { keyPath: 'id' }); };
+          r.onsuccess = function () { ok(r.result); }; r.onerror = function () { ok(null); }; r.onblocked = function () { ok(null); };
+        } catch (e) { ok(null); }
+      });
+      return banco;
+    }
+    function loja(modo, fn) {
+      return abrirBanco().then(function (db) {
+        if (!db) return fn(null);
+        return new Promise(function (ok) {
+          try { var tx = db.transaction('fila', modo); var q = fn(tx.objectStore('fila')); tx.oncomplete = function () { ok(q && q.result); }; tx.onerror = function () { ok(null); }; } catch (e) { ok(null); }
+        });
+      });
+    }
+    function filaGravar(item) { return loja('readwrite', function (s) { if (!s) { filaMemoria = filaMemoria.filter(function (x) { return x.id !== item.id; }).concat([item]); return null; } return s.put(item); }); }
+    function filaTirar(id) { return loja('readwrite', function (s) { if (!s) { filaMemoria = filaMemoria.filter(function (x) { return x.id !== id; }); return null; } return s.delete(id); }); }
+    function filaTodos() { return loja('readonly', function (s) { return s ? s.getAll() : { result: filaMemoria.slice() }; }).then(function (l) { return (l || []).sort(function (a, b) { return a.criado - b.criado; }); }); }
+
+    /* ---- contexto automático (nunca o conteúdo dos registros) ---- */
+    function contexto(o) {
+      o = o || {};
+      var c = {}, fc = conf();
+      try { if (typeof fc.tela === 'function') c = fc.tela() || {}; } catch (e) { c = {}; }
+      var hash = String(raiz.location.hash || '');
+      var tela = o.tela || c.tela || hash.replace(/^#\/?/, '').split(/[/?]/)[0] || 'inicio';
+      var titulo = o.titulo || c.titulo || (d.title || '').slice(0, 120);
+      var acoes = trilha.filter(function (a) { return !/^(tela|feedback):/.test(a); });
+      var funcao = o.funcao || c.funcao || (acoes.length ? acoes[acoes.length - 1] : '');
+      return { tela: String(tela).slice(0, 200), titulo: String(titulo).slice(0, 200), funcao: String(funcao || '').slice(0, 200), rota: hash.slice(0, 300) };
+    }
+    function aparelho() {
+      var n = {}; try { n = Compat.navegador() || {}; } catch (e) {}
+      var a = { navegador: ((n.nome || '?') + ' ' + (n.versao || '')).trim(), sistema: ((n.sistema || '?') + ' ' + (n.sistemaVersao || '')).trim(),
+        celular: !!n.celular, tela: (raiz.screen ? raiz.screen.width + 'x' + raiz.screen.height : ''), janela: raiz.innerWidth + 'x' + raiz.innerHeight,
+        instalado: !!PWA.instalado(), plataforma: Plataforma.qual() };
+      if (n.dentroDeApp) a.dentroDeApp = n.dentroDeApp;
+      return a;
+    }
+    function fuso() {
+      var nome = ''; try { nome = Intl.DateTimeFormat().resolvedOptions().timeZone || ''; } catch (e) {}
+      var m = -new Date().getTimezoneOffset(), s = m < 0 ? '−' : '+'; m = Math.abs(m);
+      return (nome + ' (UTC' + s + ('0' + Math.floor(m / 60)).slice(-2) + ':' + ('0' + (m % 60)).slice(-2) + ')').trim().slice(0, 60);
+    }
+    function categorias() {
+      return CATS.map(function (x) { return { id: x[0], icone: x[1], pt: x[2], en: x[3], tipo: x[4] }; }).concat((conf().categoriasApp || []).filter(function (x) { return x && /^[a-z0-9-]{2,40}$/.test(x.id || ''); })
+        .map(function (x) { return { id: x.id, icone: x.icone || '•', pt: x.pt || x.id, en: x.en || x.pt || x.id, tipo: ['opiniao', 'problema', 'ideia'].indexOf(x.tipo) > -1 ? x.tipo : 'opiniao' }; }));
+    }
+    function categoria(id) { return categorias().filter(function (x) { return x.id === id; })[0] || null; }
+    function montarDados(f) {
+      var cx = f.contexto || contexto(f), cat = categoria(f.categoria), s = Sessao.resumo();
+      var p = {
+        app: cfg.app, tipo: f.tipo || (cat ? cat.tipo : 'opiniao'), categoria: f.categoria || null, rapido: f.rapido || null, pergunta_id: f.pergunta_id || null,
+        texto: (f.texto || '').trim().slice(0, 4000) || null, nota: f.nota || null, tela: cx.tela, rota: cx.rota, funcao: cx.funcao || null, titulo_tela: cx.titulo || null,
+        versao_app: String(cfg.versaoApp || '').slice(0, 40) || null, versao_modulo: VERSAO, idioma: Idioma.atual === 'en' ? 'en' : 'pt', fuso: fuso(),
+        quando_cliente: new Date().toISOString(), online: navigator.onLine !== false, aparelho: aparelho(), trilha: trilha.slice(-20),
+        plano: (function () { try { return Niveis.atual(); } catch (e) { return null; } })(), login_tipo: s.tipo || 'visitante',
+        anon_id: anonId(), email_contato: (f.email || '').trim().toLowerCase() || null, pode_responder: !!f.podeResponder,
+        aviso_versao: AVISO, cliente_id: f.clienteId || novoId(), tem_anexo: !!(f.anexos && f.anexos.length)
+      };
+      if (p.categoria === 'erro' || f.erro) p.erros = erros.slice(-5).concat(f.erro ? [{ m: String((f.erro && f.erro.message) || f.erro).slice(0, 300), t: new Date().toISOString(), aqui: true }] : []);
+      return p;
+    }
+
+    /* ---- envio: banco → plano B → guarda ---- */
+    function subirAnexos(c, item, andamento) {
+      var lista = item.anexos || [], i = 0;
+      function proximo() {
+        while (i < lista.length && (lista[i].enviado || lista[i].recusado)) i++;
+        if (i >= lista.length) return Promise.resolve();
+        var a = lista[i];
+        if (andamento) andamento(0.3 + 0.7 * (i / lista.length), L('Enviando anexo ', 'Sending attachment ') + (i + 1) + '/' + lista.length);
+        var passo = a.caminho ? Promise.resolve(a.caminho) : rpc(c, 'sol_feedback_anexo', { p_feedback: item.feedbackId, p_anon_id: item.dados.anon_id, p_tipo: a.tipo,
+          p_nome: a.nome, p_mime: a.mime, p_tamanho: a.tamanho, p_duracao: a.duracao || null }).then(function (cam) { a.caminho = String(cam).replace(/"/g, ''); return filaGravar(item).then(function () { return a.caminho; }); });
+        return passo.then(function (cam) {
+          return pedir(c, '/storage/v1/object/sol-arquivos/' + cam.split('/').map(encodeURIComponent).join('/'), a.blob, { 'Content-Type': a.mime, 'x-upsert': 'false' });
+        }).then(function () { a.enviado = true; a.blob = null; }, function (e) {
+          if (deRede(e)) throw e;
+          if (e.status === 409 || /exists|duplicate/i.test(e.message || '')) { a.enviado = true; a.blob = null; return; }   // já tinha subido
+          a.recusado = (e.message || '').slice(0, 160); a.blob = null;            // 4xx: este anexo não vai; o resto segue
+        }).then(function () { return filaGravar(item); }).then(function () { i++; return proximo(); });
+      }
+      return proximo();
+    }
+    function enviarItem(item, andamento) {
+      var c = conexao();
+      if (!c) {
+        var fs = conf().formspree || (cfg.email && cfg.email.formulario) || '';
+        if (!fs || navigator.onLine === false) return Promise.resolve({ guardado: true, semBanco: !fs });
+        var dados = Object.assign({}, item.dados, { anexos: (item.anexos || []).map(function (a) { return a.nome + ' (' + a.mime + ', não enviado pelo plano B)'; }) });
+        return fetch(fs, { method: 'POST', headers: { 'Content-Type': 'application/json', Accept: 'application/json' }, body: JSON.stringify({ _subject: 'Feedback ' + cfg.app, feedback: dados }) })
+          .then(function (r) { if (!r.ok) throw Object.assign(new Error('HTTP ' + r.status), { status: r.status }); return filaTirar(item.id); })
+          .then(function () { return { numero: null, planoB: true }; }, function () { return { guardado: true }; });
+      }
+      if (navigator.onLine === false) return Promise.resolve({ guardado: true });
+      if (andamento) andamento(0.1, L('Enviando', 'Sending'));
+      var passo = item.feedbackId ? Promise.resolve(null) : rpc(c, 'sol_enviar_feedback', { p: item.dados }).then(function (r) {
+        item.feedbackId = r && r.id; item.numero = r && r.numero; return filaGravar(item);
+      });
+      return passo.then(function () { return subirAnexos(c, item, andamento); }).then(function () { return filaTirar(item.id); }).then(function () {
+        var recusados = (item.anexos || []).filter(function (a) { return a.recusado; });
+        return { numero: item.numero, id: item.feedbackId, recusados: recusados.map(function (a) { return a.nome + ': ' + a.recusado; }) };
+      }, function (e) {
+        if (deRede(e) && !faltaSql(e)) return { guardado: true };
+        if (faltaSql(e)) return { guardado: true, semBanco: true };
+        return filaTirar(item.id).then(function () { throw new Error(L('Não deu para enviar: ', 'Could not send: ') + (e.message || '')); });
+      });
+    }
+    function resumoEnvio(item, r) {
+      var cat = categoria(item.dados.categoria), cx = item.dados;
+      return (cx.titulo_tela || cx.tela || '') + (cat ? ' · ' + L(cat.pt, cat.en) : '');
+    }
+    function obrigado(item, r) {
+      var caixa = el('div', { class: 'dgo-caixa' });
+      caixa.appendChild(el('h2', { texto: r && r.guardado ? '📦 ' + L('Guardado no aparelho', 'Saved on this device') : '🙏 ' + L('Obrigado!', 'Thank you!') }));
+      if (r && r.guardado) caixa.appendChild(el('p', { texto: r.semBanco
+        ? L('Este app ainda não está ligado ao banco de opiniões. Guardamos aqui e mandamos sozinho quando ele estiver ligado.', 'This app is not connected to the feedback database yet. We kept it here and will send it on our own once it is.')
+        : L('Sem internet agora. Guardamos aqui e mandamos sozinho quando a conexão voltar.', 'No internet right now. We kept it here and will send it on our own when you are back online.') }));
+      else if (r && r.planoB) caixa.appendChild(el('p', { texto: L('Chegou para a equipe. Obrigado por ajudar a melhorar o app.', 'It reached the team. Thanks for helping improve the app.') }));
+      else caixa.appendChild(el('p', { texto: L('Chegou aqui: ', 'It got here: ') + '#' + (r && r.numero) + ' (' + resumoEnvio(item, r) + ')' }));
+      if (r && r.recusados && r.recusados.length) caixa.appendChild(aviso(L('Não foram: ', 'Not sent: ') + r.recusados.join(' · '), 'erro'));
+      caixa.appendChild(el('button', { class: 'dgo-b', type: 'button', texto: L('Fechar', 'Close'), onclick: fecharModal }));
+      return abrirModal(caixa);
+    }
+    function enviar(f, silencioso) {
+      var item = { id: novoId(), criado: Date.now(), dados: montarDados(f), anexos: (f.anexos || []).map(function (a) { return { tipo: a.tipo, nome: a.nome, mime: a.mime, tamanho: a.tamanho, duracao: a.duracao || null, blob: a.blob }; }) };
+      item.dados.cliente_id = item.id;
+      var gravado = filaGravar(item);
+      if (silencioso) return gravado.then(function () { return enviarItem(item); }).catch(function () { return { guardado: true }; });
+      return Fundo.iniciar({ id: 'feedback-' + item.id, tipo: 'envio', titulo: L('Enviando sua opinião', 'Sending your feedback'),
+        executar: function (andamento) { return gravado.then(function () { return enviarItem(item, andamento); }); },
+        aindaNaTela: function () { return true; },
+        aoAbrir: function (r) { obrigado(item, r); },
+        tituloPronto: L('Opinião enviada', 'Feedback sent'), podeCancelar: false, tentarDeNovo: false });
+    }
+    /* manda o que ficou guardado (ao voltar a internet, ao abrir o app) */
+    function sincronizar() {
+      if (sincronizando) return sincronizando;
+      if (navigator.onLine === false || !conexao()) return Promise.resolve(0);
+      sincronizando = filaTodos().then(function (lista) {
+        if (!lista.length) return 0;
+        var enviados = 0;
+        return Fundo.iniciar({ id: 'feedback-fila', tipo: 'envio', titulo: L('Enviando opiniões guardadas', 'Sending saved feedback'), podeCancelar: false, tentarDeNovo: false,
+          tituloPronto: '✓ ' + L('Tudo sincronizado', 'All synced'), abrirSozinho: false, aoAbrir: function () {},
+          executar: function (andamento) {
+            var i = 0;
+            function proximo() {
+              if (i >= lista.length) return Promise.resolve(enviados);
+              andamento(i / lista.length, (i + 1) + '/' + lista.length);
+              return enviarItem(lista[i]).then(function (r) { if (r && !r.guardado) enviados++; }, function () {}).then(function () { i++; return proximo(); });
+            }
+            return proximo();
+          } });
+      }).then(function (n) { sincronizando = null; return n; }, function () { sincronizando = null; return 0; });
+      return sincronizando;
+    }
+
+    /* ---- estilo próprio (só o que o feedback usa) ---- */
+    function estilo() {
+      if ($('#dgo-feedback-estilo')) return;
+      d.head.appendChild(el('style', { id: 'dgo-feedback-estilo', texto: [
+        '.dgo-fb-tipos{display:grid;grid-template-columns:repeat(auto-fill,minmax(128px,1fr));gap:6px;margin:6px 0 10px;}',
+        '.dgo-fb-tipo{min-height:46px;padding:8px;border-radius:11px;border:1px solid rgba(255,255,255,.2);background:transparent;color:#e2e8f0;font:600 13.5px/1.25 inherit;cursor:pointer;text-align:left;}',
+        '.dgo-fb-tipo[aria-pressed="true"]{background:var(--dgo-cor);border-color:var(--dgo-cor);color:#04121f;}',
+        '.dgo-fb-estrelas{display:flex;gap:4px;margin:4px 0 10px;}',
+        '.dgo-fb-estrela{min-width:44px;min-height:44px;border-radius:10px;border:1px solid rgba(255,255,255,.2);background:transparent;color:#64748b;font-size:20px;cursor:pointer;}',
+        '.dgo-fb-estrela[aria-pressed="true"]{color:#facc15;border-color:#facc15;}',
+        '.dgo-fb-sobre{font-size:12.5px;color:#cbd5e1;background:rgba(148,163,184,.12);border-radius:9px;padding:7px 10px;margin:4px 0 10px;}',
+        '.dgo-fb-anexos{list-style:none;padding:0;margin:6px 0;font-size:13px;}',
+        '.dgo-fb-anexos li{display:flex;gap:8px;align-items:center;justify-content:space-between;padding:4px 0;border-bottom:1px solid rgba(255,255,255,.08);}',
+        '.dgo-fb-mini{font-size:12px;color:#94a3b8;line-height:1.45;margin:8px 0;}',
+        '.dgo-fb-balao{position:fixed;right:.8rem;bottom:calc(6rem + env(safe-area-inset-bottom));z-index:2147483100;max-width:20rem;background:#0f172a;color:#f8fafc;',
+        'border:1px solid rgba(255,255,255,.2);border-radius:16px;padding:.8rem .9rem;box-shadow:0 12px 32px rgba(0,0,0,.4);font:500 .95rem/1.35 system-ui,sans-serif;}',
+        '.dgo-fb-balao p{margin:0 0 .5rem;font-weight:700;}',
+        '.dgo-fb-balao .dgo-linha>*{min-width:0;}',
+        '.dgo-fb-balao button{min-height:44px;border-radius:11px;border:1px solid rgba(255,255,255,.25);background:transparent;color:inherit;font:600 .9rem/1 inherit;cursor:pointer;padding:0 .7rem;}',
+        '.dgo-fb-balao .dgo-fb-x{position:absolute;top:4px;right:6px;min-height:32px;min-width:32px;border:0;}'
+      ].join('') }));
+    }
+
+    /* ---- o formulário curto (uma tela, para leigo) ---- */
+    function abrir(o) {
+      o = o || {};
+      if (!conf().ativo) return null;
+      estilo();
+      var s = { categoria: o.categoria || null, nota: o.nota || null, texto: o.texto || '', anexos: [], email: '', podeResponder: true,
+        contexto: contexto(o), erro: o.erro || null, titulo: o.tituloForm || null, rapido: o.rapido || null, pergunta_id: o.pergunta_id || null };
+      registrarAcao('feedback:abrir');
+      return desenhar(s);
+    }
+    function desenhar(s) {
+      var caixa = el('div', { class: 'dgo-caixa dgo-larga', 'data-recurso': 'feedback' });
+      caixa.appendChild(el('h2', { texto: '💬 ' + (s.titulo || L('Dar uma opinião / avisar um problema', 'Give feedback / report a problem')) }));
+      /* sobre o quê (a tela onde a pessoa estava), com "trocar" */
+      var sobre = el('div', { class: 'dgo-fb-sobre' });
+      function pintarSobre() {
+        sobre.innerHTML = '';
+        sobre.appendChild(d.createTextNode(L('Sobre: ', 'About: ') + (s.contexto.titulo || s.contexto.tela) + (s.contexto.funcao ? ' · ' + s.contexto.funcao : '') + ' — '));
+        sobre.appendChild(el('a', { href: '#', texto: L('trocar', 'change'), onclick: function (e) {
+          e.preventDefault();
+          var i = el('input', { type: 'text', value: s.contexto.titulo || s.contexto.tela, 'aria-label': L('Sobre o quê', 'About what') });
+          i.addEventListener('change', function () { s.contexto.titulo = i.value.trim().slice(0, 200) || s.contexto.titulo; });
+          sobre.innerHTML = ''; sobre.appendChild(el('label', { class: 'dgo-campo' }, [el('span', { texto: L('Sobre o quê?', 'About what?') }), i])); i.focus();
+        } }));
+      }
+      pintarSobre(); caixa.appendChild(sobre);
+      /* 1. tipo */
+      caixa.appendChild(el('div', { class: 'dgo-fb-mini', texto: L('O que aconteceu?', 'What happened?') }));
+      var tipos = el('div', { class: 'dgo-fb-tipos', role: 'group', 'aria-label': L('Tipo', 'Type') });
+      categorias().forEach(function (c) {
+        var b = el('button', { type: 'button', class: 'dgo-fb-tipo', 'data-cat': c.id, 'aria-pressed': s.categoria === c.id ? 'true' : 'false', texto: c.icone + ' ' + L(c.pt, c.en) });
+        b.addEventListener('click', function () { s.categoria = c.id; Array.prototype.forEach.call(tipos.children, function (x) { x.setAttribute('aria-pressed', x === b ? 'true' : 'false'); }); });
+        tipos.appendChild(b);
+      });
+      caixa.appendChild(tipos);
+      /* 2. nota (opcional) */
+      caixa.appendChild(el('div', { class: 'dgo-fb-mini', texto: L('Nota (se quiser)', 'Rating (optional)') }));
+      var estrelas = el('div', { class: 'dgo-fb-estrelas', role: 'group', 'aria-label': L('Nota de 1 a 5', 'Rating from 1 to 5') });
+      [1, 2, 3, 4, 5].forEach(function (n) {
+        var b = el('button', { type: 'button', class: 'dgo-fb-estrela', 'data-nota': n, 'aria-label': n + L(' de 5', ' of 5'), 'aria-pressed': s.nota && n <= s.nota ? 'true' : 'false', texto: '★' });
+        b.addEventListener('click', function () { s.nota = s.nota === n ? null : n; Array.prototype.forEach.call(estrelas.children, function (x, i) { x.setAttribute('aria-pressed', s.nota && i < s.nota ? 'true' : 'false'); }); });
+        estrelas.appendChild(b);
+      });
+      caixa.appendChild(estrelas);
+      /* 3. texto, com 🎤 se o navegador ditar */
+      var ta = el('textarea', { rows: '4', maxlength: '4000', placeholder: L('Conte com suas palavras', 'Tell us in your own words') });
+      ta.value = s.texto; ta.addEventListener('input', function () { s.texto = ta.value; });
+      var campoTexto = el('label', { class: 'dgo-campo' }, [el('span', { texto: L('Conte com suas palavras', 'Tell us in your own words') }), ta]);
+      caixa.appendChild(campoTexto);
+      var Rec = raiz.SpeechRecognition || raiz.webkitSpeechRecognition;
+      if (Rec) caixa.appendChild(el('button', { type: 'button', class: 'dgo-b dgo-b2', texto: '🎤 ' + L('Falar em vez de escrever', 'Speak instead of typing'), onclick: function () {
+        var b = this; try {
+          var r = new Rec(); r.lang = Idioma.atual === 'en' ? 'en-US' : 'pt-BR'; r.interimResults = false;
+          r.onresult = function (ev) { var t1 = ev.results[0][0].transcript; ta.value = (ta.value ? ta.value + ' ' : '') + t1; s.texto = ta.value; };
+          r.onend = function () { b.disabled = false; }; b.disabled = true; r.start();
+        } catch (e) { b.disabled = false; }
+      } }));
+      /* 4. anexos: print, gravar a tela (computador) e anexar imagem/vídeo */
+      var lista = el('ul', { class: 'dgo-fb-anexos', 'aria-live': 'polite' });
+      function pintarAnexos() {
+        lista.innerHTML = '';
+        s.anexos.forEach(function (a, i) {
+          lista.appendChild(el('li', {}, [el('span', { texto: (a.tipo === 'video' ? '🎥 ' : '🖼 ') + a.nome + ' · ' + (a.tamanho / MB).toFixed(1).replace('.', ',') + ' MB' }),
+            el('button', { type: 'button', class: 'dgo-b dgo-b2', style: { width: 'auto', minHeight: '36px', marginTop: '0' }, 'aria-label': L('Tirar ', 'Remove ') + a.nome, texto: '✕',
+              onclick: function () { s.anexos.splice(i, 1); pintarAnexos(); } })]));
+        });
+      }
+      var msgAnexo = el('div');
+      function anexar(blob, nome, tipo, duracao) {
+        msgAnexo.innerHTML = '';
+        var max = conf().maxMB * MB;
+        if (s.anexos.length >= 5) { msgAnexo.appendChild(aviso(L('No máximo 5 anexos.', 'At most 5 attachments.'), 'erro')); return; }
+        if (!/^(image\/(jpeg|png|webp)|video\/(webm|mp4|quicktime))$/.test(blob.type || '')) { msgAnexo.appendChild(aviso(L('Use foto (JPEG, PNG, WebP) ou vídeo (WebM, MP4, MOV).', 'Use a photo (JPEG, PNG, WebP) or video (WebM, MP4, MOV).'), 'erro')); return; }
+        if (blob.size > max) { msgAnexo.appendChild(aviso(L('Arquivo grande demais: máximo ', 'File too large: at most ') + conf().maxMB + ' MB. ' + (tipo === 'video' ? L('Grave um trecho mais curto.', 'Record a shorter clip.') : ''), 'erro')); return; }
+        s.anexos.push({ blob: blob, nome: String(nome || 'anexo').slice(0, 120), mime: blob.type, tamanho: blob.size, tipo: tipo || (/^video\//.test(blob.type) ? 'video' : 'imagem'), duracao: duracao || null });
+        pintarAnexos();
+      }
+      var linhaAnexos = el('div', { class: 'dgo-linha' });
+      var md = navigator.mediaDevices;
+      if (md && md.getDisplayMedia && !Plataforma.ehCelular()) {
+        linhaAnexos.appendChild(el('button', { type: 'button', class: 'dgo-b dgo-b2', texto: '📸 ' + L('Print da tela', 'Screenshot'), onclick: function () {
+          md.getDisplayMedia({ video: true }).then(function (st) {
+            var v = el('video'); v.muted = true; v.srcObject = st;
+            return v.play().then(function () {
+              var cv = el('canvas'); cv.width = v.videoWidth; cv.height = v.videoHeight; cv.getContext('2d').drawImage(v, 0, 0);
+              st.getTracks().forEach(function (t2) { t2.stop(); });
+              cv.toBlob(function (b) { if (b) anexar(b, 'print-' + s.contexto.tela + '.jpg', 'print'); }, 'image/jpeg', 0.82);
+            });
+          }).catch(function () { msgAnexo.innerHTML = ''; msgAnexo.appendChild(aviso(L('Não deu para tirar o print. Use "Anexar foto ou vídeo".', 'Could not take the screenshot. Use "Attach photo or video".'), 'info')); });
+        } }));
+        if (raiz.MediaRecorder) linhaAnexos.appendChild(el('button', { type: 'button', class: 'dgo-b dgo-b2', texto: '🎥 ' + L('Gravar a tela', 'Record the screen'), onclick: function () {
+          var b = this;
+          md.getDisplayMedia({ video: { frameRate: 10 } }).then(function (st) {
+            var partes = [], ini = Date.now(), rec = new MediaRecorder(st, { mimeType: MediaRecorder.isTypeSupported && MediaRecorder.isTypeSupported('video/webm') ? 'video/webm' : undefined, videoBitsPerSecond: 1000000 });
+            rec.ondataavailable = function (ev) { if (ev.data && ev.data.size) partes.push(ev.data); };
+            rec.onstop = function () { st.getTracks().forEach(function (t2) { t2.stop(); }); b.textContent = '🎥 ' + L('Gravar a tela', 'Record the screen');
+              anexar(new Blob(partes, { type: 'video/webm' }), 'gravacao-' + s.contexto.tela + '.webm', 'video', Math.round((Date.now() - ini) / 100) / 10); };
+            st.getVideoTracks()[0].addEventListener('ended', function () { if (rec.state !== 'inactive') rec.stop(); });
+            rec.start(1000); b.textContent = '⏹ ' + L('Parar a gravação', 'Stop recording');
+            var parar = function (e) { e.stopImmediatePropagation(); if (rec.state !== 'inactive') rec.stop(); b.removeEventListener('click', parar, true); };
+            b.addEventListener('click', parar, true);
+            raiz.setTimeout(function () { if (rec.state !== 'inactive') rec.stop(); }, conf().gravarSegundos * 1000);
+          }).catch(function () {});
+        } }));
+      }
+      var arquivo = el('input', { type: 'file', accept: 'image/jpeg,image/png,image/webp,video/webm,video/mp4,video/quicktime', multiple: 'multiple', style: { display: 'none' } });
+      arquivo.addEventListener('change', function () { Array.prototype.forEach.call(arquivo.files || [], function (f) { anexar(f, f.name); }); arquivo.value = ''; });
+      linhaAnexos.appendChild(el('button', { type: 'button', class: 'dgo-b dgo-b2', texto: '📎 ' + L('Anexar foto ou vídeo', 'Attach photo or video'), onclick: function () { arquivo.click(); } }));
+      caixa.appendChild(linhaAnexos); caixa.appendChild(arquivo); caixa.appendChild(lista); caixa.appendChild(msgAnexo);
+      caixa.appendChild(el('div', { class: 'dgo-fb-mini', texto: (Plataforma.ehCelular() ? L('No celular: grave ou tire o print pelo próprio aparelho e depois toque em "Anexar foto ou vídeo". ', 'On the phone: record or screenshot with the phone itself, then tap "Attach photo or video". ') : '') +
+        L('Antes de mandar um print, confira se não aparece dado de outra pessoa.', 'Before sending a screenshot, check that it shows no one else\'s data.') }));
+      pintarAnexos();
+      /* 5. e-mail opcional e "pode me responder" */
+      var logado = !!conexao() && !!conexao().token;
+      var em = el('input', { type: 'email', autocomplete: 'email', placeholder: L('seu@email.com (opcional)', 'you@email.com (optional)') });
+      em.value = s.email; em.addEventListener('input', function () { s.email = em.value; });
+      if (!logado) caixa.appendChild(el('label', { class: 'dgo-campo' }, [el('span', { texto: L('E-mail para a resposta (opcional)', 'E-mail for our reply (optional)') }), em]));
+      var marca = el('input', { type: 'checkbox' }); marca.checked = s.podeResponder; marca.addEventListener('change', function () { s.podeResponder = marca.checked; });
+      caixa.appendChild(el('label', { class: 'dgo-fb-mini', style: { display: 'flex', gap: '8px', alignItems: 'center' } }, [marca, L('Pode me responder sobre isso', 'You may reply to me about this')]));
+      /* aviso curto de privacidade (LGPD) */
+      var priv = el('div', { class: 'dgo-fb-mini', 'data-dgo-aviso': AVISO, texto: L('Guardamos o que você escrever, a tela onde estava, a versão do app e o tipo de aparelho, só para melhorar o app. Não levamos o conteúdo dos seus registros nem senhas. O e-mail é opcional e serve só para responder você. Você pode ver e apagar seus envios quando quiser. ',
+        'We keep what you write, the screen you were on, the app version and the kind of device, only to improve the app. We never take the content of your records or passwords. The e-mail is optional and only used to reply to you. You can see and delete what you sent at any time. ') });
+      if (conf().privacidade) priv.appendChild(el('a', { href: conf().privacidade, target: '_blank', rel: 'noopener', texto: L('Privacidade', 'Privacy') }));
+      caixa.appendChild(priv);
+      var msg = el('div');
+      var btEnviar = el('button', { class: 'dgo-b', type: 'button', 'data-fb-enviar': '1', texto: L('Enviar', 'Send'), onclick: function () {
+        msg.innerHTML = '';
+        if (!s.texto.trim() && !s.nota && !s.anexos.length) { msg.appendChild(aviso(L('Escreva algo, dê uma nota ou anexe um print.', 'Write something, give a rating or attach a screenshot.'), 'erro')); return; }
+        if (s.email.trim() && !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(s.email.trim())) { msg.appendChild(aviso(L('Confira o e-mail (ou deixe em branco).', 'Check the e-mail (or leave it blank).'), 'erro')); return; }
+        if (!s.categoria) s.categoria = 'outro';
+        s.podeResponder = marca.checked && (logado || !!s.email.trim());
+        fecharModal();
+        registrarAcao('feedback:enviar');
+        enviar(s);
+      } });
+      caixa.appendChild(msg);
+      caixa.appendChild(el('div', { class: 'dgo-linha' }, [btEnviar, el('button', { class: 'dgo-b dgo-b2', type: 'button', texto: L('Cancelar', 'Cancel'), onclick: fecharModal })]));
+      return abrirModal(caixa, function () { desenhar(s); });
+    }
+
+    /* ---- pergunta do dia (balão pequeno, nunca uma janela que trava) ---- */
+    function digitando() {
+      var a = d.activeElement;
+      if (!a) return false;
+      if (a.isContentEditable) return true;
+      return /^(INPUT|TEXTAREA)$/.test(a.tagName) && !!a.value;
+    }
+    function podePerguntar(forcar) {
+      var fc = conf();
+      if (!fc.ativo || !fc.perguntaDiaria || !conexao() || balao) return false;
+      if (!Central.ligado('feedback', true) || !Central.ligado('feedback.pergunta-do-dia', true)) return false;
+      if (forcar) return true;
+      var e = estado(), hoje = hojeBrasilia();
+      if (e.desligado || !e.primeiraVisita || e.primeiraVisita === hoje || e.dia === hoje || (e.pausaAte && e.pausaAte > Date.now())) return false;
+      if (modalEl || d.fullscreenElement || d.hidden || digitando()) return false;
+      try { if (typeof fc.naoPerguntarAgora === 'function' && fc.naoPerguntarAgora()) return false; } catch (x) { return false; }
+      return true;
+    }
+    function buscarPergunta() {
+      var hoje = hojeBrasilia();
+      if (perguntaCache && perguntaCache.dia === hoje) return Promise.resolve(perguntaCache.q);
+      var c = conexao(); if (!c) return Promise.resolve(null);
+      return rpc(c, 'sol_pergunta_do_dia', { p_app: cfg.app }).then(function (l) {
+        var q = Array.isArray(l) ? l[0] || null : l || null; perguntaCache = { dia: hoje, q: q }; return q;
+      }, function () { return null; });
+    }
+    function semana(e, hoje) { var lim = Date.now() - 7 * 86400000; return (e.mostrados || []).filter(function (x) { return x !== hoje && new Date(x + 'T12:00:00Z').getTime() > lim; }); }
+    function perguntaDoDia(o) {
+      o = o || {};
+      if (!podePerguntar(o.forcar)) return Promise.resolve(false);
+      return buscarPergunta().then(function (q) {
+        if (!q || !podePerguntar(o.forcar)) return false;
+        var e = estado(), hoje = hojeBrasilia();
+        if (!o.forcar && semana(e, hoje).length >= (q.vezes_semana || 3)) return false;
+        e.dia = hoje; e.mostrados = semana(e, hoje).concat([hoje]); gravarEstado(e);
+        mostrarBalao(q); return true;
+      });
+    }
+    function mostrarBalao(q) {
+      estilo();
+      var texto1 = (Idioma.atual === 'en' && q.texto_en ? q.texto_en : q.texto_pt).replace(/\{app\}/g, nomeApp());
+      var fim = function () { if (balao && balao.parentNode) balao.parentNode.removeChild(balao); balao = null; };
+      var responder = function (rapido) {
+        fim(); var e = estado(); e.agoraNao = 0; gravarEstado(e);
+        enviar({ tipo: 'pergunta_dia', rapido: rapido, pergunta_id: q.id, categoria: rapido > 0 ? 'gostei' : 'erro', texto: '', contexto: contexto() }, true);
+        abrir({ categoria: rapido > 0 ? 'gostei' : 'erro', pergunta_id: q.id,
+          tituloForm: rapido > 0 ? L('Que bom! Quer contar o que está funcionando ou o que falta?', 'Great! Want to tell us what works or what is missing?') : L('O que podemos melhorar?', 'What can we improve?') });
+      };
+      balao = el('div', { class: 'dgo-fb-balao', role: 'status', 'aria-live': 'polite', 'data-dgo-ui': '1', 'data-recurso': 'feedback' }, [
+        el('p', { texto: texto1 }),
+        el('div', { class: 'dgo-linha' }, [
+          el('button', { type: 'button', 'data-fb': 'sim', texto: '👍 ' + L('Sim', 'Yes'), onclick: function () { responder(1); } }),
+          el('button', { type: 'button', 'data-fb': 'nao', texto: '👎 ' + L('Não', 'No'), onclick: function () { responder(-1); } }),
+          el('button', { type: 'button', 'data-fb': 'agora-nao', texto: L('Agora não', 'Not now'), onclick: function () {
+            fim(); var e = estado(); e.agoraNao = (e.agoraNao || 0) + 1;
+            if (e.agoraNao >= 3) { e.pausaAte = Date.now() + 7 * 86400000; e.agoraNao = 0; }
+            gravarEstado(e);
+          } })]),
+        el('button', { type: 'button', class: 'dgo-fb-x', 'aria-label': L('Fechar', 'Close'), texto: '✕', onclick: fim })
+      ]);
+      d.body.appendChild(balao);
+      raiz.setTimeout(function () { if (balao && !balao.contains(d.activeElement)) fim(); }, conf().someEmMs);
+    }
+    /* uso real: só conta com a tela à vista e alguém mexendo no último minuto */
+    function ligarRelogio() {
+      if (relogio) return;
+      var passo = Math.max(150, Math.min(15000, conf().esperaMs / 3));
+      ['pointerdown', 'keydown', 'scroll', 'touchstart'].forEach(function (ev) { d.addEventListener(ev, function () { ultimaInteracao = Date.now(); }, { passive: true, capture: true }); });
+      relogio = raiz.setInterval(function () {
+        if (d.hidden || Date.now() - ultimaInteracao > 60000) return;
+        usoMs += passo;
+        if (usoMs >= conf().esperaMs) { perguntaDoDia().then(function (mostrou) { if (mostrou || estado().dia === hojeBrasilia()) { raiz.clearInterval(relogio); } }); }
+      }, passo);
+    }
+
+    /* ---- trilha e erros (só nomes; nunca conteúdo) ---- */
+    function registrarAcao(nome) {
+      nome = String(nome || '').replace(/\s+/g, ' ').trim().slice(0, 60); if (!nome) return;
+      if (trilha[trilha.length - 1] === nome) return;
+      trilha.push(nome); if (trilha.length > 20) trilha.shift();
+    }
+    function guardarErro(m, onde) {
+      erros.push({ m: String(m || '').slice(0, 300), onde: String(onde || '').split('/').pop().slice(0, 80), t: new Date().toISOString() });
+      if (erros.length > 5) erros.shift();
+    }
+
+    /* ---- "Meus envios": ver a resposta e apagar ---- */
+    function meus() {
+      estilo();
+      var caixa = el('div', { class: 'dgo-caixa dgo-larga' }, [el('h2', { texto: '📋 ' + L('Meus envios', 'What I sent') })]);
+      var zona = el('div', { texto: L('Carregando…', 'Loading…') }); caixa.appendChild(zona);
+      caixa.appendChild(el('button', { class: 'dgo-b dgo-b2', type: 'button', texto: L('Fechar', 'Close'), onclick: fecharModal }));
+      abrirModal(caixa);
+      var c = conexao();
+      filaTodos().then(function (guardados) {
+        if (!c) { zona.textContent = L('Este app ainda não está ligado ao banco de opiniões.', 'This app is not connected to the feedback database yet.') + (guardados.length ? ' ' + guardados.length + L(' guardado(s) no aparelho.', ' saved on this device.') : ''); return; }
+        return rpc(c, 'sol_meus_feedbacks', { p_app: cfg.app, p_anon_id: anonId() }).then(function (l) {
+          zona.innerHTML = '';
+          if (guardados.length) zona.appendChild(aviso(guardados.length + L(' envio(s) guardado(s) no aparelho, esperando a internet.', ' item(s) saved on this device, waiting for the internet.'), 'info'));
+          if (!l || !l.length) { zona.appendChild(el('p', { texto: L('Nada enviado ainda.', 'Nothing sent yet.') })); return; }
+          var SIT = { novo: L('recebido', 'received'), lido: L('lido', 'read'), em_analise: L('em análise', 'under review'), pendencia: L('planejado', 'planned'), respondido: L('respondido', 'answered'), fechado: L('fechado', 'closed') };
+          l.forEach(function (f) {
+            var cat = categoria(f.categoria);
+            zona.appendChild(el('div', { class: 'dgo-fb-sobre' }, [
+              el('b', { texto: '#' + f.numero + ' · ' + (cat ? L(cat.pt, cat.en) : f.tipo) + ' · ' + (SIT[f.situacao] || f.situacao) + ' · ' + formatarData(f.criado_em) }),
+              f.texto ? el('div', { texto: f.texto }) : null,
+              f.resposta ? el('div', { texto: '↳ ' + L('Resposta da equipe: ', 'Team reply: ') + f.resposta }) : null,
+              el('button', { type: 'button', class: 'dgo-b dgo-b2', style: { width: 'auto', minHeight: '36px' }, texto: '🗑 ' + L('Apagar', 'Delete'), onclick: function () {
+                var b = this; b.disabled = true;
+                rpc(c, 'sol_apagar_meu_feedback', { p_id: f.id, p_anon_id: anonId() }).then(function (caminhos) {
+                  /* com conta, os arquivos também saem do Storage (sem conta, a equipe apaga) */
+                  if (c.token && caminhos && caminhos.length) caminhos.forEach(function (cam) { pedir(c, '/storage/v1/object/sol-arquivos/' + cam.split('/').map(encodeURIComponent).join('/'), null, {}, 'DELETE').catch(function () {}); });
+                  meus();
+                }, function () { b.disabled = false; });
+              } })]));
+          });
+        }, function (e) { zona.textContent = faltaSql(e) ? L('O banco de opiniões ainda não está pronto.', 'The feedback database is not ready yet.') : L('Sem conexão agora.', 'No connection right now.'); });
+      });
+    }
+
+    /* ---- ⚙ → Ajuda → Feedback ---- */
+    function secaoConfig(raizEl) {
+      if (!conf().ativo) return;
+      var bloco = el('div', { 'data-recurso': 'feedback' });
+      bloco.appendChild(el('h3', { texto: L('Ajuda e opinião', 'Help and feedback') }));
+      var l1 = el('div', { class: 'dgo-linha' });
+      l1.appendChild(el('button', { class: 'dgo-b', type: 'button', texto: '💬 ' + L('Dar uma opinião / avisar um problema', 'Give feedback / report a problem'), onclick: function () { abrir({}); } }));
+      l1.appendChild(el('button', { class: 'dgo-b dgo-b2', type: 'button', texto: '📋 ' + L('Meus envios', 'What I sent'), onclick: meus }));
+      bloco.appendChild(l1);
+      if (conf().perguntaDiaria) {
+        var cx = el('input', { type: 'checkbox' }); cx.checked = !!estado().desligado;
+        cx.addEventListener('change', function () { var e = estado(); e.desligado = cx.checked; gravarEstado(e); });
+        bloco.appendChild(el('label', { class: 'dgo-fb-mini', style: { display: 'flex', gap: '8px', alignItems: 'center' } }, [cx, L('Não perguntar mais "Está gostando hoje?"', 'Stop asking "Are you enjoying it today?"')]));
+      }
+      raizEl.appendChild(bloco);
+    }
+
+    return {
+      abrir: abrir, enviar: function (f) { return enviar(f || {}, true); }, meus: meus, sincronizar: sincronizar, perguntaDoDia: perguntaDoDia,
+      registrarAcao: registrarAcao, secaoConfig: secaoConfig, conexao: function () { var c = conexao(); return c ? { url: c.url, logado: !!c.token } : null; },
+      pendentes: function () { return filaTodos().then(function (l) { return l.length; }); },
+      categorias: categorias,
+      botao: function (o) {
+        o = o || {};
+        var b = el('button', { type: 'button', class: o.classe || 'dgo-b dgo-b2', 'data-recurso': 'feedback', texto: '💬 ' + L('Dar uma opinião / avisar um problema', 'Give feedback / report a problem') });
+        b.addEventListener('click', function () { abrir(o); });
+        return b;
+      },
+      /* chamado uma vez quando o módulo fica pronto (evento dgo:pronto) */
+      _arrancar: function () {
+        if (arrancado || !conf().ativo) return; arrancado = true;
+        raiz.addEventListener('error', function (ev) { guardarErro(ev && ev.message, ev && (ev.filename + ':' + ev.lineno)); });
+        raiz.addEventListener('unhandledrejection', function (ev) { var r = ev && ev.reason; guardarErro((r && r.message) || String(r || ''), 'promessa'); });
+        raiz.addEventListener('hashchange', function () { registrarAcao('tela:' + String(raiz.location.hash || '').replace(/^#\/?/, '').split('?')[0]); });
+        raiz.addEventListener('online', function () { raiz.setTimeout(sincronizar, 800); });
+        var e = estado(); if (!e.primeiraVisita) { e.primeiraVisita = hojeBrasilia(); gravarEstado(e); }
+        raiz.setTimeout(sincronizar, 2500);
+        if (conf().perguntaDiaria) ligarRelogio();
+      }
+    };
+  })();
+  d.addEventListener('dgo:pronto', function () { try { Feedback._arrancar(); } catch (e) {} });
+
   var API = {
     __carregado: true,
+    fundo: Fundo,
+    tarefa: Tarefa,
     versao: VERSAO,
     cfg: cfg,
+    /* campo de senha com 👁: DGO.senha.olho(input) · aplicar(raiz) · esconder(raiz) */
+    senha: Senha,
 
     iniciar: function (opcoes) {
       fundir(cfg, opcoes || {});
@@ -5717,6 +6883,9 @@
       d.documentElement.setAttribute('data-dgo-idioma', Idioma.atual);
 
       function arrancar() {
+        /* camada 1 do DGO.compat: sem o essencial, o app nem tenta (tela cheia com o passo a passo) */
+        var faltaEssencial = Compat.essenciais();
+        if (faltaEssencial.length && !(cfg.compat && cfg.compat.bloqueio === false)) { Compat.mostrarBloqueio(faltaEssencial); return; }
         injetarEstilo();
         garantirMeta();
         Sessao.carregar();
@@ -5741,10 +6910,15 @@
           raiz.setTimeout(function () { ajustarTopo(faixaEl ? faixaEl.offsetHeight : 0); }, 250);
         });
         montarSeletorIdioma();
-        Assistente.iniciar();
         PWA.preparar();
         if (cfg.login.biometria) Biometria.verificarAparelho();
         Notif.iniciar();
+        Fundo._arrancar();
+        /* recursos, comportamentos e conteudo publicados pelo RootifyONE (nao trava o app) */
+        try { Interruptores.vigiar(); Central.atualizar(); } catch (e) {}
+        /* camada 2 do DGO.compat: faixa fechavel (versao antiga ou dentro de outro app); refaz quando o
+           RootifyONE publica outros minimos (comportamento global compat.minimos) */
+        try { Compat.mostrarFaixa(); d.addEventListener('dgo:central', function (e) { if (e.detail && /^recursos\//.test(e.detail.arquivo || '')) Compat.mostrarFaixa(); }); } catch (e) {}
         var con = navigator.connection;
         if (con && con.addEventListener) {
           con.addEventListener('change', function () { d.dispatchEvent(new CustomEvent('dgo:rede', { detail: { tipo: Rede.tipo() } })); });
@@ -5863,6 +7037,8 @@
       modelo: function (prov) { return IA.modelo(prov); },
       definirModelo: function (prov, m) { return IA.definirModelo(prov, m); },
       listarModelos: function (prov) { return IA.listarModelos(prov); },
+      explicarErro: function (e) { return IA.explicarErro(e); },
+      ultimaTrocaDeModelo: function () { return IA._ultimaTroca || null; },
       definirEndereco: function (prov, url) { return IA.definirBase(prov, url); },
       limpar: function () { return IA.limparConversa(); },
       set cofreBackend(b2) { IA.cofreBackend = b2; },
@@ -5878,19 +7054,6 @@
       podeBaixarPesado: function () { return Rede.podeBaixarPesado(); },
       podeUsarIA: function () { return Rede.podeUsarIA(); },
       pedirPesado: function (desc, mb) { return Rede.pedirPesado(desc, mb); }
-    },
-
-    /* AssistONE */
-    assistente: {
-      abrir: function () { Assistente.abrir(); },
-      fechar: function () { Assistente.fechar(); },
-      ligado: function () { return Assistente.ligado(); },
-      ligar: function (v) { Assistente.ligar(v !== false); },
-      tour: function () { Assistente.tour(0); },
-      procurar: function (q) { Assistente.procurar(q); },
-      dica: function () { Assistente.dica(); },
-      recomecar: function () { Assistente.recomecar(); },
-      atualizar: function () { Assistente.sincronizar(); }
     },
 
     /* wizard */
@@ -5928,6 +7091,30 @@
       }
     },
 
+    /* arquivos master do RootifyONE: recursos (flags), comportamentos e conteudo por app */
+    central: { ler: function (n) { return Central.ler(n); }, atualizar: function () { return Central.atualizar(); }, ativo: function () { return Central.ativo(); }, guardado: function (n) { return Central.guardado(n); } },
+    recursos: { ligado: function (id, p) { return Central.ligado(id, p); }, valor: function (id, p) { return Central.valor(id, p); }, todos: function () { return Central.recursos(); },
+      desligados: function () { return Interruptores.desligados(); },
+      aoMudar: function (fn) { if (typeof fn === 'function') Interruptores._ouvintes.push(fn); return function () { Interruptores._ouvintes = Interruptores._ouvintes.filter(function (f) { return f !== fn; }); }; } },
+    conteudo: { colecao: function (id) { return Central.colecao(id); }, item: function (c, id) { return Central.item(c, id); }, texto: function (v) { return Central.texto(v); } },
+
+    /* o seu aparelho pode usar isto? (1.7.0) + endereco da pagina central */
+    compat: {
+      verificar: function () { return Compat.verificar() || Promise.resolve(null); },
+      exigir: function (id, o) { return Compat.exigir(id, o); },
+      explicar: function (id, o) { return Compat.verificar().then(function (r) { return Compat.explicar(id, o, r); }); },
+      navegador: function (ua) { return Compat.navegador(ua); },
+      desatualizado: function (ua) { return Compat.desatualizado(ua ? Compat.navegador(ua) : null); },
+      minimos: function () { return Compat.minimos(); },
+      essenciais: function () { return Compat.essenciais(); },
+      semGuardar: function () { return Compat.semGuardar(); },
+      usa: function () { return Compat.usa(); },
+      faltando: function (r) { return Compat.faltando(r); },
+      mostrarFaixa: function () { return Compat.mostrarFaixa(); },
+      quadro: function (dest) { return Compat.quadro(dest); }
+    },
+    siteBase: function () { return siteBase(); },
+
     /* e-mail */
     email: Email,
 
@@ -5964,10 +7151,12 @@
     },
 
     /* utilidades internas expostas por conveniencia */
-    avisar: avisoRapido,
     guardar: Guardar,
     modal: { abrir: abrirModal, fechar: fecharModal, caixa: function (props, filhos) { return el('div', props, filhos); } }
   };
+
+  /* Feedback dos usuários: DGO.feedback (bloco "Feedback" acima) */
+  API.feedback = Feedback;
 
   raiz.DGO = API;
   raiz.Diretrizes = API;

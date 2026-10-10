@@ -528,17 +528,21 @@ $('#arquivo-varias').onchange = async e=>{
 
   if (/\.pdf$/i.test(f.name) || f.type === 'application/pdf'){
     aviso.textContent = 'Abrindo o PDF…';
-    try{
-      const r = await pdfParaFormatoLote(f, (feita, total)=>{
-        aviso.textContent = `Lendo o PDF… página ${feita} de ${total}`;
-      });
+    const ler = andamento => pdfParaFormatoLote(f, (feita, total)=>{
+      aviso.textContent = `Lendo o PDF… página ${feita} de ${total}`;
+      if (andamento) andamento(feita / total, `${feita} / ${total}`);
+    });
+    const mostrar = r=>{
       $('#entrada-varias').value = r.texto;
       aviso.textContent = r.quantas
         ? `${f.name} — ${r.paginas} páginas, ${r.quantas} músicas encontradas. Confira e mande para a fila.`
         : `${f.name} — li o PDF, mas não reconheci nenhuma música. Ele precisa ter o título, o artista e uma linha "Tom:" antes de cada cifra.`;
-    }catch(erro){
-      aviso.textContent = erro.message;
-    }
+    };
+    /* trabalho demorado (DGO.fundo): pílula com as páginas lidas, tela acesa e aviso antes de fechar */
+    const trabalho = (window.DGO && DGO.fundo)
+      ? DGO.fundo.iniciar({tipo:'importar', titulo: f.name, podeCancelar:false, executar: ler, aoAbrir: mostrar})
+      : ler().then(mostrar);
+    trabalho.catch(erro=>{ aviso.textContent = erro.message; });
     return;
   }
 
