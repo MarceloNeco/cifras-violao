@@ -12,6 +12,8 @@ valem para todos. **Nunca fixe endereço no código** — links entre apps são 
 | Arquivo | O que é | Pode mexer? |
 |---|---|---|
 | `diretrizes.js` | **Módulo comum SolverONE** (global `DGO`, versão em `DGO.versao`, hoje **1.1.4**). Idioma e datas, faixa de anúncios (carrossel + pop-up), conta/login, notificações, nuvem, OCR, níveis, rede, cofre de IA, wizard, **AssistONE**. | **Não edite aqui por causa deste app.** É idêntico em todos os apps. Uma melhoria feita aqui deve ser copiada para os outros repositórios (o número de versão sobe). Ver "O que mudou no módulo" abaixo. |
+| `recursos.js` | **Interruptores do RootifyONE** (Controle dos apps), cópia avulsa do master do `rootify-one` (global `SolverRecursos`). Lê `solverone-dados/recursos/global.json` e `…/cifras-violao.json` (o app vence o global); sem arquivo/sem rede vale ligado. Quem tem `data-recurso="<id>"` some sozinho. | **Não edite** (copie de novo do master). |
+| `recursos-do-app.json` | Diz ao RootifyONE o que este app obedece ("Quem obedece"): `assistone`, `anuncios`, `ia`, `voz` e o comportamento `assistone.dicas`. Na hora de ligar o módulo: `diretrizes-config.js` (`cifrasLigado`/`cifrasSim`); com o app aberto: `aplicarInterruptores` no `comum.js`; voz: `leitor.js`. | Sim — só liste o que o código obedece de verdade. |
 | `diretrizes-config.js` | O **único** arquivo do módulo que é diferente por app: nome, cor, anúncios, IA, AssistONE (ajuda por tela, tour, dicas, busca), login, notificações. | Sim — é aqui que se configura o módulo. |
 | `anuncios.json` | Lista dos anúncios (outros apps do portfólio) lida pelo módulo. | Sim. |
 | `servicos.json` | Quem pode usar cada recurso (níveis Visitante/Membro/Premium), lido por `DGO.niveis`. | Sim. |
@@ -35,7 +37,7 @@ valem para todos. **Nunca fixe endereço no código** — links entre apps são 
 ## Como as páginas se montam
 
 Cada página HTML tem só o conteúdo dela e, antes de `</body>`, a mesma sequência de scripts:
-`idioma.js` → `diretrizes.js` → `diretrizes-config.js` → `acordes.js` → `comum.js` → `aviso.js` → o script da página.
+`idioma.js` → `recursos.js` → `diretrizes.js` → `diretrizes-config.js` → `acordes.js` → `comum.js` → `aviso.js` → o script da página.
 O `<body data-pagina="…">` diz quem é a página; `comum.js` desenha o cabeçalho, a gaveta ☰ e a
 barra de baixo a partir disso. O `main` leva `data-dgo-ignorar` para o tradutor do módulo não
 mexer no texto que o `idioma.js` já traduz.

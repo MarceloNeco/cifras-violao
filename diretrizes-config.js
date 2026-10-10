@@ -7,6 +7,16 @@
    qualquer ajuste, mude AQUI e suba este arquivo de novo. O index.html
    nao precisa ser tocado.
    ===================================================================== */
+
+/* Interruptores do RootifyONE → Controle dos apps (recursos.js, carregado
+   antes). Vale a ultima copia guardada; sem arquivo ou sem rede, ligado.
+   O comum.js aplica na hora quando chega arquivo novo. */
+function cifrasLigado(id) { return !window.SolverRecursos || SolverRecursos.ligado(id, true); }
+function cifrasSim(id) {
+  var v = window.SolverRecursos ? SolverRecursos.valor(id, true) : true;
+  return !(v === false || v === 0 || /^(nao|não|no|off|false)$/i.test(String(v)));
+}
+
 DGO.iniciar({
 
   /* ---------- identidade ---------- */
@@ -15,7 +25,7 @@ DGO.iniciar({
                                 origem, e e isto que impede os dados de um
                                 vazarem para o outro. */
   nome: { pt: 'CifrasONE', en: 'CifrasONE' },
-  versaoApp: '2.8.2',
+  versaoApp: '2.9.0',
   cor: '#a8501e',            /* o marrom-laranja do site de cifras */
   corFundoBarra: '#1a1614',
 
@@ -33,7 +43,7 @@ DGO.iniciar({
      O carrossel e o pop-up (3, 2, 1 e ×) sao do modulo. A lista vem do
      anuncios.json na raiz (mesmo arquivo dos outros apps). */
   anuncios: {
-    ativo: true,
+    ativo: cifrasLigado('anuncios'),
     arquivo: 'anuncios.json',
     /* enquanto uma destas telas estiver aberta a faixa some sozinha,
        e volta quando ela fecha */
@@ -45,7 +55,7 @@ DGO.iniciar({
      O botao ✨ nao mora na faixa do topo (ela e so do anuncio): a IA fica em
      ⚙ Configuracoes → IA, e o cofre abre por DGO.ia.chaves(). */
   ia: {
-    ativo: true,
+    ativo: cifrasLigado('ia'),
     botaoNaFaixa: false,
     contexto: {
       pt: 'O app mostra cifras de violão com rolagem automática, troca de tom, capotraste, desenhos dos acordes, afinador e importação de cifras por texto ou foto.',
@@ -94,7 +104,7 @@ DGO.iniciar({
      O personagem no canto de baixo. Aqui vai o que ele sabe DESTE app:
      a ajuda de cada tela, o tour, uma dica por tela e o indice da busca. */
   assistente: {
-    ativo: true,
+    ativo: cifrasLigado('assistone'),
     imagem: 'ajuda-botao.png',
     /* no modo celular ele so aparece quando a barra de baixo esta recolhida
        (fica pequeno, a esquerda, longe do botao de Play); some com o afinador ou o menu abertos */
@@ -141,6 +151,7 @@ DGO.iniciar({
           var l5 = linha();
           var guia = bt(l5, '◉ ' + (en ? 'Guide' : 'Guia'), '#btn-guia');
           var voz = bt(l5, '🗣 ' + (en ? 'Voice' : 'Voz'), '#btn-voz');
+          voz.setAttribute('data-recurso', 'voz');
           bt(l5, '🎵', '#btn-afinador');
           var l6 = linha();
           bt(l6, '✕ ' + (en ? 'Leave phone mode' : 'Sair do modo celular'), '#sair-palco');
@@ -222,7 +233,8 @@ DGO.iniciar({
       { seletor: '.barra-baixo', titulo: { pt: 'Barra de baixo', en: 'Bottom bar' },
         texto: { pt: 'Os atalhos principais, sempre à mão no celular.', en: 'The main shortcuts, always at hand on the phone.' } }
     ],
-    dicas: {
+    /* desligadas no RootifyONE (assistone.dicas = não): nenhuma dica por tela */
+    dicas: !cifrasSim('assistone.dicas') ? {} : {
       inicio: { pt: 'Dica: toque na ★ de uma música para guardá-la em Favoritas.', en: 'Tip: tap a song’s ★ to keep it in Favorites.' },
       cifra: { pt: 'Dica: no celular, o 📱 Modo celular deixa só a música na tela e o ▶ rola sozinho.', en: 'Tip: on the phone, 📱 Phone mode leaves only the song on screen and ▶ scrolls by itself.' },
       acordes: { pt: 'Dica: toque em qualquer desenho para ouvir o acorde.', en: 'Tip: tap any diagram to hear the chord.' },
@@ -242,7 +254,7 @@ DGO.iniciar({
       { termo: { pt: 'Configurações', en: 'Settings' }, sinonimos: ['ajustes', 'config', 'idioma', 'language', 'conta', 'account', 'ia', 'ai', 'chave', 'key'], destino: function () { DGO.abrirConfiguracoes(); }, icone: '⚙' },
       { termo: { pt: 'Inbox (mensagens e avisos)', en: 'Inbox (messages and notices)' }, sinonimos: ['inbox', 'mensagens', 'messages', 'recados', 'avisos', 'notices'], destino: function () { if (typeof abrirInbox === 'function') abrirInbox(); }, icone: '📥' },
       { termo: { pt: 'Perfil (conta, tema, sair)', en: 'Profile (account, theme, sign out)' }, sinonimos: ['perfil', 'profile', 'entrar', 'login', 'sair', 'logout', 'usuario', 'user'], destino: function () { var b = document.querySelector('[data-abre-perfil]'); if (b) b.click(); }, icone: '👤' },
-      { termo: { pt: 'Chaves de IA (cofre)', en: 'AI keys (vault)' }, sinonimos: ['ia', 'ai', 'gemini', 'groq', 'chave', 'api key', 'cofre'], destino: function () { DGO.ia.chaves(); }, icone: '🔑' },
+      { termo: { pt: 'Chaves de IA (cofre)', en: 'AI keys (vault)' }, sinonimos: ['ia', 'ai', 'gemini', 'groq', 'chave', 'api key', 'cofre'], destino: function () { if (cifrasLigado('ia')) DGO.ia.chaves(); }, icone: '🔑' },
       { termo: { pt: 'Tema claro ou escuro', en: 'Light or dark theme' }, sinonimos: ['tema', 'theme', 'escuro', 'dark', 'claro', 'light'], destino: function () { var b = document.querySelector('[data-botao-tema]'); if (b) b.click(); }, icone: '☾' },
       { termo: { pt: 'Instalar o app / usar sem internet', en: 'Install the app / use offline' }, sinonimos: ['instalar', 'install', 'offline', 'atalho', 'tela inicial', 'home screen'], destino: function () { if (DGO.pwa) DGO.pwa.instalar(); }, icone: '📲' },
       { termo: { pt: 'Novidades de cada versão', en: 'What’s new in each version' }, sinonimos: ['versao', 'version', 'novidades', 'changelog'], destino: function () { if (typeof abrirNovidades === 'function') abrirNovidades(); }, icone: '🆕' },
