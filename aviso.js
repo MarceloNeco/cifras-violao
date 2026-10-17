@@ -140,44 +140,37 @@ function textoDoAviso(){ return `
      no topo indica a última revisão.</p>`;
 }
 
-/* ---------- a janela ---------- */
-let janelaAviso = null;
-
-function montarJanelaAviso(){
-  if (janelaAviso) return janelaAviso;
-  janelaAviso = document.createElement('dialog');
-  janelaAviso.className = 'janela';
-  janelaAviso.setAttribute('aria-labelledby', 'titulo-aviso');
-  janelaAviso.innerHTML = `
-    <button class="fechar-janela" aria-label="Fechar">✕</button>
-    <div class="janela-texto texto-legal">${textoDoAviso()}</div>
-    <div class="janela-rodape">
-      <button class="botao forte" data-fecha-janela>Fechar</button>
-    </div>`;
-  document.body.appendChild(janelaAviso);
-
-  janelaAviso.querySelectorAll('.fechar-janela, [data-fecha-janela]')
-    .forEach(b => b.addEventListener('click', fecharAviso));
-
-  /* clicar fora, na parte escura, também fecha */
-  janelaAviso.addEventListener('click', e=>{
-    if (e.target === janelaAviso) fecharAviso();
-  });
-  janelaAviso.addEventListener('close', ()=>{
-    if (location.hash === '#aviso') history.replaceState(null, '', location.pathname);
-  });
-
-  const form = janelaAviso.querySelector('#form-remocao');
-  if (form) form.addEventListener('submit', enviarPedido);
-  return janelaAviso;
-}
+/* ---------- a janela ----------
+   Pela janela comum (janela.js): trava a página de trás, fecha no ✕, no
+   Fechar, no Esc, no Voltar do celular e tocando na parte escura. O pedido de
+   remoção tem campos de texto: com algo digitado, pergunta "Descartar?". */
+let janelaAviso = null;   // a janela comum aberta (ou null)
 
 function abrirAviso(){
-  const j = montarJanelaAviso();
-  if (!j.open) j.showModal();
-  j.querySelector('.janela-texto').scrollTop = 0;
+  if (janelaAviso && !janelaAviso.fechada) return;
+  const caixa = document.createElement('div');
+  caixa.className = 'janela';
+  caixa.innerHTML = `
+    <button class="fechar-janela" type="button" aria-label="Fechar">✕</button>
+    <div class="janela-texto texto-legal">${textoDoAviso()}</div>
+    <div class="janela-rodape">
+      <button class="botao forte" type="button" data-fecha-janela>Fechar</button>
+    </div>`;
+  janelaAviso = SolverJanela.abrir({
+    conteudo: caixa, classe: 'janela-fundo',
+    aoFechar: ()=>{
+      janelaAviso = null;
+      /* depois que o histórico acompanhou, para o endereço #aviso não voltar junto */
+      SolverJanela.quandoQuieto(()=>{ if (location.hash === '#aviso') history.replaceState(null, '', location.pathname); });
+    }
+  });
+  caixa.querySelectorAll('.fechar-janela, [data-fecha-janela]')
+    .forEach(b => b.addEventListener('click', fecharAviso));
+
+  const form = caixa.querySelector('#form-remocao');
+  if (form) form.addEventListener('submit', enviarPedido);
 }
-function fecharAviso(){ if (janelaAviso && janelaAviso.open) janelaAviso.close(); }
+function fecharAviso(){ if (janelaAviso && !janelaAviso.fechada) janelaAviso.fechar('fechar'); }
 
 async function enviarPedido(e){
   e.preventDefault();
@@ -201,6 +194,7 @@ async function enviarPedido(e){
     });
     if (!r.ok) throw new Error('resposta ' + r.status);
     form.reset();
+    if (janelaAviso) janelaAviso.salvo();   // enviado: não há mais texto a descartar
     recado.textContent = 'Pedido enviado. A resposta vai para o e-mail informado.';
     recado.className = 'recado certo';
   }catch(erro){

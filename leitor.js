@@ -475,13 +475,6 @@ function ligarBotoes(){
   iniciarVoz();
   $('#btn-afinador').onclick = ()=> abrirAfinador(!$('#afinador').hasAttribute('aberta'));
   $('#fechar-afinador').onclick = ()=> abrirAfinador(false);
-  /* o afinador também fecha com um toque fora dele — antes ele ficava
-     tapando a metade de baixo da letra até achar o botão Fechar */
-  document.addEventListener('pointerdown', e=>{
-    if (!$('#afinador').hasAttribute('aberta')) return;
-    if (e.target.closest('#afinador, #btn-afinador')) return;
-    abrirAfinador(false);
-  });
 
   document.addEventListener('keydown', e=>{
     if (/^(INPUT|TEXTAREA)$/.test(e.target.tagName)) return;
@@ -572,16 +565,29 @@ function montarAfinador(){
     });
   });
 }
+/* O afinador é uma janela da janela comum (janela.js): a cifra atrás não rola
+   nem recebe toque; ✕/Fechar, Esc, Voltar do celular e toque fora fecham.
+   O painel (#afinador) vai para dentro da janela e volta ao lugar ao fechar;
+   o atributo "aberta" continua marcando que ele está aberto (a faixa de
+   anúncio e a pergunta do dia olham para ele). */
+let afinadorJ = null, afinadorLugar = null;
 function abrirAfinador(abrir){
   const g = $('#afinador');
-  if (abrir === g.hasAttribute('aberta')) return;
-  abrir ? g.setAttribute('aberta','') : g.removeAttribute('aberta');
-  g.setAttribute('aria-hidden', !abrir);
-  /* o Voltar do celular fecha o afinador em vez de sair da página */
-  if (typeof Camadas !== 'undefined'){
-    if (abrir) Camadas.abrir('afinador', ()=> abrirAfinador(false));
-    else Camadas.fechar('afinador');
-  }
+  if (!abrir){ if (afinadorJ) afinadorJ.fechar('fechar'); return; }
+  if (afinadorJ && !afinadorJ.fechada) return;
+  afinadorLugar = {pai: g.parentNode, depois: g.nextSibling};
+  g.setAttribute('aberta', '');
+  g.setAttribute('aria-hidden', 'false');
+  afinadorJ = SolverJanela.abrir({
+    conteudo: g, classe: 'afinador-j', rotulo: t('afinador.titulo'), temTexto: false,
+    aoFechar: ()=>{
+      g.removeAttribute('aberta');
+      g.setAttribute('aria-hidden', 'true');
+      const {pai, depois} = afinadorLugar;
+      pai.insertBefore(g, depois && depois.parentNode === pai ? depois : null);
+      afinadorJ = null;
+    }
+  });
 }
 
 /* ---------------- lembrar as escolhas de cada música ---------------- */
@@ -927,7 +933,7 @@ function falarProxima(){
 function lerEmVozAlta(){
   if (vozLendo){ pararVoz(); return; }
   if (window.SolverRecursos && !SolverRecursos.ligado('voz', true)) return;   // desligada no RootifyONE
-  if (!('speechSynthesis' in window)){ alert(t('cifra.semVoz')); return; }
+  if (!('speechSynthesis' in window)){ avisarCifras(t('cifra.semVoz')); return; }
   /* uma linha de cada vez: frase curta não trava o Chrome do Android */
   vozFila = [...document.querySelectorAll('#cifra .l-letra, #cifra .l-secao')]
             .filter(el => el.textContent.trim());

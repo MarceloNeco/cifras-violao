@@ -266,7 +266,7 @@ try{ FILA = JSON.parse(localStorage.getItem(FILA_CHAVE) || '[]'); }catch(e){ FIL
 
 function gravarFila(){
   try{ localStorage.setItem(FILA_CHAVE, JSON.stringify(FILA)); }catch(e){
-    alert('A fila ficou grande demais para o navegador guardar. Baixe o zip do que já tem e recomece a fila.');
+    avisarCifras(t('importar.filaGrande'));
   }
   desenharFila();
 }
@@ -344,8 +344,10 @@ $('#baixar-zip').onclick = ()=>{
   setTimeout(()=> URL.revokeObjectURL(a.href), 3000);
 };
 
-$('#esvaziar').onclick = ()=>{
-  if (!confirm('Tirar todas as ' + FILA.length + ' músicas da fila? Isso não dá para desfazer.')) return;
+$('#esvaziar').onclick = async ()=>{
+  const sim = await confirmarCifras({titulo: t('importar.esvaziarTit'), texto: t('importar.esvaziarTxt', {n: FILA.length}),
+                                     ok: t('importar.esvaziarOk')});
+  if (!sim) return;
   FILA = []; gravarFila();
 };
 

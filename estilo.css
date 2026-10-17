@@ -287,6 +287,14 @@ body.modo-palco .conteudo{ padding-top:48px; }
 }
 @media (prefers-reduced-motion: reduce){ .gaveta{ transition:none; } }
 .gaveta[aberta]{ transform:none; }
+/* o afinador é uma janela comum: o <dialog> cobre a tela e o painel fica colado embaixo, como folha */
+dialog.afinador-j[open]{ display:flex; align-items:flex-end; justify-content:center; background:rgba(8,10,14,.45); }
+.afinador-j .gaveta{
+  position:relative; inset:auto; width:100%; transform:none; transition:none; z-index:auto;
+  animation:afinador-sobe .22s cubic-bezier(.2,.8,.2,1);
+}
+@keyframes afinador-sobe{ from{ transform:translateY(40%); } to{ transform:none; } }
+@media (prefers-reduced-motion: reduce){ .afinador-j .gaveta{ animation:none; } }
 .gaveta-interna{ max-width:520px; margin:0 auto; }
 .gaveta h2{ font-size:1rem; margin:0 0 4px; }
 .gaveta p{ margin:0 0 12px; color:var(--texto-fraco); font-size:.85rem; }
@@ -640,15 +648,27 @@ body.modo-palco .fixavel{
 .texto-legal .volta{ margin-top:2.4em; }
 .texto-legal .volta a{ text-decoration:none; }
 
-/* ---------- janela do aviso ---------- */
+/* ---------- janelas (janela comum, janela.js) ----------
+   O <dialog class="sj janela-fundo"> é a parte escura que cobre a tela; a caixa
+   (.janela) fica dentro dele. Tocar na parte escura fecha. */
+dialog.janela-fundo[open]{
+  display:flex; align-items:center; justify-content:center;
+  background:rgba(8,10,14,.62); backdrop-filter:blur(3px);
+}
 .janela{
+  position:relative;
   width:min(720px, 94vw); max-height:88vh; padding:0;
   border:1px solid var(--borda); border-radius:22px;
   background:var(--fundo-card); color:var(--texto);
   box-shadow:0 24px 70px -20px rgba(0,0,0,.55);
   overflow:hidden;
 }
-.janela::backdrop{ background:rgba(8,10,14,.62); backdrop-filter:blur(3px); }
+/* aviso e confirmação curtos (no lugar do alert/confirm) */
+.janela-curta{ width:min(420px, 94vw); }
+.janela-curta .janela-texto{ padding:22px 22px 8px; }
+.janela-curta h2{ font-size:1.15rem; margin:0 0 .4rem; }
+.janela-curta p{ margin:0; color:var(--texto-fraco); line-height:1.5; }
+.janela-curta .janela-rodape{ display:flex; flex-wrap:wrap; gap:8px; justify-content:flex-end; }
 .janela-texto{
   max-height:calc(88vh - 74px); overflow-y:auto;
   padding:26px 28px 10px; max-width:none;
@@ -808,13 +828,9 @@ html[data-tema="escuro"] .recado.erro{ color:#f2837a; }
 .botao.conta{ font-size:1rem; }
 .menu-icones{ display:flex; gap:8px; }
 
-.gaveta-menu{ position:fixed; inset:0; z-index:80; visibility:hidden; pointer-events:none; }
-.gaveta-menu.aberta{ visibility:visible; pointer-events:auto; }
-.gaveta-fundo{
-  position:absolute; inset:0; background:rgba(8,10,14,.5); backdrop-filter:blur(2px);
-  opacity:0; transition:opacity .2s ease;
-}
-.gaveta-menu.aberta .gaveta-fundo{ opacity:1; }
+/* a gaveta ☰ é uma janela comum: o <dialog> é o fundo escuro e o painel desliza da esquerda.
+   .gaveta-menu é só o esconderijo do painel enquanto ela está fechada. */
+dialog.gaveta-j[open]{ display:block; background:rgba(8,10,14,.5); backdrop-filter:blur(2px); }
 .gaveta-painel{
   position:absolute; top:0; bottom:0; left:0; width:min(320px, 86vw);
   background:var(--fundo-card); color:var(--texto);
@@ -823,11 +839,11 @@ html[data-tema="escuro"] .recado.erro{ color:#f2837a; }
   /* começa abaixo da faixa de anúncio (o módulo informa a altura dela em --dgo-topo) */
   padding:calc(var(--dgo-topo, 0px) + 10px) 12px calc(20px + env(safe-area-inset-bottom, 0px));
   overflow-y:auto; scrollbar-width:thin;               /* rola com a barra visível */
-  transform:translateX(-102%); transition:transform .22s cubic-bezier(.2,.8,.2,1);
   outline:none;
 }
-.gaveta-menu.aberta .gaveta-painel{ transform:none; }
-@media (prefers-reduced-motion: reduce){ .gaveta-painel, .gaveta-fundo{ transition:none; } }
+.gaveta-j .gaveta-painel{ animation:gaveta-entra .22s cubic-bezier(.2,.8,.2,1); }
+@keyframes gaveta-entra{ from{ transform:translateX(-102%); } to{ transform:none; } }
+@media (prefers-reduced-motion: reduce){ .gaveta-j .gaveta-painel{ animation:none; } }
 .gaveta-topo{ display:flex; align-items:center; gap:8px; padding:4px 4px 10px; border-bottom:1px solid var(--borda); margin-bottom:6px; }
 .gaveta-topo .marca{ flex:1; font-size:1.05rem; }
 .gaveta-grupo{ padding:8px 0 4px; }
@@ -890,6 +906,15 @@ html[data-tema="escuro"] .recado.erro{ color:#f2837a; }
 }
 .menu-perfil.aberto{ transform:none; opacity:1; visibility:visible; pointer-events:auto; transition-delay:0s; }
 @media (prefers-reduced-motion: reduce){ .menu-perfil{ transition:none; } }
+/* o menu 👤 é uma janela comum presa ao botão: o <dialog> é transparente (toque fora fecha) e o
+   menu fica logo abaixo do botão (--topo-menu vem do comum.js) */
+dialog.perfil-j[open]{ display:block; background:transparent; }
+.perfil-j .menu-perfil{
+  top:var(--topo-menu, 56px); transition:none;
+  animation:menu-entra .2s cubic-bezier(.2,.8,.2,1);
+}
+@keyframes menu-entra{ from{ transform:scale(.96) translateY(-6px); opacity:0; } to{ transform:none; opacity:1; } }
+@media (prefers-reduced-motion: reduce){ .perfil-j .menu-perfil{ animation:none; } }
 .perfil-cabeca{
   display:flex; align-items:center; gap:12px; padding:8px 10px 12px;
   border-bottom:1px solid var(--borda); margin-bottom:6px; min-width:0;
