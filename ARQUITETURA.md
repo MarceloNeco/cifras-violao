@@ -11,7 +11,9 @@ valem para todos. **Nunca fixe endereço no código** — links entre apps são 
 
 | Arquivo | O que é | Pode mexer? |
 |---|---|---|
-| `diretrizes.js` | **Módulo comum SolverONE** (global `DGO`, versão em `DGO.versao`, hoje **1.9.0**, cópia exata do master do `rootify-one`). Idioma e datas, faixa de anúncios (carrossel + pop-up), conta/login, notificações, nuvem, OCR, níveis, rede, cofre de IA, wizard, interruptores e manutenção (`DGO.recursos`), trabalho em fundo (`DGO.fundo`), 💬 feedback (`DGO.feedback`), "O seu aparelho" (`DGO.compat`). **Não tem mais o AssistONE.** | **Não edite aqui por causa deste app.** É idêntico em todos os apps. Uma melhoria feita aqui deve ser copiada para os outros repositórios (o número de versão sobe). Ver "O que mudou no módulo" abaixo. |
+| `diretrizes.js` | **Módulo comum SolverONE** (global `DGO`, versão em `DGO.versao`, hoje **1.11.0**, cópia exata do master do `rootify-one`). Idioma e datas, faixa de anúncios (carrossel + pop-up), conta/login, notificações, nuvem, OCR, níveis, rede, cofre de IA, wizard, interruptores e manutenção (`DGO.recursos`), trabalho em fundo (`DGO.fundo`), 💬 feedback (`DGO.feedback`), "O seu aparelho" (`DGO.compat`). **Não tem mais o AssistONE.** | **Não edite aqui por causa deste app.** É idêntico em todos os apps. Uma melhoria feita aqui deve ser copiada para os outros repositórios (o número de versão sobe). Ver "O que mudou no módulo" abaixo. |
+| `janela.js` | **Janela comum** (global `SolverJanela` 1.0.1), cópia exata do master do `rootify-one`. Toda janela do app abre por ela: `<dialog>` modal, página de trás travada, ✕/Esc/Voltar/toque fora, "Descartar?" com texto digitado, uma por vez. | **Não edite** (copie de novo do master). |
+| `cofre.js` | **Cofre comum de chaves** (global `SolverCofre` 1.4.0), cópia exata do master. Chaves de IA trancadas por PIN (e digital); `proteger: true` no config liga as regras do PIN. | **Não edite** (copie de novo do master). |
 | `assistone.js` | **AssistONE** (personagem, balão "📍 Você está em…", tour, busca, dicas, painel de comandos do modo celular, cartão em ⚙, 💬 no balão). Arquivo próprio, cópia exata do master do `rootify-one` (v1.0.0), igual em todos os apps. Registra `DGO.assistente` com os mesmos nomes do 1.1.4 e usa as mesmas chaves de preferência (`dgo:cifras-violao:pref:aone:*`): quem desligou continua desligado. O conteúdo vem do `assistente:` do `diretrizes-config.js`. | **Não edite** (copie de novo do master). |
 | `recursos.js` | **Interruptores do RootifyONE** (Controle dos apps), cópia avulsa do master do `rootify-one` (global `SolverRecursos`; cópia de 10/Out/2026, com a manutenção). Lê `solverone-dados/recursos/global.json` e `…/cifras-violao.json` (o app vence o global); sem arquivo/sem rede vale ligado. Quem tem `data-recurso="<id>"` some sozinho. Recurso reservado `app` desligado = tela cheia "Em manutenção" (mensagem em `app.mensagem`) com "Tentar de novo". Com o módulo 1.9.0 ele só repassa para o `DGO.recursos`; o `<script>` leva `data-manutencao="nao"` porque ele carrega antes do módulo e, sem isso, punha uma segunda tela de manutenção que o "Tentar de novo" não tirava. | **Não edite** (copie de novo do master). |
 | `recursos-do-app.json` | Diz ao RootifyONE o que este app obedece ("Quem obedece" e **⚡ Modo DEUS**), no formato detalhado `{id, nome{pt,en}, onde{pt,en}}`: `app` (manutenção), `assistone`, `feedback` (💬), `anuncios`, `ia`, `busca`, `filtros`, `favoritos`, `ouvir`, `tom`, `capo`, `rolagem`, `guia`, `voz`, `letra`, `so-cifra`, `palco`, `diagramas`, `afinador`, `compartilhar`, `acordes`, `campo-harmonico`, `importar`, `ocr`, `inbox` e o comportamento `assistone.dicas`. Ver "Modo DEUS" abaixo. | Sim — só liste o que o código obedece de verdade. |
@@ -38,7 +40,7 @@ valem para todos. **Nunca fixe endereço no código** — links entre apps são 
 ## Como as páginas se montam
 
 Cada página HTML tem só o conteúdo dela e, antes de `</body>`, a mesma sequência de scripts:
-`idioma.js` → `recursos.js` → `diretrizes.js` → `diretrizes-config.js` → `assistone.js` → `acordes.js` → `comum.js` → `aviso.js` → o script da página.
+`idioma.js` → `recursos.js` → `janela.js` → `cofre.js` → `diretrizes.js` → `diretrizes-config.js` → `assistone.js` → `acordes.js` → `comum.js` → `aviso.js` → o script da página.
 O `<body data-pagina="…">` diz quem é a página; `comum.js` desenha o cabeçalho, a gaveta ☰ e a
 barra de baixo a partir disso. O `main` leva `data-dgo-ignorar` para o tradutor do módulo não
 mexer no texto que o `idioma.js` já traduz.
@@ -105,8 +107,7 @@ comandos do modo celular, cartão "💡 AssistONE" em ⚙ (depois de Idioma) e o
   lido nessa linha. Tirar quando o master for corrigido.
 
 **Pendências** (fora do que foi pedido nesta versão):
-1. Corrigir no master (`rootify-one/diretrizes.js`, `redesenharInterfaceDGO`) a chamada a `imagemPlaceholder()`
-   (o 1.1.4 chamava `montarFaixa()`); depois, tirar o `anuncios.imagem: true` daqui.
+1. ~~Corrigir no master a chamada a `imagemPlaceholder()` e tirar `anuncios.imagem: true`~~ — feito no módulo 1.11.0 (2.12.0).
 2. `recursos.js` antes do módulo: o master poderia esconder a tela de manutenção dele quando o `DGO.recursos`
    aparece (hoje resolvido aqui com `data-manutencao="nao"`).
 3. As escolhas do Controle dos apps guardadas pelo `recursos.js` (`dgo:cifras-violao:central:…`) não são lidas pelo
@@ -114,6 +115,39 @@ comandos do modo celular, cartão "💡 AssistONE" em ⚙ (depois de Idioma) e o
    decide (AssistONE, IA, anúncios, manutenção) pode aparecer ligado até a próxima abertura com rede.
 4. Preencher `supabase: { url, anonKey }` (chave **pública**) quando o banco do feedback existir.
 5. Sugestão: tirar o `tarefas.js` (sem uso desde o 1.9.0) da Foto, do `sw.js` e do repositório.
+
+## Janelas pela janela comum + cofre (CifrasONE 2.12.0, 17/Out/2026)
+
+Módulo 1.9.0 → **1.11.0**, mais `janela.js` 1.0.1 e `cofre.js` 1.4.0 (os três idênticos ao master do `rootify-one`,
+conferidos por sha256; listados no `sw.js`, que foi para `v17`).
+
+- **Janelas** (`SolverJanela.abrir`): Novidades, 📥 Inbox, Aviso de uso (`comum.js`/`aviso.js`), gaveta ☰, menu 👤
+  e afinador (`leitor.js`). O `<dialog>` é o fundo escuro (classe `janela-fundo`, ou `gaveta-j`/`perfil-j`/`afinador-j`);
+  a caixa (`.janela`) fica dentro. Gaveta, menu 👤 e afinador **movem o painel que já existe** para dentro da janela e o
+  devolvem ao lugar ao fechar (`aoFechar`), então botões e traduções continuam ligados. Menu 👤 e gaveta não têm campo de
+  texto (`temTexto: false`). O Aviso tem o formulário de remoção: com texto digitado, pergunta "Descartar?" (e `salvo()`
+  depois de enviar). O Voltar do celular dessas janelas é o da janela comum; o `Camadas` ficou só para o modo celular.
+- **alert()/confirm() trocados** (`comum.js`: `avisarCifras`, `confirmarCifras`, em PT e EN): voz sem suporte
+  (`leitor.js`), fila grande demais e "tirar todas da fila" (`importador.js`).
+- **Cofre**: `cofre: { fontes: [], proteger: true }` no config. Este app só guardava a chave no item do módulo
+  (`dgo:global:chaves-ia`), que o cofre já conhece de fábrica; por isso `fontes` fica vazio. Com chave guardada: PIN ao abrir e
+  ao recarregar; tranca ao sair do app, escondido e sem uso; sem chave, nunca pede PIN.
+  **O item `dgo:global:chaves-ia` continua com a cópia em texto aberto** (o cofre o marca `manter`) até o master pôr
+  `LIMPAR_COMPARTILHADAS = true`, o que só é seguro depois que o HyperNutry também for atualizado. A tela das chaves é do
+  módulo (a chave guardada nunca vem para o campo: "✓ guardado" + "Mostrar a chave guardada").
+- **Painel da digital**: o módulo 1.11.0 não tem ponto de encaixe na tela das chaves. O `comum.js` reserva um bloco logo
+  acima do botão Fechar (`painelDigitalNasChaves`, dentro do `MutationObserver` que já existia para o botão "Novidades"
+  em Configurações) e chama `SolverCofre.painelDigital`. O app não desenha nada da digital.
+- **Contorno do config removido**: `anuncios.imagem: true` (pendência 1 da seção acima) — o módulo 1.11.0 já corrigiu a
+  chamada a `imagemPlaceholder()`.
+- Teste: `teste/janelas.js` (Playwright, 390 px e 1280 px; ver o cabeçalho do arquivo).
+
+**Pendências novas**:
+1. Master: `janela.js` trava também o `body` (`overflow:hidden`); com o cabeçalho `sticky` deste app o cabeçalho "pula" 67 px
+   para baixo atrás da janela (só o que fica atrás do fundo escuro; nada quebra). Sugestão: travar só o `html`.
+2. Master: dar ao módulo um ponto de encaixe para o painel da digital na tela das chaves (hoje o app usa o observador).
+3. Quando o HyperNutry mesclar o PR dele, pedir a `LIMPAR_COMPARTILHADAS = true` no master do `cofre.js` e copiar para os apps.
+4. Com o afinador agora modal, a rolagem automática continua correndo atrás dele (rolagem por código não é travada).
 
 ## O que mudou no módulo (`diretrizes.js`) neste repositório
 

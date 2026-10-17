@@ -4,8 +4,8 @@
 
 /* Versão do site. Ao publicar uma mudança, altere estas duas linhas:
    o número aparece no rodapé de todas as páginas. */
-const VERSAO = '2.11.0';
-const VERSAO_DATA = '2026-10-10';
+const VERSAO = '2.12.0';
+const VERSAO_DATA = '2026-10-17';
 
 /* assinatura com a versão e o link do aviso, no rodapé de cada página */
 function montarRodape(){
@@ -21,6 +21,54 @@ function montarRodape(){
 }
 
 /* ============================================================
+   Janelas pela janela comum (janela.js, 17/Out/2026)
+   Toda janela do app é aberta por SolverJanela.abrir: a página de
+   trás não rola nem recebe toque, e ✕, Esc, Voltar do celular e
+   toque na parte escura fecham (com texto digitado, pergunta
+   "Descartar?"). O <dialog> é o fundo escuro (classe janela-fundo);
+   a caixa que aparece é a .janela de dentro.
+   Aqui ficam também o aviso curto e a confirmação curta, no lugar
+   do alert() e do confirm() do navegador.
+   ============================================================ */
+function caixaJanela(html, classe){
+  const c = document.createElement('div');
+  c.className = 'janela' + (classe ? ' ' + classe : '');
+  c.innerHTML = html;
+  return c;
+}
+
+/* aviso curto (era alert): uma frase e o botão "Entendi" */
+function avisarCifras(texto){
+  const caixa = caixaJanela(`
+    <div class="janela-texto"><p></p></div>
+    <div class="janela-rodape"><button class="botao forte" type="button" data-ok>${escapar(t('geral.entendi'))}</button></div>`, 'janela-curta');
+  caixa.querySelector('p').textContent = texto;
+  const j = SolverJanela.abrir({conteudo: caixa, classe: 'janela-fundo', papel: 'alertdialog', rotulo: texto, temTexto: false});
+  caixa.querySelector('[data-ok]').addEventListener('click', ()=> j.fechar('ok'));
+  return j;
+}
+
+/* confirmação curta (era confirm): responde true só em "ok" */
+function confirmarCifras({titulo, texto, ok, cancelar}){
+  return new Promise(resolve=>{
+    const caixa = caixaJanela(`
+      <div class="janela-texto"><h2></h2><p></p></div>
+      <div class="janela-rodape">
+        <button class="botao" type="button" data-nao></button>
+        <button class="botao forte" type="button" data-ok></button>
+      </div>`, 'janela-curta');
+    caixa.querySelector('h2').textContent = titulo;
+    caixa.querySelector('p').textContent = texto || '';
+    caixa.querySelector('[data-nao]').textContent = cancelar || t('geral.cancelar');
+    caixa.querySelector('[data-ok]').textContent = ok || 'OK';
+    const j = SolverJanela.abrir({conteudo: caixa, classe: 'janela-fundo', papel: 'alertdialog', temTexto: false,
+      aoFechar: motivo => resolve(motivo === 'ok')});
+    caixa.querySelector('[data-ok]').addEventListener('click', ()=> j.fechar('ok'));
+    caixa.querySelector('[data-nao]').addEventListener('click', ()=> j.fechar('nao'));
+  });
+}
+
+/* ============================================================
    Histórico de versões ("Novidades")
    A lista mora no versoes.json (a mais nova em cima), em PT e EN.
    Abre pelo link "Novidades" do rodapé e por um botão nas
@@ -29,7 +77,7 @@ function montarRodape(){
    um selo "novo".
    ============================================================ */
 const NOVIDADES_CHAVE = 'cifras:novidades-vista';
-let janelaNovidades = null;
+let janelaNovidades = null;   // a janela comum aberta (ou null)
 
 function jaViuNovidades(){
   try{ return localStorage.getItem(NOVIDADES_CHAVE) === VERSAO; }catch(e){ return true; }
@@ -42,26 +90,17 @@ function pintarSeloNovidades(){
 }
 
 async function abrirNovidades(){
+  if (janelaNovidades && !janelaNovidades.fechada) return;
   const idioma = (typeof IDIOMA !== 'undefined' && IDIOMA === 'en') ? 'en' : 'pt';
   const txt = (chave, reserva) => (typeof t === 'function' ? t(chave) : reserva);
   const data = d => (typeof formatarData === 'function' ? formatarData(d) : d);
-
-  if (!janelaNovidades){
-    janelaNovidades = document.createElement('dialog');
-    janelaNovidades.className = 'janela';
-    janelaNovidades.setAttribute('aria-labelledby', 'titulo-novidades');
-    document.body.appendChild(janelaNovidades);
-    janelaNovidades.addEventListener('click', e=>{
-      if (e.target === janelaNovidades || e.target.closest('.fechar-janela, [data-fecha-janela]'))
-        janelaNovidades.close();
-    });
-  }
 
   let lista = [];
   try{
     const r = await fetch('versoes.json', {cache:'no-cache'});
     lista = (await r.json()).versoes || [];
   }catch(e){ lista = null; }
+  if (janelaNovidades && !janelaNovidades.fechada) return;   // outro toque abriu enquanto a lista vinha
 
   const corpo = lista === null
     ? `<p>${escapar(txt('novidades.erro', 'Não consegui abrir a lista de versões.'))}</p>`
@@ -73,17 +112,19 @@ async function abrirNovidades(){
           <ul>${(v[idioma] || v.pt || []).map(item => `<li>${escapar(item)}</li>`).join('')}</ul>
         </section>`).join('');
 
-  janelaNovidades.innerHTML = `
-    <button class="fechar-janela" aria-label="${escapar(txt('afinador.fechar', 'Fechar'))}">✕</button>
+  const caixa = caixaJanela(`
+    <button class="fechar-janela" type="button" aria-label="${escapar(txt('afinador.fechar', 'Fechar'))}">✕</button>
     <div class="janela-texto texto-legal">
       <h2 id="titulo-novidades">${escapar(txt('novidades.titulo', 'Novidades de cada versão'))}</h2>
       ${corpo}
     </div>
     <div class="janela-rodape">
-      <button class="botao forte" data-fecha-janela>${escapar(txt('afinador.fechar', 'Fechar'))}</button>
-    </div>`;
-
-  if (janelaNovidades.showModal) janelaNovidades.showModal(); else janelaNovidades.setAttribute('open', '');
+      <button class="botao forte" type="button" data-fecha-janela>${escapar(txt('afinador.fechar', 'Fechar'))}</button>
+    </div>`);
+  janelaNovidades = SolverJanela.abrir({conteudo: caixa, classe: 'janela-fundo', temTexto: false,
+    aoFechar: ()=>{ janelaNovidades = null; }});
+  caixa.querySelectorAll('.fechar-janela, [data-fecha-janela]')
+    .forEach(b => b.addEventListener('click', ()=> janelaNovidades && janelaNovidades.fechar('fechar')));
   try{ localStorage.setItem(NOVIDADES_CHAVE, VERSAO); }catch(e){}
   pintarSeloNovidades();
 }
@@ -105,6 +146,21 @@ function botaoNovidadesNasConfiguracoes(){
   });
 }
 
+/* cofre.js: o painel da digital mora na tela das chaves de IA (que é do
+   módulo), logo acima do botão Fechar. O app só reserva o lugar e deixa o
+   SolverCofre desenhar; a tela é refeita a cada ação, por isso confere sempre. */
+function painelDigitalNasChaves(){
+  if (!window.SolverCofre || !SolverCofre.painelDigital) return;
+  document.querySelectorAll('.dgo-cofre').forEach(caixa=>{
+    if (caixa.querySelector('[data-cifras-digital]')) return;
+    const bloco = document.createElement('div');
+    bloco.setAttribute('data-cifras-digital', '');
+    const fechar = caixa.querySelector(':scope > .dgo-b:last-child');
+    if (fechar) caixa.insertBefore(bloco, fechar); else caixa.appendChild(bloco);
+    SolverCofre.painelDigital(bloco);
+  });
+}
+
 let novidadesProntas = false;
 function iniciarNovidades(){
   if (novidadesProntas) return;
@@ -115,14 +171,15 @@ function iniciarNovidades(){
     e.preventDefault();
     abrirNovidades();
   });
-  new MutationObserver(botaoNovidadesNasConfiguracoes)
+  new MutationObserver(()=>{ botaoNovidadesNasConfiguracoes(); painelDigitalNasChaves(); })
     .observe(document.body, {childList:true, subtree:true});
   pintarSeloNovidades();
 }
 
 /* ============================================================
    Camadas: o botão Voltar do celular fecha o que está aberto
-   (menu ☰, afinador, modo celular) em vez de sair da página.
+   (modo celular) em vez de sair da página. As janelas (menu ☰,
+   menu 👤, afinador, avisos) têm o Voltar na janela comum.
    Cada camada que abre ganha uma entrada no histórico; no
    Voltar, fecha só a camada de cima. Fechar pelo botão da tela
    também tira a entrada do histórico. Um ponto só no código.
@@ -417,28 +474,30 @@ function montarPerfil(){
   if (!bt || !menu) return;
 
   function itens(){ return [...menu.querySelectorAll('[role^="menuitem"]')].filter(b => !b.hidden); }
+  const barra = menu.parentNode;   // onde o menu mora quando fechado
+  let perfilJ = null;              // a janela comum com o menu dentro
+
+  /* o menu é uma janela presa ao botão 👤 (sem campo de texto: nunca pergunta "Descartar?") */
   function abrirPerfil(abrir){
-    if (abrir === menu.classList.contains('aberto')) return;
-    if (abrir) pintarPerfil();
-    menu.classList.toggle('aberto', abrir);
-    bt.setAttribute('aria-expanded', String(abrir));
-    if (abrir){
-      Camadas.abrir('perfil', ()=> abrirPerfil(false));
-      setTimeout(()=>{ const f = itens()[0]; if (f) f.focus({preventScroll:true}); }, 60);
-    }else{
-      Camadas.fechar('perfil');
-      if (menu.contains(document.activeElement)) bt.focus({preventScroll:true});
-    }
+    if (!abrir){ if (perfilJ) perfilJ.fechar('fechar'); return; }
+    if (perfilJ && !perfilJ.fechada) return;
+    pintarPerfil();
+    menu.style.setProperty('--topo-menu', Math.round(bt.getBoundingClientRect().bottom + 6) + 'px');
+    menu.classList.add('aberto');
+    bt.setAttribute('aria-expanded', 'true');
+    perfilJ = SolverJanela.abrir({
+      conteudo: menu, classe: 'perfil-j', rotulo: menu.getAttribute('aria-label'), temTexto: false,
+      focar: itens()[0],
+      aoFechar: ()=>{
+        menu.classList.remove('aberto');
+        barra.appendChild(menu);
+        bt.setAttribute('aria-expanded', 'false');
+        perfilJ = null;
+      }
+    });
   }
-  bt.addEventListener('click', ()=> abrirPerfil(!menu.classList.contains('aberto')));
-  document.addEventListener('pointerdown', e=>{
-    if (!menu.classList.contains('aberto')) return;
-    if (menu.contains(e.target) || bt.contains(e.target)) return;
-    abrirPerfil(false);
-  });
-  document.addEventListener('keydown', e=>{
-    if (!menu.classList.contains('aberto')) return;
-    if (e.key === 'Escape'){ e.preventDefault(); abrirPerfil(false); return; }
+  bt.addEventListener('click', ()=> abrirPerfil(true));
+  menu.addEventListener('keydown', e=>{
     if (e.key === 'ArrowDown' || e.key === 'ArrowUp'){
       const lista = itens(); const i = lista.indexOf(document.activeElement);
       if (!lista.length) return;
@@ -451,7 +510,7 @@ function montarPerfil(){
     const alvo = e.target.closest('button');
     if (!alvo) return;
     if (alvo.matches('[data-botao-tema], [data-botao-fundo]')) return;
-    setTimeout(()=> abrirPerfil(false), 80);
+    abrirPerfil(false);
   });
   menu.querySelector('[data-sair]').addEventListener('click', ()=>{
     if (window.DGO && DGO.sair) DGO.sair();
@@ -479,7 +538,7 @@ function montarPerfil(){
    app instalado (setAppBadge, pelo módulo). */
 const INBOX_LIDAS = 'cifras:inbox-lidas';
 const INBOX_ARQUIVO = 'cifras:inbox-arquivo';
-let janelaInbox = null, inboxVerArquivo = false;
+let janelaInbox = null, inboxVerArquivo = false;   // janelaInbox: a janela comum aberta (ou null)
 
 function lerConjunto(chave){
   try{ return new Set(JSON.parse(localStorage.getItem(chave) || '[]')); }catch(e){ return new Set(); }
@@ -546,16 +605,6 @@ async function contarInbox(){
 }
 
 async function abrirInbox(){
-  if (!janelaInbox){
-    janelaInbox = document.createElement('dialog');
-    janelaInbox.className = 'janela';
-    janelaInbox.setAttribute('aria-labelledby', 'titulo-inbox');
-    document.body.appendChild(janelaInbox);
-    janelaInbox.addEventListener('click', e=>{
-      if (e.target === janelaInbox || e.target.closest('.fechar-janela, [data-fecha-janela]')) janelaInbox.close();
-    });
-    janelaInbox.addEventListener('close', contarInbox);
-  }
   const lidas = lerConjunto(INBOX_LIDAS), arq = lerConjunto(INBOX_ARQUIVO);
   const todos = await itensInbox();
   const itens = todos.filter(i => arq.has(i.id) === inboxVerArquivo);
@@ -577,8 +626,8 @@ async function abrirInbox(){
       </article>`).join('')
     : `<p class="vazio">${escapar(t(inboxVerArquivo ? 'inbox.arquivoVazio' : 'inbox.vazio'))}</p>`;
 
-  janelaInbox.innerHTML = `
-    <button class="fechar-janela" aria-label="${escapar(t('geral.fechar'))}">✕</button>
+  const caixa = caixaJanela(`
+    <button class="fechar-janela" type="button" aria-label="${escapar(t('geral.fechar'))}">✕</button>
     <div class="janela-texto texto-legal">
       <h2 id="titulo-inbox">${escapar(t('inbox.titulo'))}</h2>
       <p class="contagem" aria-live="polite">${escapar(naoLidas ? t('inbox.naoLidas', {n: naoLidas}) : t('inbox.tudoLido'))}</p>
@@ -591,35 +640,40 @@ async function abrirInbox(){
     <div class="janela-rodape">
       ${naoLidas ? `<button class="botao" type="button" data-inbox-todas>${escapar(t('inbox.todasLidas'))}</button> ` : ''}
       <button class="botao forte" type="button" data-fecha-janela>${escapar(t('geral.fechar'))}</button>
-    </div>`;
+    </div>`);
 
-  janelaInbox.querySelectorAll('[data-inbox-modo]').forEach(b => b.addEventListener('click', ()=>{
+  caixa.querySelectorAll('.fechar-janela, [data-fecha-janela]').forEach(b => b.addEventListener('click', ()=>{
+    if (janelaInbox) janelaInbox.fechar('fechar');
+  }));
+  caixa.querySelectorAll('[data-inbox-modo]').forEach(b => b.addEventListener('click', ()=>{
     inboxVerArquivo = b.dataset.inboxModo === 'arquivo'; abrirInbox();
   }));
   const acha = el => todos.find(i => i.id === el.closest('.inbox-item').dataset.id);
-  janelaInbox.querySelectorAll('[data-inbox-lida]').forEach(b => b.addEventListener('click', ()=>{
+  caixa.querySelectorAll('[data-inbox-lida]').forEach(b => b.addEventListener('click', ()=>{
     lidas.add(acha(b).id); gravarConjunto(INBOX_LIDAS, lidas); abrirInbox();
   }));
-  janelaInbox.querySelectorAll('[data-inbox-arquivar]').forEach(b => b.addEventListener('click', ()=>{
+  caixa.querySelectorAll('[data-inbox-arquivar]').forEach(b => b.addEventListener('click', ()=>{
     const id = acha(b).id;
     if (inboxVerArquivo) arq.delete(id); else { arq.add(id); lidas.add(id); gravarConjunto(INBOX_LIDAS, lidas); }
     gravarConjunto(INBOX_ARQUIVO, arq); abrirInbox();
   }));
-  janelaInbox.querySelectorAll('[data-inbox-abrir]').forEach(b => b.addEventListener('click', ()=>{
+  caixa.querySelectorAll('[data-inbox-abrir]').forEach(b => b.addEventListener('click', ()=>{
     const i = acha(b); lidas.add(i.id); gravarConjunto(INBOX_LIDAS, lidas);
-    janelaInbox.close(); if (i.acao) i.acao();
+    if (janelaInbox) janelaInbox.fechar('abrir');
+    if (i.acao) i.acao();
   }));
-  janelaInbox.querySelectorAll('a[href]').forEach(a => a.addEventListener('click', ()=>{
+  caixa.querySelectorAll('a[href]').forEach(a => a.addEventListener('click', ()=>{
     lidas.add(acha(a).id); gravarConjunto(INBOX_LIDAS, lidas);
   }));
-  const todas = janelaInbox.querySelector('[data-inbox-todas]');
+  const todas = caixa.querySelector('[data-inbox-todas]');
   if (todas) todas.addEventListener('click', ()=>{
     todos.forEach(i => lidas.add(i.id)); gravarConjunto(INBOX_LIDAS, lidas); abrirInbox();
   });
 
-  if (!janelaInbox.open){
-    if (janelaInbox.showModal) janelaInbox.showModal(); else janelaInbox.setAttribute('open', '');
-  }
+  /* já aberta: troca o miolo no lugar (marcar como lida, arquivar, trocar de aba) */
+  if (janelaInbox && !janelaInbox.fechada) janelaInbox.trocar(caixa);
+  else janelaInbox = SolverJanela.abrir({conteudo: caixa, classe: 'janela-fundo', temTexto: false,
+    aoFechar: ()=>{ janelaInbox = null; contarInbox(); }});
   contarInbox();
 }
 
@@ -641,9 +695,8 @@ function montarGaveta(pagina){
   const gaveta = document.createElement('div');
   gaveta.className = 'gaveta-menu';
   gaveta.id = 'gaveta-menu';
-  gaveta.setAttribute('aria-hidden', 'true');
+  gaveta.hidden = true;   // guarda o painel enquanto a janela comum não o está mostrando
   gaveta.innerHTML = `
-    <div class="gaveta-fundo" data-fecha-menu></div>
     <nav class="gaveta-painel" data-i18n-aria="menu.titulo" aria-label="Menu" tabindex="-1">
       <div class="gaveta-topo">
         <span class="marca"><span class="marca-nome">Cifras<span class="marca-one">ONE</span></span></span>
@@ -682,40 +735,39 @@ function montarGaveta(pagina){
 
   const botaoMenu = document.querySelector('[data-botao-menu]');
   const painel = gaveta.querySelector('.gaveta-painel');
+  let gavetaJ = null;   // a janela comum com o painel dentro
 
   function abrirGaveta(abrir){
-    if (abrir === gaveta.classList.contains('aberta')) return;
-    gaveta.classList.toggle('aberta', abrir);
-    gaveta.setAttribute('aria-hidden', String(!abrir));
-    if (botaoMenu) botaoMenu.setAttribute('aria-expanded', String(abrir));
-    if (abrir){
-      Camadas.abrir('menu', ()=> abrirGaveta(false));
-      setTimeout(()=>{ (gaveta.querySelector('.gaveta-item.atual') || painel).focus({preventScroll:true}); }, 60);
-    }else{
-      Camadas.fechar('menu');
-      if (botaoMenu) botaoMenu.focus({preventScroll:true});
-    }
+    if (!abrir){ if (gavetaJ) gavetaJ.fechar('fechar'); return; }
+    if (gavetaJ && !gavetaJ.fechada) return;
+    if (botaoMenu) botaoMenu.setAttribute('aria-expanded', 'true');
+    gavetaJ = SolverJanela.abrir({
+      conteudo: painel, classe: 'gaveta-j', rotulo: t('menu.titulo'), temTexto: false,
+      focar: gaveta.querySelector('.gaveta-item.atual') || painel,
+      aoFechar: ()=>{                 // o painel volta para o esconderijo e o foco volta ao ☰ (a janela cuida)
+        gaveta.appendChild(painel);
+        if (botaoMenu) botaoMenu.setAttribute('aria-expanded', 'false');
+        gavetaJ = null;
+      }
+    });
   }
-  if (botaoMenu) botaoMenu.addEventListener('click', ()=> abrirGaveta(!gaveta.classList.contains('aberta')));
-  gaveta.querySelectorAll('[data-fecha-menu]').forEach(el => el.addEventListener('click', ()=> abrirGaveta(false)));
-  document.addEventListener('keydown', e=>{
-    if (e.key === 'Escape' && gaveta.classList.contains('aberta')) abrirGaveta(false);
-  });
+  if (botaoMenu) botaoMenu.addEventListener('click', ()=> abrirGaveta(true));
+  painel.querySelectorAll('[data-fecha-menu]').forEach(el => el.addEventListener('click', ()=> abrirGaveta(false)));
 
-  /* escolher algo dentro da gaveta: fecha primeiro (tirando a entrada do
+  /* escolher algo dentro da gaveta: fecha primeiro (a janela tira a entrada do
      histórico) e só depois navega, para o Voltar não voltar ao menu aberto */
-  gaveta.addEventListener('click', e=>{
+  painel.addEventListener('click', e=>{
     const alvo = e.target.closest('a, button');
     if (!alvo || alvo.hasAttribute('data-fecha-menu')) return;
     if (alvo.matches('[data-botao-tema], [data-botao-fundo]')) return; // visuais: fica aberto para ver o efeito
     if (alvo.tagName === 'A' && alvo.getAttribute('href') && !alvo.hasAttribute('data-abre-novidades') && alvo.target !== '_blank'){
       e.preventDefault();
       const href = alvo.getAttribute('href');
-      gaveta.classList.remove('aberta');
-      Camadas.fechar('menu', ()=>{ location.href = href; });
+      abrirGaveta(false);
+      SolverJanela.quandoQuieto(()=>{ location.href = href; });
       return;
     }
-    setTimeout(()=> abrirGaveta(false), 120);
+    abrirGaveta(false);
   });
   const afinador = gaveta.querySelector('[data-abre-afinador]');
   if (afinador) afinador.addEventListener('click', ()=>{

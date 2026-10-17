@@ -27,7 +27,7 @@ DGO.iniciar({
                                 origem, e e isto que impede os dados de um
                                 vazarem para o outro. */
   nome: { pt: 'CifrasONE', en: 'CifrasONE' },
-  versaoApp: '2.11.0',
+  versaoApp: '2.12.0',
   cor: '#a8501e',            /* o marrom-laranja do site de cifras */
   corFundoBarra: '#1a1614',
 
@@ -62,11 +62,6 @@ DGO.iniciar({
     /* enquanto uma destas telas estiver aberta a faixa some sozinha,
        e volta quando ela fecha */
     esconderCom: ['body.modo-palco', '#afinador[aberta]'],
-    /* contorno do modulo 1.9.0 (pendencia no master): ao trocar o idioma com a
-       faixa na tela, ele chama imagemPlaceholder(), que nao existe mais, e a
-       troca para no meio (o site nao muda de lingua). Este campo so e lido ali;
-       preenchido, o modulo pula essa linha. Tirar quando o master for corrigido. */
-    imagem: true,
     popup: { ativo: true, antesDoLogin: true, depoisDoLogin: true, esperaSegundos: 3 }
   },
 
@@ -86,6 +81,14 @@ DGO.iniciar({
       { pt: 'Como uso o capotraste para cantar mais baixo?', en: 'How do I use the capo to sing lower?' }
     ]
   },
+
+  /* ---------- cofre comum de chaves (cofre.js) ----------
+     As chaves de IA moram so no cofre, trancadas por PIN. O lugar antigo
+     (dgo:global:chaves-ia) o proprio cofre ja conhece e esvazia sozinho; este app
+     nao guardava chave em nenhum outro lugar, por isso 'fontes' fica vazio.
+     proteger: com chave guardada, PIN ao abrir e ao recarregar; tranca ao sair do
+     app, escondido e sem uso. Sem chave guardada, nunca pede PIN. */
+  cofre: { fontes: [], proteger: true },
 
   /* ---------- 💬 feedback dos usuarios (DGO.feedback) ----------
      Aparece no balao do AssistONE, no ☰ → Ajuda e mais e em ⚙.
@@ -142,7 +145,7 @@ DGO.iniciar({
     imagem: 'ajuda-botao.png',
     /* no modo celular ele so aparece quando a barra de baixo esta recolhida
        (fica pequeno, a esquerda, longe do botao de Play); some com o afinador ou o menu abertos */
-    esconderCom: ['body.modo-palco:not(.barra-oculta)', '#afinador[aberta]', '.gaveta-menu.aberta', 'dialog[open]'],
+    esconderCom: ['body.modo-palco:not(.barra-oculta)', '#afinador[aberta]', 'dialog[open]'],
     /* qual tela e esta: no modo celular a ajuda e outra (os comandos) */
     tela: function () { return document.body.classList.contains('modo-palco') ? 'palco' : (document.body.getAttribute('data-pagina') || 'inicio'); },
     telas: {
